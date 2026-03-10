@@ -1,0 +1,163 @@
+@import "tailwindcss";
+
+@theme {
+    /* Gerakan sangat lambat (30 detik) agar transisi warna terasa sangat halus */
+    --animate-moving-bg: moving-bg 20s ease-in-out infinite;
+
+    @keyframes moving-bg {
+        0%   { background-position: 0% 50%; }
+        25%  { background-position: 100% 10%; }
+        50%  { background-position: 50% 100%; }
+        75%  { background-position: 0% 90%; }
+        100% { background-position: 0% 50%; }
+    }
+}
+
+@layer base {
+    :root {
+        --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
+            'Segoe UI Symbol', 'Noto Color Emoji';
+    }
+
+    body {
+        background-size: 200% 200% !important;
+
+        /* PALET BERANI TAPI NYAMAN: Teal, Dusty Rose, Deep Indigo, Muted Gold, Pine */
+        background-image:
+            radial-gradient(at 0% 0%, #134e4a 0px, transparent 55%),   /* Teal Deep */
+            radial-gradient(at 100% 0%, #881337 0px, transparent 55%),  /* Muted Rose/Burgundy */
+            radial-gradient(at 100% 100%, #1e1b4b 0px, transparent 55%),/* Deep Indigo */
+            radial-gradient(at 0% 100%, #14532d 0px, transparent 55%),  /* Forest Green */
+            radial-gradient(at 50% 50%, #78350f 0px, transparent 55%)   /* Muted Amber/Gold */
+        !important;
+
+        /* Warna dasar gelap agar transisi antar 'awan' warna terlihat menyatu */
+        background-color: #020617;
+
+        background-repeat: no-repeat;
+        background-attachment: fixed;
+        min-height: 100vh;
+        margin: 0;
+
+        animation: var(--animate-moving-bg) !important;
+    }
+
+    /* Sisa utilitas Anda tetap aman di sini */
+    @media (max-width: 640px) {
+        body {
+            background-position: bottom center;
+        }
+    }
+    /* .custom-scrollbar::-webkit-scrollbar {
+        height: 5px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    } */
+
+    .select-none { user-select: none; }
+    .slider-handle-transition { transition: left 0.3s ease-out, background-color 0.3s ease; }
+    .slider-fill-transition { transition: width 0.3s ease-out, background-color 0.3s ease; }
+    .font-fancy { font-family: 'Parisienne', cursive; }
+    #dropdown-toggle:checked ~ #dropdown-menu { display: block !important; }
+    [x-cloak] { display: none !important; }
+
+    .spinner {
+        width: 48px; height: 48px; border: 5px solid #f3f3f3;
+        border-top: 5px solid #3b82f6; border-radius: 50%;
+        display: inline-block; animation: spin-loading 1s linear infinite;
+    }
+    @keyframes spin-loading { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+    .animate-fly {
+        animation: fly 2.0s infinite linear;
+    }
+    @keyframes fly {
+        0% { transform: translateX(-20px); opacity: 0; }
+        50% { transform: translateX(0); opacity: 1; }
+        100% { transform: translateX(20px); opacity: 0; }
+    }
+
+    #document-viewer-modal {
+        -webkit-backdrop-filter: blur(4px);
+        backdrop-filter: blur(4px);
+    }
+
+    /* CSS Tambahan Opsional: Transisi untuk sidebar */
+    .sidebar-transition {
+        transition: transform 0.3s ease-in-out;
+        transform: translateX(-100%);
+    }
+    .sidebar-transition.is-active {
+        transform: translateX(0);
+    }
+
+    .has-vertical-line::before {
+        content: '';
+        position: absolute;
+        left: 44px; /* Sesuaikan nilai ini */
+        top: 0;
+        bottom: 0;
+        width: 2px;
+        background-color: rgb(56, 189, 248, 0.5);
+        transform: translateX(-50%);
+    }
+
+    .submenu-collapse-transition {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        visibility: hidden; /* Sembunyikan sepenuhnya saat tertutup */
+    }
+
+    .submenu-collapse-transition.is-open {
+        max-height: 500px; /* Harus cukup besar untuk menampung semua submenu */
+        visibility: visible;
+    }
+
+    .custom-scroll-area {
+        min-height: 0; /* Penting agar flex child bisa scroll */
+        flex: 1 1 auto;
+    }
+    /* Agar scrollbar terlihat di sisi kanan dan tidak memotong konten */
+    .custom-scroll-container::-webkit-scrollbar {
+        width: 8px;
+    }
+    .custom-scroll-container::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 10px;
+    }
+    .custom-scroll-container::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 10px;
+    }
+
+    /* Menyembunyikan teks "Showing X to Y of Z results" di Laravel Tailwind Pagination */
+    .pagination-custom.no-info nav p {
+        display: none !important;
+    }
+
+    /* Merapikan layout tombol agar tetap di kanan */
+    .pagination-custom.no-info nav div:first-child {
+        display: none !important;
+    }
+
+    .pagination-custom.no-info nav div:last-child {
+        margin-left: auto;
+    }
+
+}
+
+/* KODE BARU DITAMBAHKAN DI SINI UNTUK MENGHILANGKAN SCROLLBAR HALAMAN UTAMA */
+html, body {
+    overflow: hidden; /* Mencegah scrolling pada body utama */
+    height: 100%;      /* Memastikan body mengambil tinggi penuh */
+    margin: 0;
+    padding: 0;
+}
+
+#app-container {
+    height: 100vh; /* Memastikan app-container mengambil tinggi penuh viewport */
+    display: flex;
+}

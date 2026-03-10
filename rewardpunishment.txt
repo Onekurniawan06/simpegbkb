@@ -1,0 +1,393 @@
+<div class="bg-white rounded-lg shadow-lg max-w-full mx-auto">
+        <div class="p-4 shadow-sm">
+            <h3 class="text-lg font-semibold text-blue-700"># Section 4: Reward & Punishment</h3>
+
+            <!-- Container internal untuk padding dan layout tab -->
+            <!-- Saya tambahkan padding p-6 di sini agar konten tidak menempel di tepi container utama -->
+            <div x-data="{ activeTab: 'reward' }" class="">
+
+                <!-- Navigasi Tab -->
+                <div class="flex border-b border-gray-200 mb-6">
+                    <button
+                        @click="activeTab = 'reward'"
+                        :class="activeTab === 'reward' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                        class="py-4 px-6 border-b-2 font-medium text-sm transition-all duration-200">
+                        Data Penghargaan/ Reward
+                    </button>
+                    <button
+                        @click="activeTab = 'punishment'"
+                        :class="activeTab === 'punishment' ? 'border-blue-500 text-blue-600' : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'"
+                        class="py-4 px-6 border-b-2 font-medium text-sm transition-all duration-200">
+                        Data Hukuman/ Punishment
+                    </button>
+                </div>
+
+                <!-- Form Tunggal untuk Semua Tab -->
+                <!-- KONTEN TAB 1: DATA PRIBADI -->
+                <div x-show="activeTab === 'reward'" class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Penghargaan/ Reward</label>
+
+                        <!-- Form Simpan Reward -->
+                        <form action="{{ route('pegawai.profile.updateReward') }}" method="POST">
+                            @csrf
+                            @method('PUT')
+
+                            {{-- Container tempat input dinamis akan ditambahkan oleh JavaScript --}}
+                            <div id="reward-container" class="space-y-4">
+
+                                {{-- Logic untuk menampilkan data existing ATAU old input saat validasi gagal --}}
+                                @if(old('jenis_reward'))
+                                    {{-- Tampilkan OLD INPUT jika ada error validasi --}}
+                                    @foreach(old('jenis_reward') as $index => $jenis)
+                                        <div class="punishment-item p-4 border border-slate-200 rounded-lg bg-slate-50 relative">
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                {{-- Input Jenis Reward --}}
+                                                <div class="flex flex-col gap-1">
+                                                    <label class="text-xs font-bold text-slate-600">Jenis Penghargaan</label>
+                                                    <input type="text" name="jenis_reward[]" placeholder="Contoh: Karyawan Teladan"
+                                                        value="{{ $jenis }}"
+                                                        class="w-full bg-white text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 focus:border-blue-500 outline-none shadow-sm" required />
+                                                </div>
+
+                                                {{-- KONTEN BARU: Satukan Tanggal & Diberikan Oleh dalam satu kontainer Flex --}}
+                                                {{-- Ini mengambil kolom kedua dari grid induk --}}
+                                                <div class="flex gap-4">
+                                                    {{-- Input Tanggal (mengambil setengah ruang) --}}
+                                                    <div class="flex-1 flex flex-col gap-1">
+                                                        <label for="tanggal_diberikan_{{ $index }}" class="block text-xs font-medium text-gray-700">Tanggal Diberikan Penghargaan</label>
+                                                        <input type="date" name="tanggal_diberikan[]" id="tanggal_diberikan_{{ $index }}"
+                                                            value="{{ old('tanggal_diberikan.'.$index) }}"
+                                                            class="w-full bg-white text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 focus:border-blue-500 outline-none shadow-sm" />
+                                                    </div>
+                                                    {{-- Input Diberikan Oleh (mengambil setengah ruang) --}}
+                                                    <div class="flex-1 flex flex-col gap-1">
+                                                        <label class="text-xs font-bold text-slate-600">Diberikan Oleh</label>
+                                                        <input type="text" name="diberikan_oleh[]" placeholder="Nama Instansi/Perusahaan"
+                                                            value="{{ old('diberikan_oleh.'.$index) }}"
+                                                            class="w-full bg-white text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 focus:border-blue-500 outline-none shadow-sm" />
+                                                    </div>
+                                                </div>
+
+                                                {{-- Input Deskripsi (span 2 kolom) --}}
+                                                <div>
+                                                    <label class="text-xs font-bold text-slate-600">Deskripsi Singkat</label>
+                                                    <textarea name="deskripsi_reward[]" rows="2" placeholder="Jelaskan detail pencapaian..."
+                                                        class="w-full bg-white text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 focus:border-blue-500 outline-none shadow-sm">{{ old('deskripsi_reward.'.$index) }}</textarea>
+                                                </div>
+                                            </div>
+
+                                            <button type="button" onclick="removeRewardField(this)" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-700 btn-remove" title="hapus">
+                                                <svg xmlns="www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    @endforeach
+                                    @elseif($rewards->count() > 0)
+                                        {{-- Tampilkan DATA DARI DATABASE jika tidak ada old input --}}
+                                        @foreach($rewards as $index => $reward)
+                                            <div class="punishment-item p-4 border border-slate-200 rounded-lg bg-slate-50 relative">
+                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    {{-- Input Jenis Reward --}}
+                                                    <div class="flex flex-col gap-1">
+                                                        <label class="text-xs font-bold text-slate-600">Jenis Penghargaan</label>
+                                                        <input type="text" name="jenis_reward[]" placeholder="Contoh: Karyawan Teladan"
+                                                            value="{{ $reward->jenis_reward }}"
+                                                            class="w-full bg-white text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 focus:border-blue-500 outline-none shadow-sm" required />
+                                                    </div>
+                                                    {{-- Input Tanggal --}}
+                                                    <div class="flex gap-4">
+                                                        {{-- Input Tanggal --}}
+                                                        <div class="flex-1 flex flex-col gap-1">
+                                                            <label for="tanggal_diberikan_{{ $index }}" class="block text-xs font-medium text-gray-700">Tanggal Diberikan Penghargaan</label>
+                                                            <input type="date" name="tanggal_diberikan[]" id="tanggal_diberikan_{{ $index }}"
+                                                                value="{{ \Carbon\Carbon::parse($reward->tanggal_diberikan)->format('Y-m-d') }}"
+                                                                class="w-full bg-white text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 focus:border-blue-500 outline-none shadow-sm" />
+                                                        </div>
+                                                        {{-- Input Diberikan Oleh --}}
+                                                        <div class="flex-1 flex flex-col gap-1">
+                                                            <label class="text-xs font-bold text-slate-600">Diberikan Oleh</label>
+                                                            <input type="text" name="diberikan_oleh[]" placeholder="Nama Instansi/Perusahaan"
+                                                                value="{{ $reward->diberikan_oleh }}"
+                                                                class="w-full bg-white text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 focus:border-blue-500 outline-none shadow-sm" />
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Input Deskripsi --}}
+                                                    <div class="flex flex-col gap-1 md:col-span-2">
+                                                        <label class="text-xs font-bold text-slate-600">Deskripsi Singkat</label>
+                                                        <textarea name="deskripsi_reward[]" rows="2" placeholder="Jelaskan detail pencapaian..."
+                                                                class="w-full bg-white text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 focus:border-blue-500 outline-none shadow-sm">{{ $reward->deskripsi_reward }}</textarea>
+                                                    </div>
+                                                </div>
+                                                {{-- Semua item dari DB akan menampilkan tombol hapus --}}
+                                                <button type="button" onclick="removeRewardField(this)" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-700 btn-remove" title="Hapus">
+                                                    <svg xmlns="www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        @endforeach
+                                    @else
+                                @endif
+                            </div>
+
+                            {{-- Tombol untuk menambah input baru (Button type="button" agar tidak men-submit form) --}}
+                            <button type="button" onclick="addRewardField()" class="mt-4 flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition duration-150">
+                                <svg xmlns="www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+                                </svg>
+                                Tambah Penghargaan / Reward
+                            </button>
+
+                            <!-- Garis batas horizontal antara logo dan menu -->
+                            <hr class="border-b border-gray-100 mt-4">
+
+                            {{-- Tombol Simpan Reward (Button type="submit" untuk mengirim form) --}}
+                            <div class=" border-gray-100 flex justify-end mt-4">
+                                <button type="submit" class="inline-flex justify-center py-2.5 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all">
+                                    Simpan Data Reward
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- KONTEN TAB 2: UPLOAD IMAGE -->
+                <div x-show="activeTab === 'punishment'" class="space-y-6" x-cloak>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Jenis Hukuman/ Punishment</label>
+
+                        <!-- Form Simpan Punishment -->
+                        <form action="{{ route('pegawai.profile.updatePunishment') }}" method="POST">
+                        @csrf
+                        @method('PUT')
+                        {{-- Container tempat input dinamis akan ditambahkan oleh JavaScript --}}
+                            <div id="punishment-container" class="space-y-4">
+                                @if(old('jenis_punishment'))
+                                    {{-- Tampilkan OLD INPUT jika ada error validasi --}}
+                                    @foreach(old('jenis_punishment') as $index => $jenis)
+                                    {{-- ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ Ubah dari jenis_reward --}}
+
+                                        <div class="punishment-item p-4 border border-slate-200 rounded-lg bg-slate-50 relative">
+                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                {{-- Input Jenis Punishment --}}
+                                                <div class="flex flex-col gap-1">
+                                                    <label class="text-xs font-bold text-slate-600">Jenis Punishment</label>
+                                                    <input type="text" name="jenis_punishment[]" placeholder="Contoh: Surat Peringatan 1 (SP1)"
+                                                        value="{{ $jenis }}"
+                                                        class="w-full bg-white text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 focus:border-blue-500 outline-none shadow-sm" required />
+                                                </div>
+
+                                                {{-- KONTEN BARU: Satukan Tanggal & Diberikan Oleh dalam satu kontainer Flex --}}
+                                                <div class="flex gap-4">
+                                                    {{-- Input Tanggal (mengambil setengah ruang) --}}
+                                                    <div class="flex-1 flex flex-col gap-1">
+                                                        <label for="tanggal_diberikan_{{ $index }}" class="block text-xs font-medium text-gray-700">Tanggal Diberikan Punishment</label>
+                                                        <input type="date" name="tanggal_diberikan[]" id="tanggal_diberikan_{{ $index }}"
+                                                            value="{{ old('tanggal_diberikan.'.$index) }}"
+                                                            class="w-full bg-white text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 focus:border-blue-500 outline-none shadow-sm" />
+                                                    </div>
+                                                    {{-- Input Diberikan Oleh (mengambil setengah ruang) --}}
+                                                    <div class="flex-1 flex flex-col gap-1">
+                                                        <label class="text-xs font-bold text-slate-600">Diberikan Oleh</label>
+                                                        <input type="text" name="diberikan_oleh[]" placeholder="Nama Instansi/Perusahaan"
+                                                            value="{{ old('diberikan_oleh.'.$index) }}"
+                                                            class="w-full bg-white text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 focus:border-blue-500 outline-none shadow-sm" />
+                                                    </div>
+                                                </div>
+
+                                                {{-- Input Deskripsi (span 2 kolom) --}}
+                                                <div>
+                                                    <label class="text-xs font-bold text-slate-600">Deskripsi Singkat</label>
+                                                    <textarea name="deskripsi[]" rows="2" placeholder="Jelaskan detail pencapaian..."
+                                                        class="w-full bg-white text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 focus:border-blue-500 outline-none shadow-sm">{{ old('deskripsi.'.$index) }}</textarea>
+                                                </div>
+                                            </div>
+
+                                            <button type="button" onclick="removePunishmentField(this)" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-700 btn-remove" title="Hapus">
+                                                <svg xmlns="www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                </svg>
+                                            </button>
+                                        </div>
+                                    @endforeach
+
+                                    @elseif($punishment->count() > 0)
+                                        {{-- ^^^^^^^^^^^^^^^^^ Ubah nama variabel koleksi menjadi jamak (punishments) untuk kejelasan --}}
+
+                                        {{-- Tampilkan DATA DARI DATABASE jika tidak ada old input --}}
+                                        @foreach($punishment as $index => $item)
+                                            {{-- ^^^^^^^^^^^^^^ Gunakan nama variabel tunggal yang berbeda (item) untuk menghindari penimpaan --}}
+
+                                            <div class="punishment-item p-4 border border-slate-200 rounded-lg bg-slate-50 relative">
+                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                    {{-- Input Jenis punishment --}}
+                                                    <div class="flex flex-col gap-1">
+                                                        <label class="text-xs font-bold text-slate-600">Jenis punishment</label>
+                                                        <input type="text" name="jenis_punishment[]" placeholder="Contoh: Surat Peringatan 1 (SP1)"
+                                                            value="{{ $item->jenis_punishment }}"
+                                                            class="w-full bg-white text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 focus:border-blue-500 outline-none shadow-sm" required />
+                                                    </div>
+                                                    {{-- Input Tanggal & Diberikan Oleh --}}
+                                                    <div class="flex gap-4">
+                                                        {{-- Input Tanggal --}}
+                                                        <div class="flex-1 flex flex-col gap-1">
+                                                            <label for="tanggal_diberikan_{{ $index }}" class="block text-xs font-medium text-gray-700">Tanggal Diberikan Punishment</label>
+                                                            {{-- Menggunakan Carbon untuk memformat tanggal ke format Y-m-d yang dibutuhkan HTML input date --}}
+                                                            <input type="date" name="tanggal_diberikan[]" id="tanggal_diberikan_{{ $index }}"
+                                                                value="{{ \Carbon\Carbon::parse($item->tanggal_diberikan)->format('Y-m-d') }}"
+                                                                class="w-full bg-white text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 focus:border-blue-500 outline-none shadow-sm" />
+                                                        </div>
+                                                        {{-- Input Diberikan Oleh --}}
+                                                        <div class="flex-1 flex flex-col gap-1">
+                                                            <label class="text-xs font-bold text-slate-600">Diberikan Oleh</label>
+                                                            <input type="text" name="diberikan_oleh[]" placeholder="Nama Instansi/Perusahaan"
+                                                                value="{{ $item->diberikan_oleh }}"
+                                                                class="w-full bg-white text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 focus:border-blue-500 outline-none shadow-sm" />
+                                                        </div>
+                                                    </div>
+
+                                                    {{-- Input Deskripsi --}}
+                                                    <div class="flex flex-col gap-1 md:col-span-2">
+                                                        <label class="text-xs font-bold text-slate-600">Deskripsi Singkat</label>
+                                                        <textarea name="deskripsi[]" rows="2" placeholder="Jelaskan detail pelanggaran..."
+                                                                class="w-full bg-white text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 focus:border-blue-500 outline-none shadow-sm">{{ $item->deskripsi }}</textarea>
+                                                                {{-- ^^^^^^^^^^^^^ Ubah name menjadi deskripsi[] agar konsisten dengan skema DB dan input old() sebelumnya --}}
+                                                    </div>
+                                                </div>
+                                                {{-- Semua item dari DB akan menampilkan tombol hapus --}}
+                                                <button type="button" onclick="removePunishmentField(this)" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-700 btn-remove" title="Hapus">
+                                                    {{-- ^^^^^^^^^^^^^^^^^^^^^ Ubah nama fungsi JS dari removeRewardField ke removePunishmentField --}}
+                                                    <svg xmlns="www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                        @endforeach
+                                    @else
+                                @endif
+                            </div>
+
+                            {{-- Tombol untuk menambah input baru (Button type="button" agar tidak men-submit form) --}}
+                            <button type="button" onclick="addPunishmentField()" class="mt-4 flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 transition duration-150">
+                                <svg xmlns="www.w3.org" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fill-rule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clip-rule="evenodd" />
+                                </svg>
+                                Tambah Hukuman / Punishment
+                            </button>
+
+                            <!-- Garis batas horizontal antara logo dan menu -->
+                            <hr class="border-b border-gray-100 mt-4">
+
+                            {{-- Tombol Simpan Punishment (Button type="submit" untuk mengirim form) --}}
+                            <div class=" border-gray-100 flex justify-end mt-4">
+                                <button type="submit" class="inline-flex justify-center py-2.5 px-6 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all">
+                                    Simpan Data Punishment
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    function addRewardField() {
+        // Ambil elemen kontainer berdasarkan ID
+        const container = document.getElementById('reward-container');
+
+        // Buat elemen div baru untuk membungkus grup input
+        const newGroup = document.createElement('div');
+        newGroup.className = "reward-item p-4 border border-slate-200 rounded-lg bg-slate-50 relative mt-4";
+
+        // Isi konten HTML (sama dengan struktur di atas, namun tombol hapus dimunculkan)
+        newGroup.innerHTML = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-bold text-slate-600">Jenis Penghargaan</label>
+                    <input type="text" name="jenis_reward[]" placeholder="Contoh: Karyawan Teladan" class="w-full bg-white text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 focus:border-blue-500 outline-none shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-bold text-slate-600">Tanggal Penghargaan</label>
+                    <input type="date" name="tanggal_penghargaan[]" class="w-full bg-white text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 focus:border-blue-500 outline-none shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1">
+                    <label class="text-xs font-bold text-slate-600">Diberikan Oleh</label>
+                    <input type="text" name="diberikan_oleh[]" placeholder="Nama Instansi/Perusahaan" class="w-full bg-white text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 focus:border-blue-500 outline-none shadow-sm" />
+                </div>
+                <div class="flex flex-col gap-1 md:col-span-2">
+                    <label class="text-xs font-bold text-slate-600">Deskripsi/Keterangan</label>
+                    <textarea name="deskripsi_reward[]" rows="2" placeholder="Jelaskan detail penghargaan ini..." class="w-full bg-white text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 focus:border-blue-500 outline-none shadow-sm"></textarea>
+                </div>
+            </div>
+            <button type="button" onclick="removeRewardField(this)" class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-700 shadow-lg" title="Hapus">
+                <svg xmlns="www.w3.org" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+        `;
+
+        // Masukkan elemen baru ke dalam kontainer
+        container.appendChild(newGroup);
+    }
+
+    function removeRewardField(button) {
+        // Cari elemen terdekat dengan class .reward-item dan hapus
+        const itemToRemove = button.closest('.reward-item');
+        itemToRemove.remove();
+    }
+</script>
+
+<script>
+    /**
+     * Fungsi untuk menambahkan grup input punishment baru secara dinamis.
+     */
+    function addPunishmentField() {
+        const container = document.getElementById('punishment-container');
+
+        // Template HTML yang akan ditambahkan.
+        const punishmentHtml = `
+            <div class="punishment-item p-4 border border-slate-200 rounded-lg bg-slate-50 relative mt-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs font-bold text-slate-600">Jenis Hukuman/Sanksi</label>
+                        <input type="text" name="jenis_punishment[]" placeholder="Contoh: Surat Peringatan 1 (SP1)" class="w-full bg-white text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 focus:border-red-500 outline-none shadow-sm" required />
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs font-bold text-slate-600">Tanggal Diberikan</label>
+                        <input type="date" name="tanggal_diberikan[]" class="w-full bg-white text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 focus:border-red-500 outline-none shadow-sm" />
+                    </div>
+                    <div class="flex flex-col gap-1">
+                        <label class="text-xs font-bold text-slate-600">Diberikan Oleh</label>
+                        <input type="text" name="diberikan_oleh[]" placeholder="Nama Atasan/HRD" class="w-full bg-white text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 focus:border-red-500 outline-none shadow-sm" />
+                    </div>
+                    <div class="flex flex-col gap-1 md:col-span-2">
+                        <label class="text-xs font-bold text-slate-600">Deskripsi Pelanggaran</label>
+                        <textarea name="deskripsi[]" rows="2" placeholder="Jelaskan detail pelanggaran yang dilakukan..." class="w-full bg-white text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 focus:border-red-500 outline-none shadow-sm"></textarea>
+                    </div>
+                </div>
+                <button type="button" onclick="removePunishmentField(this)" class="absolute -top-2 -right-2 p-1.5 bg-white border border-red-200 text-red-600 hover:bg-red-50 rounded-full transition duration-150 shadow-sm" title="Hapus">
+                    <svg xmlns="www.w3.org" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+        `;
+
+        container.insertAdjacentHTML('beforeend', punishmentHtml);
+    }
+
+    /**
+     * Fungsi untuk menghapus grup input punishment tertentu.
+     */
+    function removePunishmentField(button) {
+        // Mencari elemen induk terdekat dengan kelas .punishment-item untuk dihapus
+        const group = button.closest('.punishment-item');
+        if (group) {
+            group.remove();
+        }
+    }
+</script>

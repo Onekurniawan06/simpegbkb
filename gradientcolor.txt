@@ -1,0 +1,8 @@
+background-image: linear-gradient(135deg, #0f3443 0%, #34e89e 100%);
+
+<body class="flex flex-col min-h-screen"
+    style="background-image: linear-gradient(to right, #FBE580 0%, #4D2FB2 100%);
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-attachment: fixed;">

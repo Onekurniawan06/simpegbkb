@@ -1,0 +1,8 @@
+1. memastikan jumlah anak tidak di input, tapi dihitung secara otomatis oleh sistem dengan menghitung jumlah nama anak yang di input berdasarkan nomor urut pegawai (detail_pribadi join dengan data anak)
+2. pembuatan nomor urut pegawai berdasarkan apa
+3. butuh email untuk mengirim link/ tautan ketika lupa password
+4. nama istri di input atau tidak
+5. menghitung tmt pensiun seperti apa
+6. butuh data unit kerja apa saja
+7. data status pegawai
+8. form surat pengajuan cuti izin

@@ -1,0 +1,195 @@
+<?php
+
+namespace App\Http\Controllers\Pegawai;
+
+
+use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
+use App\Services\SubmissionProcessorService;
+use App\Models\JenisCuti;
+use App\Models\SubJenisCutiPenting;
+use App\Models\Pekerjaan;
+use App\Models\PengajuanCuti;
+use App\Models\User;
+use Barryvdh\DomPDF\Facade\Pdf;
+
+class CutiController extends Controller
+{
+    protected $submissionProcessor;
+
+    public function __construct(SubmissionProcessorService $submissionProcessor)
+    {
+        $this->submissionProcessor = $submissionProcessor;
+    }
+
+    public function formCutiIzin()
+    {
+        $user = Auth::user();
+        $nomorUrutPegawai = $user->nomor_urut_pegawai;
+        $pekerjaanData = Pekerjaan::where('nomor_urut_pegawai', $nomorUrutPegawai)->first();
+
+        // ... (data fetching lainnya) ...
+
+        $jenisCuti = JenisCuti::all();
+        $durationsMapping = $jenisCuti->pluck('durasi_hari', 'nama_cuti')->toJson();
+        $subJenisCuti = SubJenisCutiPenting::all();
+        $jatahCutiTahunanMaksimal = $jenisCuti->where('nama_cuti', 'Cuti Tahunan')->first()->durasi_hari ?? 0;
+
+        $pageTitle = 'Pengajuan Cuti dan Izin';
+        $breadcrumbs = [
+            'Beranda' => route('pegawai.dashboard'),
+            $pageTitle => null
+        ];
+
+        // PERBAIKAN DI SINI: Tambahkan '$breadcrumbs' ke dalam compact()
+        return view('pegawai.cutiizin', compact('jenisCuti', 'durationsMapping' , 'subJenisCuti', 'jatahCutiTahunanMaksimal', 'pekerjaanData', 'pageTitle', 'breadcrumbs'));
+    }
+
+    public function updateCutiizin(Request $request)
+    {
+        // 1. Validasi Data (Menghapus file_cuti)
+        $validatedData = $request->validate([
+            'nomor_urut_pegawai' => 'required|string|max:15',
+            'nama_pegawai' => 'required|string|max:255',
+            'jenis_cuti' => 'required|string|max:100',
+            'tanggal_mulai' => 'required|date',
+            'tanggal_selesai' => 'required|date|after_or_equal:tanggal_mulai',
+            'jumlah_cuti' => 'required|integer|min:1',
+            'jatah_periode_hari' => ['nullable', 'string', 'regex:/^\d+\s*Hari?$/i'],
+            'sisa_cuti' => 'nullable|integer',
+            'keterangan' => 'nullable|string|max:500',
+            'sub_jenis_cuti' => 'sometimes|required_if:jenis_cuti,Cuti Alasan Penting dan Mendesak|nullable|exists:sub_jenis_cuti_penting,id',
+        ]);
+
+        $nomorPegawai = $request->input('nomor_urut_pegawai');
+
+        // 2. Logging untuk Debugging
+        \Log::info('Request masuk ke Controller untuk NIP: ' . $request->nomor_urut_pegawai);
+
+        $user = User::with('pegawai.pekerjaan')->where('nomor_urut_pegawai', $nomorPegawai)->first();
+        if (!$user || !$user->pegawai || !$user->pegawai->pekerjaan) {
+            \Log::error('DEBUG_ERROR: Gagal karena data divisi pegawai tidak ditemukan');
+            return back()->with('error', 'Data divisi pegawai tidak ditemukan.')->withInput();
+        }
+
+        // Baris 79: Hapus penggunaan first() karena hasOne bukan collection
+        $idDivisi = $user->pegawai->pekerjaan->id_divisi ?? null;
+        if (empty($idDivisi)) {
+            \Log::error('DEBUG_ERROR: Gagal karena ID Divisi kosong');
+            return back()->with('error', 'Data divisi pegawai tidak ditemukan di tabel pekerjaan.')->withInput();
+        }
+
+        $startDate = $request->input('tanggal_mulai');
+        $endDate = $request->input('tanggal_selesai');
+
+        if (PengajuanCuti::isOverlapDivisi($idDivisi, $startDate, $endDate)) {
+            \Log::error('DEBUG_ERROR: Gagal karena overlap divisi');
+            return back()->with('error', 'Jadwal cuti yang diajukan tumpang tindih dengan cuti rekan di divisi yang sama.')->withInput();
+        }
+
+        // 3. Cek Pengajuan Aktif
+        $existingRequest = PengajuanCuti::where('nomor_urut_pegawai', $request->nomor_urut_pegawai)
+            ->whereHas('logs', function ($query) {
+                $query->where('status_pengajuan', 'diproses');
+            })
+            ->first();
+
+        if ($existingRequest) {
+            \Log::error('DEBUG_ERROR: Gagal karena masih ada pengajuan yang diproses');
+            return back()->with('error', 'Anda masih memiliki pengajuan cuti yang sedang diproses.')->withInput();
+        }
+
+        // 4. Eksekusi Database Transaction
+        try {
+            DB::transaction(function () use ($validatedData, $request) {
+                $dataToSave = $validatedData;
+
+                // Logika penggantian jenis cuti jika ada sub_jenis
+                if ($request->jenis_cuti === 'Cuti Alasan Penting dan Mendesak' && $request->sub_jenis_cuti) {
+                    $subCuti = SubJenisCutiPenting::find($request->sub_jenis_cuti);
+                    if ($subCuti) {
+                        $dataToSave['jenis_cuti'] = $subCuti->nama_sub_jenis;
+                    }
+                }
+
+                // Hapus kunci sub_jenis_cuti sebelum disimpan
+                unset($dataToSave['sub_jenis_cuti']);
+
+                // Simpan data utama tanpa file_cuti/path
+                $submission = PengajuanCuti::create($dataToSave);
+
+                // Simpan data log
+                $submission->logs()->create([
+                    'nomor_urut_pegawai'           => $submission->nomor_urut_pegawai,
+                    'tahap_persetujuan'            => 'Pengajuan Awal',
+                    'nomor_urut_pegawai_penyetuju' => $request->nomor_urut_pegawai,
+                    'status_pengajuan'             => 'diproses',
+                    'komentar'                     => 'Menunggu verifikasi.',
+                ]);
+            });
+
+            \Log::info('DEBUG_SUCCESS: Pengajuan berhasil dibuat.');
+            return redirect()->route('pegawai.formCutiIzin')->with('success', 'Pengajuan cuti Anda berhasil dibuat!');
+
+        } catch (\Throwable $e) {
+            \Log::error('DEBUG_ERROR: Gagal dalam blok TRY/CATCH DB: ' . $e->getMessage());
+            return redirect()->back()->with('error', 'Terjadi kesalahan sistem saat menyimpan data.');
+        }
+    }
+
+    public function statuscuti($nip) // Menggunakan opsi 1 dari diskusi sebelumnya
+    {
+        $pekerjaanData = Pekerjaan::where('nomor_urut_pegawai', $nip)->first();
+
+        // Mengambil data pengajuan cuti beserta relasi jenisCuti dan log yang diurutkan
+        $pengajuancuti = PengajuanCuti::with(['jenisCuti', 'logs' => function ($query) {
+                            // Tambahkan orderBy('id', 'desc') sebagai pengurutan sekunder
+                            $query->orderByDesc('updated_at')->orderByDesc('id');
+                        }])
+                        ->where('nomor_urut_pegawai', $nip)
+                        ->orderBy('created_at', 'desc')
+                        ->firstOrFail();
+
+        $submissionRaw = [
+            'type' => 'Cuti',
+            'logs' => $pengajuancuti->Logs->toArray(),
+            // PERBAIKAN DI SINI: Tambahkan relasi jenisCuti ke array pengajuancuti
+            'pengajuancuti' => array_merge($pengajuancuti->toArray(), [
+                'jenisCuti' => $pengajuancuti->jenisCuti->toArray() ?? null
+            ]),
+            'tanggal_mulai' => $pengajuancuti->tanggal_mulai,
+            'tanggal_selesai' => $pengajuancuti->tanggal_selesai,
+            'sisa_cuti' => $pengajuancuti->sisa_cuti,
+            'jumlah_cuti' => $pengajuancuti->jumlah_cuti,
+            'keterangan' => $pengajuancuti->keterangan,
+            // ... tambahkan field lain yang dibutuhkan processSubmissions
+        ];
+
+        $submission = $this->submissionProcessor->processSubmissions(collect([$submissionRaw]))->first();
+
+        // 3. Ambil stageData yang sudah matang dari hasil proses
+        // $stageData = $processedSubmission['stageData'];
+
+        // Mengambil log terbaru untuk ditampilkan di bagian "Alasan Ditolak/Disetujui"
+        $latestLog = $pengajuancuti->logs->first();
+        $komentarStatus = $latestLog ? $latestLog->komentar : 'Menunggu keputusan';
+        $submissionType = 'Cuti'; // Variabel yang harus ada
+
+        // Pastikan pageTitle diset dengan benar menggunakan variabel dinamis
+        $pageTitle = 'Lacak Pengajuan ' . $submissionRaw['type']; // Hasilnya: Lacak Pengajuan Cuti
+
+        $breadcrumbs = [
+            'Beranda' => route('pegawai.dashboard'),
+            'Data Pengajuan' => route('pegawai.formDataPengajuan'),
+            $pageTitle => null                                // Halaman saat ini
+        ];
+
+        return view('pegawai.lacakpengajuan',
+            compact('pengajuancuti', 'pageTitle', 'komentarStatus', 'pekerjaanData', 'submissionRaw', 'submissionType', 'submission', 'breadcrumbs'))->with('pengajuankenaikan', null);
+    }
+
+}

@@ -1,0 +1,295 @@
+/**
+ * Logic Pengajuan Cuti - Resources/js/cuti-logic.js
+ * Sudah termasuk fungsi calculateDuration dan semua event listeners.
+ */
+let currentPdfUrl = null;
+
+export function initCutiHandler() {
+    console.log('Cuti Logic Initialized via Vite.');
+
+    // --- 1. Ambil Data dari Jembatan HTML ---
+    const dataBridge = document.getElementById('cuti-data-bridge');
+    if (!dataBridge) return;
+
+    // Pastikan JATAH_CUTI_TAHUNAN_MAKSIMAL diinisialisasi sebagai angka (default ke 12 jika tidak ada/error)
+    const JATAH_CUTI_TAHUNAN_MAKSIMAL = parseInt(dataBridge.dataset.jatahCutiMax || '12', 10);
+    let allJenisCuti = [];
+    try {
+        allJenisCuti = JSON.parse(dataBridge.dataset.allJenisCuti);
+    } catch (e) {
+        console.error('Gagal parsing data jenis cuti:', e);
+    }
+
+    // Fungsi utilitas untuk format tanggal ke YYYY-MM-DD
+    const formatDateToISO = (date) => {
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    };
+
+    /**
+     * FUNGSI PERHITUNGAN TANGGAL SELESAI BARU (Mengabaikan Hari Minggu)
+     * Menggunakan durasi hari yang diberikan untuk menghitung tanggal selesai otomatis.
+     * Fungsi ini sekarang hanya digunakan jika jenis cuti BUKAN Cuti Tahunan.
+     */
+    const calculateEndDateExcludingSundays = (startDate, duration) => {
+        if (!startDate || !duration || isNaN(duration) || duration <= 0) {
+            return '';
+        }
+
+        let currentDate = new Date(startDate);
+        let daysToAdd = parseInt(duration);
+
+        while (daysToAdd > 0) {
+            currentDate.setDate(currentDate.getDate() + 1); // Tambah 1 hari kalender
+            if (currentDate.getDay() !== 0) { // 0 adalah Hari Minggu
+                daysToAdd--; // Kurangi kuota jika bukan hari Minggu
+            }
+        }
+        return formatDateToISO(currentDate);
+    };
+
+
+    // --- 2. Konfigurasi Mapping File ---
+    const fileMapping = {
+        'Cuti Tahunan': '/forms/form_cuti_tahunan.doc',
+        'Cuti Besar': '/forms/form_cuti_besar.doc',
+        'Cuti Menikah': '/forms/form_cuti_menikah.doc',
+        'Cuti Melahirkan': '/forms/form_cuti_melahirkan.doc',
+        'Cuti Sakit': '/forms/form_cuti_sakit.doc',
+        'Cuti Hari Raya Keagamaan': '/forms/form_cuti_hari_raya_keagamaan.doc',
+        'Cuti Hari Raya Keagamaan - Umroh': '/forms/form_cuti_hari_raya_keagamaan_umroh.doc',
+        'Cuti Hari Raya Keagamaan - Haji': '/forms/form_cuti_hari_raya_keagamaan_haji.doc',
+        'Izin Tidak Masuk Kerja': '/forms/form_izin_tidak_masuk_kerja.doc',
+        'sub_jenis': {
+            '1': '/forms/form_penting_menikah_anak.doc',
+            '2': '/forms/form_penting_mengkhitankan_anak.doc',
+            '3': '/forms/form_penting_merawat_keluarga_sakit.doc',
+            '4': '/forms/form_penting_istri_melahirkan.doc',
+            '5': '/forms/form_penting_duka.doc',
+            '6': '/forms/form_penting_bencana_alam.doc'
+        }
+    };
+
+    // --- 3. Seleksi Elemen DOM ---
+    const elements = {
+        jenisCutiEl: document.getElementById('jenis_cuti'),
+        durationEl: document.getElementById('jumlah_cuti'), // Elemen ini dipertahankan
+        remainingCutiEl: document.getElementById('sisa_cuti'),
+        durationDisplayEl: document.getElementById('jatah_periode_hari'),
+        startDateEl: document.getElementById('tanggal_mulai'),
+        endDateEl: document.getElementById('tanggal_selesai'), // Pastikan ini ada di HTML Anda
+        subJenisCutiContainer: document.getElementById('sub_jenis_cuti_container'),
+        subJenisCutiEl: document.getElementById('sub_jenis_cuti'),
+        downloadSection: document.getElementById('download_section'),
+        btnDownload: document.getElementById('btn_download_formulir'),
+        btnRefresh: document.getElementById('btn_refresh_form'),
+
+        // Elemen untuk penanganan PDF:
+        fileInputEl: document.getElementById('file_cuti'),
+        statusAreaEl: document.getElementById('pdf-status-area'),
+        pdfModalEl: document.getElementById('pdfModal'),
+        pdfIframeEl: document.getElementById('pdfIframe'),
+        pdfNameTitleEl: document.getElementById('pdfNameTitle'),
+        btnCloseModalEl: document.getElementById('btnClosePdfModal')
+    };
+
+    /**
+     * FUNGSI HITUNG DURASI LAMA & VALIDASI DURASI (BARU)
+     * Menghitung hari antara tanggal mulai dan selesai yang diinput manual oleh user.
+     */
+    const calculateDuration = () => {
+        if (elements.startDateEl?.value && elements.endDateEl?.value) {
+            const start = new Date(elements.startDateEl.value);
+            const end = new Date(elements.endDateEl.value);
+            // Hitung selisih hari (+1 agar tanggal akhir ikut terhitung)
+            const diff = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+
+            if (diff > 0) {
+                if (elements.durationEl) elements.durationEl.value = diff;
+
+                // --- LOGIKA VALIDASI BARU UNTUK CUTI TAHUNAN ---
+                const selectedCutiName = elements.jenisCutiEl?.value;
+                if (selectedCutiName === 'Cuti Tahunan' && diff > JATAH_CUTI_TAHUNAN_MAKSIMAL) {
+                    // Tampilkan popup modal warning
+                    alert(`PERINGATAN: Anda tidak boleh memilih lebih dari ${JATAH_CUTI_TAHUNAN_MAKSIMAL} hari untuk Cuti Tahunan.`);
+
+                    // Opsional: Reset tanggal selesai ke tanggal mulai untuk memaksa input ulang
+                    elements.endDateEl.value = elements.startDateEl.value;
+                    elements.durationEl.value = 1; // Durasi minimal 1 hari
+                }
+                // --- AKHIR LOGIKA VALIDASI BARU ---
+
+            } else {
+                elements.durationEl.value = 0;
+            }
+        }
+        // PENTING: Panggil updateCutiFields setiap kali durasi berubah (untuk update sisa cuti dll)
+        updateCutiFields();
+    };
+
+    /**
+     * FUNGSI UPDATE FIELD CUTI (Logika Utama + Perhitungan Tanggal Otomatis)
+     * Memperbarui UI berdasarkan jenis cuti yang dipilih dan menghitung tanggal selesai.
+     */
+    const updateCutiFields = () => {
+        const selectedCutiName = elements.jenisCutiEl?.value;
+        if (!selectedCutiName) return;
+        const selectedCutiData = allJenisCuti.find(c => c.nama_cuti === selectedCutiName);
+        if (!selectedCutiData) return;
+
+        // --- Logika Penanganan Input Tanggal/Durasi (Diperbarui) ---
+        const startDate = elements.startDateEl?.value;
+        const duration = selectedCutiData.durasi_hari;
+
+        // Cuti Tahunan: User input manual, field endDate readOnly=false
+        if (selectedCutiName === 'Cuti Tahunan') {
+            if (elements.endDateEl) {
+                elements.endDateEl.readOnly = false; // Bolehkan user input manual
+                // Jangan set endDate/duration otomatis di sini, biarkan fungsi calculateDuration() yang menangani saat tanggal diubah
+            }
+        } else if (startDate && duration) {
+            // Jenis Cuti Lain DENGAN durasi tetap: Hitung otomatis & readOnly=true
+            const endDate = calculateEndDateExcludingSundays(startDate, duration);
+            if (elements.endDateEl) {
+                elements.endDateEl.value = endDate;
+                elements.endDateEl.readOnly = true;
+            }
+            if (elements.durationEl) {
+                elements.durationEl.value = duration;
+            }
+        } else {
+            // Jenis Cuti Lain TANPA durasi hari tetap (misal: durasi bulan/izin): User input manual
+            if (elements.endDateEl) {
+                elements.endDateEl.value = '';
+                elements.endDateEl.readOnly = false;
+            }
+        }
+
+        // Logika Link Download (tidak berubah) ...
+        let finalUrl = "";
+        if (selectedCutiName.toLowerCase().includes('penting')) {
+            elements.subJenisCutiContainer.style.display = 'block';
+            finalUrl = fileMapping.sub_jenis[elements.subJenisCutiEl?.value] || "";
+        } else {
+            elements.subJenisCutiContainer.style.display = 'none';
+            finalUrl = fileMapping[selectedCutiName] || "";
+        }
+
+        if (finalUrl) {
+            elements.downloadSection.style.display = 'block';
+            elements.btnDownload.href = finalUrl;
+        } else {
+            elements.downloadSection.style.display = 'none';
+        }
+
+        // Update Durasi Maksimal & Sisa Cuti (tidak berubah) ...
+        if (elements.durationDisplayEl) {
+            elements.durationDisplayEl.value = selectedCutiData.durasi_hari ? `${selectedCutiData.durasi_hari} Hari` : (selectedCutiData.durasi_bulan ? `${selectedCutiData.durasi_bulan} Bulan` : '');
+        }
+
+        // Logika sisa cuti tahunan
+        if (selectedCutiName === 'Cuti Tahunan' && elements.remainingCutiEl) {
+            // Menggunakan nilai dari durationEl yang sudah dihitung/diinput manual
+            const daysProposed = parseInt(elements.durationEl?.value || '0', 10);
+            elements.remainingCutiEl.value = daysProposed > 0 ? (JATAH_CUTI_TAHUNAN_MAKSIMAL - daysProposed) : '';
+        } else if (elements.remainingCutiEl) {
+            elements.remainingCutiEl.value = '';
+        }
+    };
+
+    /**
+     * Reset Formulir secara manual
+     */
+    const handleManualRefresh = (event) => {
+        event.preventDefault();
+        location.reload(); // Cara termudah untuk reset total
+    };
+
+
+    // --- 4. FUNGSI LOGIKA UPLOAD PDF ---
+    const clearFileSelection = () => {
+        if (elements.fileInputEl) elements.fileInputEl.value = "";
+        if (currentPdfUrl) URL.revokeObjectURL(currentPdfUrl);
+        currentPdfUrl = null;
+        if (elements.statusAreaEl) {
+            elements.statusAreaEl.innerHTML = `
+                <div id="empty-info" style="padding: 20px; background: #f9fafb; border: 2px dashed #d1d5db; border-radius: 12px; text-align: center; color: #9ca3af; font-size: 13px;">
+                    📄 Belum ada file PDF dipilih
+                </div>
+            `;
+        }
+    };
+
+    const openPdfModal = (url, name) => {
+        if (elements.pdfNameTitleEl) elements.pdfNameTitleEl.innerText = name;
+        if (elements.pdfIframeEl) elements.pdfIframeEl.src = url;
+        if (elements.pdfModalEl) elements.pdfModalEl.style.display = "block";
+        document.body.style.overflow = "hidden";
+    };
+
+    const closePdfModal = () => {
+        if (elements.pdfModalEl) elements.pdfModalEl.style.display = "none";
+        if (elements.pdfIframeEl) elements.pdfIframeEl.src = "";
+        document.body.style.overflow = "auto";
+    };
+
+    const handlePdfSelect = () => {
+        const file = elements.fileInputEl.files[0]; // Ambil file pertama
+        if (!file) return;
+
+        if (file.type !== "application/pdf") {
+            alert("Harap pilih file PDF!");
+            clearFileSelection();
+            return;
+        }
+
+        if (currentPdfUrl) URL.revokeObjectURL(currentPdfUrl);
+        currentPdfUrl = URL.createObjectURL(file);
+        const fileName = file.name;
+
+        // Render template string HTML dengan event listener yang diikat setelah render
+        elements.statusAreaEl.innerHTML = `
+            <div style="padding: 12px; background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 10px; display: flex; align-items: center; justify-content: space-between;">
+                <div style="display: flex; align-items: center; gap: 10px; overflow: hidden; flex: 1;">
+                    <span style="font-size: 20px;">✅</span>
+                    <span style="font-size: 13px; font-weight: 600; color: #166534; white-space: nowrap; text-overflow: ellipsis; overflow: hidden;">${fileName}</span>
+                </div>
+                <div style="display: flex; gap: 8px; margin-left: 10px;">
+                    <!-- Tambahkan ID unik untuk menangani event listener di JS -->
+                    <button type="button" id="btnViewPdf" style="background: #16a34a; color: white; border: none; border-radius: 6px; width: 35px; height: 35px; cursor: pointer; font-size: 16px;" title="Lihat">🔍</button>
+                    <button type="button" id="btnClearPdf" style="background: #ef4444; color: white; border: none; border-radius: 6px; width: 35px; height: 35px; cursor: pointer; font-size: 16px;" title="Hapus">❌</button>
+                </div>
+            </div>
+        `;
+
+        // Ikat event listener ke tombol yang baru dibuat secara dinamis
+        document.getElementById('btnViewPdf').addEventListener('click', () => openPdfModal(currentPdfUrl, fileName));
+        document.getElementById('btnClearPdf').addEventListener('click', clearFileSelection);
+    };
+
+    // --- 6. PENDAFTARAN EVENT LISTENERS UTAMA ---
+
+    // Event listeners Form Cuti:
+    elements.jenisCutiEl?.addEventListener('change', updateCutiFields);
+    elements.subJenisCutiEl?.addEventListener('change', updateCutiFields);
+    elements.startDateEl?.addEventListener('change', calculateDuration);
+    elements.startDateEl?.addEventListener('change', updateCutiFields);
+    elements.endDateEl?.addEventListener('change', calculateDuration);
+    elements.btnRefresh?.addEventListener('click', handleManualRefresh);
+
+
+    // Event listener Upload PDF:
+    elements.fileInputEl?.addEventListener('change', handlePdfSelect);
+
+    // Event listener Tutup Modal PDF (pastikan ID btnClosePdfModal ada di HTML modal Anda)
+    elements.btnCloseModalEl?.addEventListener('click', closePdfModal);
+
+    // Inisialisasi UI saat pertama kali dimuat
+    updateCutiFields();
+    clearFileSelection(); // Inisialisasi tampilan area status PDF
+}
+
+// Jalankan fungsi inisialisasi saat DOM Content dimuat
+document.addEventListener('DOMContentLoaded', initCutiHandler);

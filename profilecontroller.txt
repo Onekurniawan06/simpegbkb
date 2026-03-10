@@ -1,0 +1,214 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth; // <-- Tambahkan baris ini
+use App\Models\Pegawai; // Pastikan ini mengarah ke model yang benar
+use Illuminate\Support\Facades\DB; // Pastikan Anda mengimpor facade DB di atas
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Storage;
+use App\Models\KeluargaPegawai;
+// ... models lain jika diperlukan ...
+
+class ProfileController extends Controller
+{
+    /**
+     * Handle the form submission for Section 1: Data Pegawai.
+     * Mengelola pengiriman formulir untuk Bagian 1: Data Pegawai.
+     */
+
+    public function showProfile(Request $request)
+    {
+        $user = Auth::user();
+        $nomorUrutPegawai = $user->nomor_urut_pegawai;
+        $formType = $request->query('form_type', 'edit');
+
+        // Ambil data detail pribadi secara langsung menggunakan Query Builder
+        $detailPribadi = DB::table('detail_pribadi')
+                        ->where('nomor_urut_pegawai', $nomorUrutPegawai)
+                        ->first(); // Ini mengembalikan objek standar
+
+        // Inisialisasi variabel lain yang dibutuhkan view
+        $pegawaiData = null; // Anda perlu mengisi ini jika view memerlukannya, atau hapus 'pegawaiData' dari compact
+
+        // Ambil data keluarga dari database
+        $istris = KeluargaPegawai::where('nomor_urut_pegawai', $nomorUrutPegawai)
+                                ->where('hubungan', 'istri')
+                                ->get();
+                                
+        $anaks = KeluargaPegawai::where('nomor_urut_pegawai', $nomorUrutPegawai)
+                                ->where('hubungan', 'anak')
+                                ->get();
+        // DEBUGGING MUTLAK: Cek lagi, ini harusnya menampilkan nama file
+        // dd($detailPribadi?->dokumen_ktp);
+
+        $pageTitle = 'Profil Data Pegawai';
+        // Anda bisa tambahkan variabel lain jika perlu, misal:
+        $breadcrumbs = [
+            'Beranda' => route('pegawai.dashboard'),
+            $pageTitle => null
+        ];
+
+        return view('pegawai.profile', compact('user', 'detailPribadi', 'pegawaiData', 'formType', 'pageTitle', 'breadcrumbs', 'istris', 'anaks'));
+    }
+
+    // Catatan: Anda juga perlu menambahkan relasi 'pekerjaan' ke Model Pegawai
+    // public function pekerjaan() { return $this->hasOne(Pekerjaan::class, 'nomor_urut_pegawai'); }
+
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->back()->with('error', 'Sesi Anda habis.');
+        }
+
+        $nomorUrut = trim($user->nomor_urut_pegawai);
+
+        // 1. VALIDASI SEMUA DI AWAL (Jangan di dalam loop atau try-catch)
+        $request->validate([
+            'nomor_urut_pegawai' => 'required|in:' . $nomorUrut,
+            'tempat_lahir'       => 'required|string|max:100',
+            'tanggal_lahir'      => 'required',
+            'agama'              => 'required',
+            'dokumen_ktp'        => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
+            'dokumen_kk'         => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
+            'dokumen_npwp'       => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
+            'dokumen_buku_nikah' => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
+            'dokumen_akta_cerai' => 'nullable|image|mimes:jpeg,png,jpg|max:10240',
+        ]);
+
+        $tanggalFormatted = \Carbon\Carbon::parse($request->tanggal_lahir)->format('Y-m-d');
+
+        // Daftar konfigurasi folder
+        $documentConfig = [
+            'dokumen_ktp'         => 'ktp',
+            'dokumen_kk'          => 'kk',
+            'dokumen_npwp'        => 'npwp',
+            'dokumen_buku_nikah'  => 'buku_nikah',
+            'dokumen_akta_cerai'  => 'akta_cerai',
+        ];
+
+        $uploadedFiles = [];
+
+        DB::beginTransaction();
+        try {
+            // A. Update data Pegawai
+            DB::table('pegawai')->updateOrInsert(
+                ['nomor_urut_pegawai' => $nomorUrut],
+                ['nama' => $request->nama]
+            );
+
+            foreach ($documentConfig as $inputName => $folder) {
+                if ($request->hasFile($inputName)) {
+                    $file = $request->file($inputName);
+
+                    // Penamaan file
+                    $prefix = strtoupper(str_replace('dokumen_', '', $inputName));
+                    $fileName = $prefix . '_' . $nomorUrut . '_' . time() . '.' . $file->getClientOriginalExtension();
+
+                    // SIMPAN KE: storage/app/public/uploads/{folder}
+                    // Gunakan path relatif dari 'root' disk public
+                    $path = $file->storeAs('uploads/' . $folder, $fileName, 'public');
+
+                    if ($path) {
+                        $uploadedFiles[$inputName] = $fileName;
+                    }
+                }
+            }
+
+            // C. Siapkan Data Detail
+            $dataToUpdate = [
+                'tempat_lahir'          => $request->tempat_lahir,
+                'tanggal_lahir'         => $tanggalFormatted,
+                'jenis_kelamin'         => $request->jenis_kelamin,
+                'agama'                 => $request->agama,
+                'alamat'                => $request->alamat,
+                'email'                 => $request->email,
+                'no_telpon'             => $request->no_telpon,
+                'nama_ibu'              => $request->nama_ibu,
+                'nama_ayah'             => $request->nama_ayah,
+                'pendidikan_terakhir'   => $request->pendidikan_terakhir,
+                'jurusan'               => $request->jurusan,
+                'status_perkawinan'     => $request->status_perkawinan,
+            ];
+
+            $dataToUpdate = array_merge($dataToUpdate, $uploadedFiles);
+
+            DB::table('detail_pribadi')->updateOrInsert(
+                ['nomor_urut_pegawai' => $nomorUrut],
+                $dataToUpdate
+            );
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Data dan seluruh dokumen berhasil disimpan!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+
+            // Hapus file fisik jika DB gagal (Perbaikan Path Delete)
+            foreach ($uploadedFiles as $inputName => $fileName) {
+                $folder = $documentConfig[$inputName];
+                // Karena root disk public adalah public/uploads, cukup hapus path relatifnya
+                \Storage::disk('public')->delete($folder . '/' . $fileName);
+            }
+
+            \Log::error("Error Update Profile: " . $e->getMessage());
+            return redirect()->back()->withInput()->with('error', 'Gagal: ' . $e->getMessage());
+        }
+    }
+
+    public function updateKeluarga(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return redirect()->back()->with('error', 'Sesi Anda habis.');
+        }
+        $nomorUrut = trim($user->nomor_urut_pegawai);
+
+        // Validasi KHUSUS untuk keluarga (tidak ada 'tempat_lahir' yang wajib)
+        $request->validate([
+            'nomor_urut_pegawai' => 'required|in:' . $nomorUrut,
+            'nama_istri'         => 'nullable|array',
+            'nama_anak'          => 'nullable|array',
+        ]);
+
+        // Kita tetap pakai transaksi di sini untuk keamanan
+        DB::beginTransaction();
+        try {
+            // Logika penyimpanan keluarga yang sudah digabung sebelumnya
+            KeluargaPegawai::where('nomor_urut_pegawai', $nomorUrut)->delete();
+
+            // Simpan Istri
+            if($request->has('nama_istri') && is_array($request->nama_istri)) {
+                foreach($request->nama_istri as $nama) {
+                    if(!empty(trim($nama))) {
+                        KeluargaPegawai::updateOrInsert([
+                            'nomor_urut_pegawai' => $nomorUrut, 'nama' => trim($nama), 'hubungan' => 'istri', 'created_at' => Carbon::now()
+                        ]);
+                    }
+                }
+            }
+            
+            // Simpan Anak
+            if($request->has('nama_anak') && is_array($request->nama_anak)) {
+                foreach($request->nama_anak as $nama) {
+                    if(!empty(trim($nama))) {
+                        KeluargaPegawai::updateOrInsert([
+                            'nomor_urut_pegawai' => $nomorUrut, 'nama' => trim($nama), 'hubungan' => 'anak', 'created_at' => Carbon::now()
+                        ]);
+                    }
+                }
+            }
+
+            DB::commit();
+            return redirect()->back()->with('success', 'Data keluarga berhasil diperbarui!');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            \Log::error("Error Update Keluarga: " . $e->getMessage());
+            return redirect()->back()->withInput()->with('error', 'Gagal menyimpan data keluarga: ' . $e->getMessage());
+        }
+    }
+}
+

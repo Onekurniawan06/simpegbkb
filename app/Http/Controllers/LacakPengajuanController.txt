@@ -1,0 +1,225 @@
+<?php
+
+namespace App\Http\Controllers;
+
+use Illuminate\Http\Request;
+use Carbon\Carbon; // Pastikan ini ada
+
+// Jika Anda menggunakan Enums di App\Enums\StatusPersetujuan, pastikan itu juga compatible.
+// Jika tidak, hapus baris ini:
+// use App\Enums\StatusPersetujuan;
+
+
+class LacakPengajuanController extends Controller
+{
+    public function show($nip, $type = null)
+    {
+        // Cek dulu apakah $type sudah terdefinisi dari default route
+        if ($type === null) {
+            // Ini mungkin terjadi jika defaults() tidak berfungsi di setup Anda
+            // Kita bisa ambil dari Request atau set manual jika URL spesifik
+            // Namun, jika defaults() berfungsi, kita bisa lanjut
+        }
+
+        // Karena URL spesifik hanya mengirim {nip}, kita asumsikan ID-nya adalah $nip
+        $id = $nip;
+
+        // Logika di bawah ini tetap sama seperti sebelumnya, menggunakan $type dan $id ($nip)
+        $submission = $this->getSubmissionData($type, $id);
+
+        if (!$submission) {
+            return abort(404, 'Data pengajuan tidak ditemukan');
+        }
+
+        // --- Logika Flow Alur Persetujuan ---
+        $flow = ['Pengajuan Awal', 'Manager', 'Direktur Operasional', 'HRO'];
+        if ($type == 'lembur') {
+            $flow = array_map(function ($stage) {
+                return ($stage == 'Direktur Operasional') ? 'Kepala SKK MR' : $stage;
+            }, $flow);
+        }
+
+        // --- Logika Penentuan Relasi Log (menggunakan switch lama) ---
+        $logRelationName = 'logs';
+        switch ($type) {
+            case 'lembur':
+                $logRelationName = 'logPersetujuanLembur';
+                break;
+            case 'pensiun':
+                $logRelationName = 'logPersetujuanPensiun';
+                break;
+            case 'lacakpengajuan-pangkatgajitunjangan':
+                $logRelationName = 'logPersetujuanPangkatgajitunjangan';
+                break;
+        }
+
+        $logsByStage = $submission->$logRelationName->sortBy('updated_at')->keyBy('tahap_persetujuan');
+
+        $stageData = [];
+        $processStopped = false;
+
+        foreach ($flow as $stageName) {
+            $log = $logsByStage->get($stageName);
+            $statusString = 'menunggu';
+            $updatedAt = null;
+            $isCurrent = false;
+
+            if ($log) {
+                $rawStatus = isset($log->status_pengajuan) ? $log->status_pengajuan : $log->status_persetujuan;
+
+                // Menangani Enum jika ada, jika tidak, anggap string biasa
+                // Sesuaikan namespace jika diperlukan
+                if (class_exists('App\Enums\StatusPersetujuan') && $rawStatus instanceof \App\Enums\StatusPersetujuan) {
+                    $statusString = strtolower($rawStatus->value);
+                } else {
+                    $statusString = strtolower($rawStatus);
+                }
+
+                $updatedAt = $log->updated_at;
+
+                if ($statusString == 'ditolak') {
+                    $processStopped = true;
+                } elseif ($statusString == 'diproses') {
+                    $isCurrent = true;
+                }
+            }
+
+            $uiStyles = $this->generateStyles($statusString, $isCurrent, $processStopped);
+
+            $stageData[] = array_merge([
+                'stageName' => $stageName,
+                'statusString' => $statusString,
+                'updatedAt' => $updatedAt,
+                'isCurrent' => $isCurrent,
+            ], $uiStyles);
+        }
+
+        foreach ($stageData as $index => &$currentStage) {
+            $lineColor = 'bg-gray-200';
+            $nextStage = isset($stageData[$index + 1]) ? $stageData[$index + 1] : null;
+
+            if ($currentStage['statusString'] == 'disetujui') {
+                $lineColor = 'bg-teal-500';
+            } elseif ($nextStage && $nextStage['statusString'] == 'ditolak') {
+                $lineColor = 'bg-red-500';
+            }
+
+            $currentStage['lineColor'] = $lineColor;
+        }
+
+        // --- Logika Detail Pengajuan (menggunakan if/else lama) ---
+        $submissionDetails = $this->getSubmissionDetails($type, $submission);
+        $komentarStatus = "N/A"; // Anda harus menentukan dari mana nilai ini berasal
+
+        return view('pegawai.lacakpengajuan', compact('stageData', 'submissionDetails', 'komentarStatus'));
+    }
+
+    // --- Helper Function untuk Styles (if/else lama) ---
+    private function generateStyles($statusString, $isCurrent, $processStopped)
+    {
+        $styles = [];
+
+        if ($statusString == 'ditolak') {
+            $styles['statusBadge'] = 'bg-red-100 text-red-800';
+            $styles['statusText'] = 'Ditolak';
+            $styles['isLineVisible'] = false;
+        } elseif ($statusString == 'disetujui') {
+            $styles['statusBadge'] = 'bg-teal-100 text-teal-800';
+            $styles['statusText'] = 'Disetujui';
+        } elseif ($isCurrent) {
+            $styles['statusBadge'] = 'bg-orange-100 text-orange-800';
+            $styles['statusText'] = 'Diproses';
+        } elseif ($processStopped) {
+            $styles['statusText'] = '-';
+        }
+
+        return $styles;
+    }
+
+    // --- Helper Function untuk Detail Pengajuan (if/else lama) ---
+    private function getSubmissionDetails($type, $submission)
+    {
+        $details = [];
+        $submissionType = ucfirst($type);
+
+        // Kolom 1
+        $details['jenis_label'] = "Jenis {$submissionType} yang diajukan";
+        if ($type == 'cuti') {
+            $details['jenis_value'] = isset($submission->jenisCuti->nama_cuti) ? $submission->jenisCuti->nama_cuti : 'N/A';
+        } elseif ($type == 'lembur') {
+            $details['jenis_value'] = 'Lembur';
+        } else {
+            $details['jenis_value'] = isset($submission->jenis_pengajuan) ? $submission->jenis_pengajuan : 'N/A';
+        }
+
+        // Kolom 2
+        $details['mulai_label'] = ($type == 'pensiun' || $type == 'lacakpengajuan-pangkatgajitunjangan') ? 'Tmt pegawai' : "Tanggal Mulai {$submissionType}";
+
+        $dateValue = null;
+        if ($type == 'pensiun' || $type == 'lacakpengajuan-pangkatgajitunjangan') {
+            $dateValue = isset($submission->tmt_pegawai) ? $submission->tmt_pegawai : null;
+        } else {
+            $dateValue = isset($submission->tanggal_lembur) ? $submission->tanggal_lembur : (isset($submission->tanggal_mulai) ? $submission->tanggal_mulai : null);
+        }
+        $details['mulai_value'] = $dateValue ? Carbon::parse($dateValue)->format('d F Y') : 'N/A';
+
+
+        // Kolom 3
+        $details['tmt_visible'] = ($type != 'lacakpengajuan-pangkatgajitunjangan');
+        if ($details['tmt_visible']) {
+            if ($type == 'lembur') {
+                $details['tmt_label'] = 'Waktu Lembur';
+                $details['tmt_value'] = $submission->jam_mulai . ' - ' . $submission->jam_selesai;
+            } elseif ($type == 'pensiun') {
+                $details['tmt_label'] = 'TMT Pensiun';
+                $details['tmt_value'] = isset($submission->tmt_pensiun) ? Carbon::parse($submission->tmt_pensiun)->format('d F Y') : 'N/A';
+            } else {
+                $details['tmt_label'] = 'Tanggal Selesai';
+                $details['tmt_value'] = isset($submission->tanggal_selesai) ? Carbon::parse($submission->tanggal_selesai)->format('d F Y') : 'N/A';
+            }
+        }
+
+        // Kolom 4
+        $details['lama_label'] = ($type == 'pensiun' || $type == 'lacakpengajuan-pangkatgajitunjangan') ? 'Masa Kerja' : "Lama {$submissionType} yang diajukan";
+
+        if ($type == 'lembur') {
+            $details['lama_value'] = $submission->total_jam_lembur . ' jam';
+        } elseif ($type == 'pensiun' || $type == 'lacakpengajuan-pangkatgajitunjangan') {
+            $details['lama_value'] = isset($submission->masa_kerja) ? $submission->masa_kerja : 'N/A';
+        } else {
+            $details['lama_value'] = isset($submission->jumlah_cuti) ? $submission->jumlah_cuti : 'N/A' . ' hari';
+        }
+
+        // Kolom 5
+        $details['sisa_cuti_visible'] = ($type == 'cuti');
+        if ($details['sisa_cuti_visible']) {
+            $details['sisa_cuti_value'] = (isset($submission->sisa_cuti) ? $submission->sisa_cuti : 'N/A') . ' hari';
+        }
+
+        // Kolom 6
+        $details['alasan_visible'] = ($type != 'pensiun' && $type != 'lacakpengajuan-pangkatgajitunjangan');
+        if ($details['alasan_visible']) {
+            $details['alasan_label'] = "Alasan {$submissionType}";
+            $details['alasan_value'] = isset($submission->uraian_tugas) ? $submission->uraian_tugas : (isset($submission->keterangan) ? $submission->keterangan : 'N/A');
+        }
+
+        return $details;
+    }
+
+    // --- Helper Function untuk Get Data Model (menggunakan switch lama) ---
+    private function getSubmissionData($type, $id)
+    {
+        switch ($type) {
+            case 'lacakpengajuan-cuti':
+                return \App\Models\PengajuanCuti::with('logs')->find($id);
+            case 'lacakpengajuan-lembur':
+                return \App\Models\PengajuanLembur::with('logPersetujuanLembur')->find($id);
+            case 'lacakpengajuan-pensiun':
+                return \App\Models\PengajuanPensiun::with('logPersetujuanPensiun')->find($id);
+            case 'lacakpengajuan-pangkatgajitunjangan':
+                return \App\Models\PengajuanPangkatgajitunjangan::with('logPersetujuanPangkatgajitunjangan')->find($id);
+            default:
+                return null;
+        }
+    }
+}

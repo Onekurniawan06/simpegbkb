@@ -1,0 +1,88 @@
+                {{-- Dokumen Path Inputs (diasumsikan ini hanya field teks untuk menyimpan nama file atau path) --}}
+                {{-- Dokumen Path Inputs (Gaya Inline CSS yang stabil untuk semua dokumen) --}}
+                {{-- <div></div> --}}
+
+                {{-- KTP Upload Area --}}
+                <div style="margin-bottom: 1.5rem; box-sizing: border-box; max-width: 100%;">
+                    <label for="dokumen_ktp" style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151;">NIK KTP / Dokumen KTP</label>
+                    <div style="position: relative; margin-top: 0.25rem;">
+                        <input type="file" name="dokumen_ktp" id="dokumen_ktp" accept="image/*" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10;">
+                        <div id="ktp-default-view" style="padding: 1.5rem; border: 2px dashed #D1D5DB; border-radius: 0.375rem; text-align: center; background-color: #F9FAFB; pointer-events: none;">
+                            <img src="URL_ILUSTRASI_ANDA_DI_SINI" alt="Upload Icon" style="display: block; margin: 0 auto 0.5rem auto; height: 3rem; width: 3rem; color: #4F46E5;">
+                            <p id="ktp-status-text" style="font-size: 0.875rem; color: #6B7280;"><span style="font-weight: 500; color: #4F46E5;">Unggah file</span> atau seret dan lepas di sini</p>
+                            <p style="font-size: 0.75rem; color: #9CA3AF; margin-top: 0.25rem;">PNG, JPG, GIF up to 10MB</p>
+                        </div>
+                        <div id="ktp-preview-view" style="display: none; padding: 0.5rem; border: 1px solid #D1D5DB; border-radius: 0.375rem; background-color: #fff;">
+                            <img id="ktp-preview-image" src="" alt="Pratinjau KTP" style="max-width: 100%; max-height: 200px; display: block; margin: 0 auto;">
+                            <p id="ktp-preview-filename" style="font-size: 0.875rem; color: #4F46E5; text-align: center; margin-top: 0.5rem; pointer-events: none;"></p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- KK Upload Area --}}
+                <div style="margin-bottom: 1.5rem; box-sizing: border-box; max-width: 100%;">
+                    <label for="dokumen_kk" style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151;">Dokumen KK</label>
+                    <div style="position: relative; margin-top: 0.25rem;">
+                        <input type="file" name="dokumen_kk" id="dokumen_kk" accept="image/*" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10;">
+                        <div id="kk-default-view" style="padding: 1.5rem; border: 2px dashed #D1D5DB; border-radius: 0.375rem; text-align: center; background-color: #F9FAFB; pointer-events: none;">
+                            <img src="URL_ILUSTRASI_ANDA_DI_SINI" alt="Upload Icon" style="display: block; margin: 0 auto 0.5rem auto; height: 3rem; width: 3rem; color: #4F46E5;">
+                            <p id="kk-status-text" style="font-size: 0.875rem; color: #6B7280;"><span style="font-weight: 500; color: #4F46E5;">Unggah file</span> atau seret dan lepas di sini</p>
+                            <p style="font-size: 0.75rem; color: #9CA3AF; margin-top: 0.25rem;">PNG, JPG, GIF up to 10MB</p>
+                        </div>
+                        <div id="kk-preview-view" style="display: none; padding: 0.5rem; border: 1px solid #D1D5DB; border-radius: 0.375rem; background-color: #fff;">
+                            <img id="kk-preview-image" src="" alt="Pratinjau KK" style="max-width: 100%; max-height: 200px; display: block; margin: 0 auto;">
+                            <p id="kk-preview-filename" style="font-size: 0.875rem; color: #4F46E5; text-align: center; margin-top: 0.5rem; pointer-events: none;"></p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- NPWP Upload Area --}}
+                <div style="margin-bottom: 1.5rem; box-sizing: border-box; max-width: 100%;">
+                    <label for="dokumen_npwp" style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151;">Dokumen NPWP</label>
+                    <div style="position: relative; margin-top: 0.25rem;">
+                        <input type="file" name="dokumen_npwp" id="dokumen_npwp" accept="image/*" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10;">
+                        <div id="npwp-default-view" style="padding: 1.5rem; border: 2px dashed #D1D5DB; border-radius: 0.375rem; text-align: center; background-color: #F9FAFB; pointer-events: none;">
+                            <img src="URL_ILUSTRASI_ANDA_DI_SINI" alt="Upload Icon" style="display: block; margin: 0 auto 0.5rem auto; height: 3rem; width: 3rem; color: #4F46E5;">
+                            <p id="npwp-status-text" style="font-size: 0.875rem; color: #6B7280;"><span style="font-weight: 500; color: #4F46E5;">Unggah file</span> atau seret dan lepas di sini</p>
+                            <p style="font-size: 0.75rem; color: #9CA3AF; margin-top: 0.25rem;">PNG, JPG, GIF up to 10MB</p>
+                        </div>
+                        <div id="npwp-preview-view" style="display: none; padding: 0.5rem; border: 1px solid #D1D5DB; border-radius: 0.375rem; background-color: #fff;">
+                            <img id="npwp-preview-image" src="" alt="Pratinjau NPWP" style="max-width: 100%; max-height: 200px; display: block; margin: 0 auto;">
+                            <p id="npwp-preview-filename" style="font-size: 0.875rem; color: #4F46E5; text-align: center; margin-top: 0.5rem; pointer-events: none;"></p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Buku Nikah Upload Area --}}
+                <div style="margin-bottom: 1.5rem; box-sizing: border-box; max-width: 100%;">
+                    <label for="dokumen_buku_nikah" style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151;">Dokumen Buku Nikah</label>
+                    <div style="position: relative; margin-top: 0.25rem;">
+                        <input type="file" name="dokumen_buku_nikah" id="dokumen_buku_nikah" accept="image/*" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10;">
+                        <div id="buku-nikah-default-view" style="padding: 1.5rem; border: 2px dashed #D1D5DB; border-radius: 0.375rem; text-align: center; background-color: #F9FAFB; pointer-events: none;">
+                            <img src="URL_ILUSTRASI_ANDA_DI_SINI" alt="Upload Icon" style="display: block; margin: 0 auto 0.5rem auto; height: 3rem; width: 3rem; color: #4F46E5;">
+                            <p id="buku-nikah-status-text" style="font-size: 0.875rem; color: #6B7280;"><span style="font-weight: 500; color: #4F46E5;">Unggah file</span> atau seret dan lepas di sini</p>
+                            <p style="font-size: 0.75rem; color: #9CA3AF; margin-top: 0.25rem;">PNG, JPG, GIF up to 10MB</p>
+                        </div>
+                        <div id="buku-nikah-preview-view" style="display: none; padding: 0.5rem; border: 1px solid #D1D5DB; border-radius: 0.375rem; background-color: #fff;">
+                            <img id="buku-nikah-preview-image" src="" alt="Pratinjau Buku Nikah" style="max-width: 100%; max-height: 200px; display: block; margin: 0 auto;">
+                            <p id="buku-nikah-preview-filename" style="font-size: 0.875rem; color: #4F46E5; text-align: center; margin-top: 0.5rem; pointer-events: none;"></p>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Akta Cerai Upload Area --}}
+                <div style="margin-bottom: 1.5rem; box-sizing: border-box; max-width: 100%;">
+                    <label for="dokumen_akta_cerai" style="display: block; font-size: 0.875rem; font-weight: 500; color: #374151;">Dokumen Akta Cerai</label>
+                    <div style="position: relative; margin-top: 0.25rem;">
+                        <input type="file" name="dokumen_akta_cerai" id="dokumen_akta_cerai" accept="image/*" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; z-index: 10;">
+                        <div id="akta-cerai-default-view" style="padding: 1.5rem; border: 2px dashed #D1D5DB; border-radius: 0.375rem; text-align: center; background-color: #F9FAFB; pointer-events: none;">
+                            <img src="URL_ILUSTRASI_ANDA_DI_SINI" alt="Upload Icon" style="display: block; margin: 0 auto 0.5rem auto; height: 3rem; width: 3rem; color: #4F46E5;">
+                            <p id="akta-cerai-status-text" style="font-size: 0.875rem; color: #6B7280;"><span style="font-weight: 500; color: #4F46E5;">Unggah file</span> atau seret dan lepas di sini</p>
+                            <p style="font-size: 0.75rem; color: #9CA3AF; margin-top: 0.25rem;">PNG, JPG, GIF up to 10MB</p>
+                        </div>
+                        <div id="akta-cerai-preview-view" style="display: none; padding: 0.5rem; border: 1px solid #D1D5DB; border-radius: 0.375rem; background-color: #fff;">
+                            <img id="akta-cerai-preview-image" src="" alt="Pratinjau Akta Cerai" style="max-width: 100%; max-height: 200px; display: block; margin: 0 auto;">
+                            <p id="akta-cerai-preview-filename" style="font-size: 0.875rem; color: #4F46E5; text-align: center; margin-top: 0.5rem; pointer-events: none;"></p>
+                        </div>
+                    </div>
+                </div>

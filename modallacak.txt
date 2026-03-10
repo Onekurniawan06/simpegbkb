@@ -1,0 +1,200 @@
+@extends('layouts.app-pegawai')
+@section('content')
+
+    <div class="bg-white rounded-lg shadow-lg max-w-full mx-auto">
+        <div class="mb-4 p-4 shadow-lg">
+            <div class="flex flex-wrap border-gray-200 grid grid-cols-4 gap-4">
+                <div class="flex-1">
+                    <label for="dari_tanggal" class="block text-sm font-medium text-gray-700">Dari Tanggal</label>
+                    <input type="date" id="dari_tanggal" class="mt-1 block w-full border border-gray-300 rounded-md text-sm shadow-sm p-2">
+                </div>
+                <div class="flex-1">
+                    <label for="hingga_tanggal" class="block text-sm font-medium text-gray-700">Hingga Tanggal</label>
+                    <input type="date" id="hingga_tanggal" class="mt-1 block w-full border border-gray-300 rounded-md text-sm shadow-sm p-2">
+                </div>
+                <div class="flex-1">
+                    <label for="jenis_pengajuan" class="block text-sm font-medium text-gray-700">Jenis Pengajuan</label>
+                    <select id="jenis_pengajuan" class="mt-1 block w-full border border-gray-300 rounded-md text-sm shadow-sm p-2">
+                        <option>Cuti Menikah</option><option>Pengajuan Lembur</option>
+                    </select>
+                </div>
+                <div class="flex-1">
+                    <label for="status_pengajuan_filter" class="block text-sm font-medium text-gray-700">Status Pengajuan</label>
+                    <select id="status_pengajuan_filter" class="mt-1 block w-full border border-gray-300 rounded-md text-sm shadow-sm p-2">
+                        <option>Pending</option><option>Disetujui</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2 flex gap-2">
+                    <button type="submit" class="h-[38px] w-auto px-4 flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-md shadow-sm transition duration-150 gap-2" title="Cari/Filter">
+                        <svg xmlns="www.w3.org" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                        </svg>
+                        <span class="text-sm">Filter Data</span>
+                    </button>
+                    <!-- Button Reset (Icon & Text) -->
+                    <button type="button" onclick="resetFormFilters()" class="h-[38px] w-auto px-4 flex items-center justify-center bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-md shadow-sm transition duration-150 gap-2" title="Reset Filter">
+                        <!-- Icon untuk Reset/Silang (X) -->
+                        <svg xmlns="www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                        <span class="text-sm">Reset Filter</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-full mx-auto bg-white shadow-lg rounded-lg overflow-hidden border border-gray-200">
+        <div class="grid grid-cols-12 p-4 bg-white font-bold text-xs text-gray-500 uppercase tracking-wider border-b border-gray-200">
+            {{-- Alokasi Lebar: 2 (Jenis) + 2 (Tgl Pengajuan) + 7 (Status & Detail) + 1 (Aksi) = 12 --}}
+            <div class="col-span-2">Jenis Pengajuan</div>
+            <div class="col-span-2">Tanggal Pengajuan</div>
+            <div class="col-span-7">Status & Detail Spesifik</div>
+            <div class="col-span-1 text-right">Aksi</div>
+        </div>
+        {{-- Loop melalui data pengajuan --}}
+        @foreach ($submissions as $submission)
+            <!-- Bungkus setiap baris dalam scope Alpine.js -->
+            <div x-data="{ openModal: false }" class="grid grid-cols-12 p-4 items-center hover:bg-gray-50 border-b border-gray-100 last:border-b-0">
+
+                {{-- Kolom 1-3 (Tipe, Tanggal, Status/Detail) tetap sama... --}}
+                <div class="col-span-2 text-gray-800 text-sm font-medium truncate">{{ $submission['type'] }}</div>
+                <div class="col-span-2 text-gray-600 text-sm truncate">{{ \Carbon\Carbon::parse($submission['created_at'])->format('d F Y') }}</div>
+                <div class="col-span-7 pr-4 flex flex-col gap-1 text-xs">
+                    @php
+                        // Perbaikan Baris 64 (dari gambar): Menggunakan sintaks array ['key']
+                        $statusText = ucfirst($submission['status_pengajuan'] ?? 'Pending');
+
+                        // Perbaikan di baris berikutnya: Menggunakan sintaks array ['key']
+                        $statusClass = ($submission['status_pengajuan'] ?? '') == 'disetujui' ? 'bg-green-100 text-green-800' :
+                                    (($submission['status_pengajuan'] ?? '') == 'ditolak' ? 'bg-red-100 text-red-800' : 'bg-yellow-100 text-yellow-800');
+                    @endphp
+                    <div class="text-sm">
+                        <span class="font-semibold {{ $statusClass }} px-1 rounded-sm">
+                            {{ $statusText }}
+                        </span>
+                    </div>
+                    <div class="text-gray-500 text-sm flex flex-col gap-1 mt-1">
+                        {{-- Perbaikan di sini: Menggunakan sintaks array ['key'] --}}
+                        @if (($submission['type'] ?? '') === 'Cuti')
+                            <div class="truncate">Jenis Cuti : {{ $submission['jenis_cuti'] ?? 'Tidak ada keterangan' }}</div>
+                            {{-- Menggunakan sintaks array ['key'] untuk created_at, tanggal_mulai, dll. --}}
+                            <div class="truncate">Tanggal Cuti : {{ \Carbon\Carbon::parse($submission['tanggal_mulai'])->format('d F Y') }} - {{ \Carbon\Carbon::parse($submission['tanggal_selesai'])->format('d F Y') }}</div>
+                        @elseif (($submission['type'] ?? '') === 'Lembur')
+                            <div class="truncate">Tanggal Lembur : {{ \Carbon\Carbon::parse($submission['tanggal_lembur'])->format('d F Y') }}, Jam: {{ $submission['jam_mulai'] }} - {{ $submission['jam_selesai'] }}. Total Jam: {{ $submission['total_jam_lembur'] }}</div>
+                        @elseif (($submission['type'] ?? '') === 'Pensiun')
+                            <div class="truncate">TMT Pensiun: {{ \Carbon\Carbon::parse($submission['tmt_pensiun'] ?? 'N/A')->format('d F Y') }}. Masa Kerja: {{ $submission['masa_kerja'] ?? 'N/A' }}</div>
+                        @endif
+                    </div>
+
+                </div>
+
+                {{-- Kolom 4: Action Buttons (col-span-1) --}}
+                <div class="col-span-1 flex justify-end items-center gap-2">
+                    <!-- Button Detail (Pemicu Modal) -->
+                    <button @@click="openModal = true" class="text-gray-400 hover:text-blue-700 transition-colors focus:outline-none" title="Detail Pengajuan">
+                        <svg xmlns="www.w3.org" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                        </svg>
+                    </button>
+
+                    <!-- Button Unduh Dokumen -->
+                    <a href="#" class="text-blue-500 hover:text-blue-700 transition-colors" title="Unduh Dokumen">
+                        <svg xmlns="www.w3.org" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                    </a>
+                </div>
+
+                <!-- MODAL WINDOW START -->
+                <div x-show="openModal"
+                    x-transition:enter="transition ease-out duration-300"
+                    x-transition:enter-start="opacity-0"
+                    x-transition:enter-end="opacity-100"
+                    x-transition:leave="transition ease-in duration-200"
+                    x-transition:leave-start="opacity-100"
+                    x-transition:leave-end="opacity-0"
+                    class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
+
+                    <div class="flex items-center justify-center min-h-screen p-4">
+                        <!-- Overlay -->
+                        <div class="fixed inset-0 bg-black/50 backdrop-blur-sm" @@click="openModal = false"></div>
+
+                        <!-- Panel Modal -->
+                        <div x-show="openModal"
+                            x-transition:enter="transition ease-out duration-300"
+                            x-transition:enter-start="opacity-0 scale-95 translate-y-4"
+                            x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                            class="relative bg-white rounded-2xl shadow-2xl max-w-4xl w-full overflow-hidden z-10">
+
+                            <button @@click="openModal = false" class="absolute right-4 top-4 z-20 text-gray-500 hover:text-gray-700 bg-white/80 p-1.5 rounded-full shadow-sm transition-all">
+                                <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                            </button>
+
+                            {{-- HEADER SECTION (Use $submission variable here for dynamic data) --}}
+                            <div style="background-image: linear-gradient(to right, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.1)), url('{{ asset('images/vecteezylight.jpg') }}')" class="bg-cover bg-center p-8 border-b border-gray-100 relative">
+                            </div>
+
+                            {{-- BODY SECTION (The fixed tracking logic goes here) --}}
+                            <div class="p-8 bg-white">
+                                <div class="flex flex-wrap md:flex-nowrap justify-between items-start gap-y-8">
+                                    {{-- PERBAIKAN: Menggunakan sintaks array ['processed_flow'] --}}
+                                    @foreach (($submission['processed_flow'] ?? []) as $stage)
+                                        <div class="relative flex flex-col items-center flex-1 min-w-[140px]">
+                                            {{-- Garis Konektor --}}
+                                            @if (!$loop->last)
+                                            <div class="hidden md:block absolute top-6 left-[60%] w-full h-0.5 bg-gray-100">
+                                                <div class="h-full bg-{{ $stage['themeColor'] }}-400 transition-all duration-700" style="width: 100%"></div>
+                                            </div>
+                                            @endif
+
+                                            {{-- Bulatan Icon --}}
+                                            <div class="relative z-10 w-12 h-12 rounded-full flex items-center justify-center border-4 border-white shadow-lg transition-transform duration-300 {{ $stage['isCurrent'] ? 'scale-125 bg-'.$stage['themeColor'].'-600 text-white ring-2 ring-'.$stage['themeColor'].'-200' : 'bg-'.$stage['themeColor'].'-100 text-'.$stage['themeColor'].'-600' }}">
+                                                @if($stage['isFailed'])
+                                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12""")/>></svg>
+                                                @elseif($stage['isCompleted'])
+                                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7""")/>></svg>
+                                                @else
+                                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z""")/>></svg>
+                                                @endif
+                                            </div>
+
+                                            <div class="mt-4 text-center px-2">
+                                                <p class="text-[10px] font-extrabold uppercase text-gray-500 tracking-widest mb-1">{{ $stage['name'] }}</p>
+                                                <span class="inline-block px-3 py-0.5 rounded-full text-[9px] font-black uppercase
+                                                    bg-{{ $stage['themeColor'] }}-100 text-{{ $stage['themeColor'] }}-700">
+                                                    {{ $stage['statusText'] }}
+                                                </span>
+
+                                                @if ($stage['updated_at'])
+                                                    <p class="text-[9px] text-gray-400 mt-1 font-medium">
+                                                        {{ $stage['updated_at'] }}
+                                                    </p>
+                                                @elseif (!$stage['isCurrent'] && !$stage['isCompleted'] && !$stage['isFailed'])
+                                                    <p class="text-[9px] text-gray-400 mt-1 font-medium">-</p>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    @endforeach
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- MODAL WINDOW END -->
+            </div>
+        @endforeach
+
+        <div class="px-4 py-3 bg-white border-t border-gray-200">
+            {{ $submissions->links() }}
+        </div>
+    </div>
+
+@push('scripts')
+    @vite(['resources/js/app.js', 'resources/js/filterpengajuan.js'])
+@endpush
+
+@endsection
+
+http://127.0.0.1:8000/pegawai/lacakpengajuancuti/20251219052

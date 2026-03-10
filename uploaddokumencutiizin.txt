@@ -1,0 +1,53 @@
+<div class="bg-white rounded-lg shadow-lg max-w-full mx-auto">
+            <div class="mb-4 p-4 shadow-sm" style="background-color: white; border-radius: 12px; border: 1px solid #e5e7eb;">
+                <h3 class="text-lg font-semibold text-blue-700 mb-4"># Section 2: Upload Dokumen Pendukung Cuti/ Izin</h3>
+                <!-- Area Panduan yang Dipercantik - Disesuaikan untuk Dokumen -->
+                <div id="download_section" class="mb-6 p-4" style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #1e40af; border-radius: 8px; display: none;">
+                    <div class="flex items-start">
+                        <div>
+                            <p class="text-sm font-bold text-slate-900 mb-1">Unduh Formulir Pengajuan (.docx)</p>
+                            <p class="text-xs text-slate-600 mb-3">Silakan unduh, lengkapi data di komputer Anda, lalu simpan kembali dalam format PDF sebelum diunggah ke sistem.</p>
+
+                            <!-- Tombol Download Dinamis -->
+                            <a href="#" id="btn_download_formulir" class="inline-flex items-center px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white text-xs font-semibold rounded shadow-sm transition-all duration-200" download>
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="www.w3.org">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                                </svg>
+                                Download Form <span id="label_jenis_cuti" class="ml-1 uppercase"></span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <!-- Container Utama -->
+                <div class="upload-group" style="font-family: 'Segoe UI', Tahoma, sans-serif; max-width: 450px;">
+                    <label style="display: block; font-weight: 600; margin-bottom: 5px; color: #374151;">Dokumen Cuti / Izin (PDF)</label>
+                    <p style="font-size: 11px; color: #6b7280; margin-bottom: 12px;">Format: PDF • Maks: 2MB</p>
+                    <!-- Area Status File -->
+                    <div id="pdf-status-area" style="margin-bottom: 15px;">
+                        <div id="empty-info" style="padding: 20px; background: #f9fafb; border: 2px dashed #d1d5db; border-radius: 12px; text-align: center; color: #9ca3af; font-size: 12px;">
+                            📄 Belum ada file PDF dipilih
+                        </div>
+                    </div>
+                    <!-- Tombol Pilih File -->
+                    <button type="button" onclick="document.getElementById('file_cuti').click()" class="bg-blue-600 hover:bg-blue-700 text-white text-sm" style="padding: 10px 22px; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                        <span>📂</span> Pilih Dokumen PDF
+                    </button>
+                    <input type="file" id="file_cuti" name="file_cuti" style="display: none;" accept="application/pdf">
+                </div>
+
+                <!-- MODAL PREVIEW (ID: pdfModal) -->
+                <div id="pdfModal" style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(4px);">
+                    <div style="position: relative; background-color: #fff; margin: 2% auto; width: 90%; max-width: 900px; height: 90vh; border-radius: 12px; overflow: hidden; display: flex; flex-direction: column;">
+                        <div style="padding: 15px 20px; background: #fff; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
+                            <strong id="pdfNameTitle" style="font-size: 14px; color: #333;">Pratinjau Dokumen</strong>
+
+                            <!-- Tombol Tutup (ID: btnClosePdfModal) -->
+                            <button type="button" id="btnClosePdfModal" style="background: #ef4444; color: white; border: none; border-radius: 6px; padding: 6px 15px; cursor: pointer; font-weight: bold;">Tutup X</button>
+                        </div>
+                        <div style="flex-grow: 1; background: #525659;">
+                            <iframe id="pdfIframe" src="" style="width: 100%; height: 100%; border: none;"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>

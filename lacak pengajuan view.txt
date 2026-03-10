@@ -1,0 +1,306 @@
+@extends('layouts.app-pegawai') {{-- Assume you have a master layout that provides some outer padding --}}
+
+@section('content')
+
+<div class="bg-white rounded-lg shadow-lg max-w-full mx-auto">
+    {{-- Header Profile Section (menggunakan p-8 untuk padding internal) --}}
+    <div style="background-image: linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.1)), url('{{ asset('images/vecteezylight.jpg') }}')" class="bg-cover bg-bottom p-2 rounded-t-lg relative">
+        <img src="{{ asset('images/trackingcheck.png') }}" alt="Overtime" class="absolute right-0 top-0 h-48">
+        {{-- Opsional: Tambahkan overlay gelap agar teks lebih mudah dibaca --}}
+        <div class="absolute rounded-t-lg"></div>
+        {{-- Image and Name section --}}
+        <div class="flex items-center mt-3 ml-4 mb-3">
+            {{-- Container untuk Foto Profil atau Placeholder --}}
+            <div class="h-32 w-32 rounded-full overflow-hidden flex items-center justify-center">
+                @if(Auth::user()->detailPribadi && Auth::user()->detailPribadi->photo_selfie)
+                    {{-- Menampilkan foto profil jika sudah diunggah --}}
+                    <img src="{{ asset('storage/' . Auth::user()->detailPribadi->photo_selfie) }}?v={{ time() }}"
+                        class="h-full w-full object-cover"
+                        alt="Foto Profil Pegawai">
+                @else
+                    {{-- Placeholder ikon jika belum ada foto diunggah --}}
+                    <x-heroicon-x-person-profile class="h-full w-full text-gray-400 group-hover:text-yellow-500" />
+                @endif
+            </div>
+            <div class="ml-5">
+                <h1 class="text-gray-800 text-1xl font-bold">
+                    {{ Auth::user()->name ?? 'User' }} -
+                    <a class="text-gray-600 font-semibold text-sm">
+                        {{ Auth::user()->pegawai->nomor_urut_pegawai ?? 'Nomor Urut Pegawai tidak ditemukan' }}
+                    </a>
+                </h1>
+                <p class="text-gray-600 font-semibold text-sm">{{ $pekerjaanData->jabatan ?? 'Jabatan Tidak Ditemukan' }}</p>
+                <p class="text-gray-600 font-semibold text-sm">
+                    {{ ($pekerjaanData->pangkat ?? '') . ' - ' . ($pekerjaanData->grade ?? '') }}
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="mb-4 p-4 shadow-sm">
+        <span class="text-md font-semibold text-blue-700"># Section 1: Status Lacak Pengajuan {{ $submissionType ?? 'Pengajuan' }}</span>
+        {{-- CARD 1: Tracking Persetujuan Horizontal (Badges Modern) --}}
+        <div class="flex justify-between items-center mt-4">
+            @php
+                // Tentukan submission mana yang aktif
+                $submission = $pengajuancuti ?? $pengajuanlembur ?? $pengajuanpensiun ?? $pengajuankenaikan  ?? null;
+                if (!$submission) {
+                    echo "<p>Data pengajuan tidak ditemukan.</p>";
+                    return;
+                }
+                $flow = ['Pengajuan Awal', 'Kepala SKK & MR', 'Direktur Kepatuhan', 'Direktur Utama', 'HRO'];
+                // Jika jenisnya BUKAN Pensiun atau Kenaikan (misal: Cuti/Lembur), gunakan alur standar lama
+                $isCutiOrLembur = isset($pengajuancuti) || isset($pengajuanlembur);
+                if ($isCutiOrLembur) {
+                    $flow = ['Pengajuan Awal', 'Manager', 'Direktur Operasional', 'HRO'];
+                    // Penyesuaian khusus untuk Lembur jika diperlukan
+                    if (isset($pengajuanlembur)) {
+                        $flow = array_map(function ($stage) {
+                            return ($stage == 'Direktur Operasional') ? 'Kepala SKK MR' : $stage;
+                        }, $flow);
+                    }
+                }
+
+                $stageData = [];
+                $processStopped = false;
+                $logRelationName = 'logs';
+                if (isset($pengajuanlembur)) {
+                    $logRelationName = 'logPersetujuanLembur';
+                } elseif (isset($pengajuanpensiun)) {
+                    $logRelationName = 'logPersetujuanPensiun';
+                } elseif (isset($pengajuankenaikan )) {
+                    $logRelationName = 'logPersetujuanPangkatgajitunjangan';
+                }
+                $logsByStage = $submission->$logRelationName->sortBy('updated_at')->keyBy('tahap_persetujuan');
+                foreach ($flow as $index => $stageName) {
+                    $log = $logsByStage->get($stageName);
+                    $status = 'menunggu';
+                    $updatedAt = null;
+                    $isCurrent = false;
+                if ($log) {
+                    $rawStatus = $log->status_pengajuan ?? $log->status_persetujuan;
+                    if ($rawStatus instanceof App\Enums\StatusPersetujuan) {
+                        $status = strtolower($rawStatus->value);
+                    } else {
+                        $status = strtolower($rawStatus);
+                    }
+                    $updatedAt = $log->updated_at;
+
+                    if ($status == 'ditolak') {
+                        $processStopped = true;
+                    } elseif ($status == 'diproses') {
+                        $isCurrent = true;
+                    }
+                }
+
+                $iconColor = 'text-gray-400';
+                $statusBadge = 'bg-gray-100 text-gray-600';
+                $statusText = '';
+                if ($status instanceof App\Enums\StatusPersetujuan) {
+                    $statusString = strtolower($status->value);
+                } else {
+                    $statusString = strtolower($status);
+                }
+                if ($statusString == 'ditolak') {
+                    $iconColor = 'text-red-500';
+                    $statusBadge = 'bg-red-100 text-red-800';
+                    $statusText = 'Ditolak';
+                } elseif ($statusString == 'disetujui') {
+                    $iconColor = 'text-teal-500';
+                    $statusBadge = 'bg-teal-100 text-teal-800';
+                    $statusText = 'Disetujui';
+                } elseif ($isCurrent) {
+                    $iconColor = 'text-orange-500 ring-4 ring-offset-1 ring-orange-300';
+                    $statusBadge = 'bg-orange-100 text-orange-800';
+                    $statusText = 'Diproses';
+                }
+                    if ($processStopped && $statusText == '') {
+                        $statusText = '-';
+                        $iconColor = 'text-gray-400';
+                        $statusBadge = 'bg-gray-100 text-gray-600';
+                    } elseif ($statusText == '' && !$isCurrent) {
+                        $statusText = 'Menunggu';
+                    }
+                    $isLineVisible = true;
+                    if ($statusString == 'ditolak') {
+                        $isLineVisible = false;
+                    }
+                    $stageData[] = compact('stageName', 'status', 'updatedAt', 'iconColor', 'statusBadge', 'statusText', 'processStopped', 'isCurrent', 'statusString', 'isLineVisible');
+                }
+            @endphp
+
+            {{-- TAMPILKAN HASILNYA --}}
+            <div class="w-full flex justify-between items-start overflow-hidden">
+                @foreach ($stageData as $index => $stage)
+                    <div class="flex flex-col items-center flex-1 relative">
+                        {{-- Icon and Circle with Shadow and Hover Effect --}}
+                        <div class="relative z-10 flex items-center justify-center w-10 h-10 rounded-full border-2 shadow-md {{ $stage['statusString'] == 'disetujui' ? 'border-teal-500 bg-teal-500 text-white shadow-teal-500/50' :
+                            ($stage['statusString'] == 'ditolak' ? 'border-red-500 bg-red-500 text-white shadow-red-500/50' :
+                            ($stage['isCurrent'] ? 'border-orange-500 bg-white text-orange-500 shadow-orange-500/50' : 'border-gray-300 bg-white text-gray-400 shadow-gray-400/50'))
+                        }}">
+                            @if ($stage['statusString'] == 'ditolak')
+                                <svg xmlns="www.w3.org" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                                </svg>
+                            @elseif ($stage['statusString'] == 'disetujui')
+                                <svg xmlns="www.w3.org" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                                </svg>
+                            @else
+                                <svg xmlns="www.w3.org" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            @endif
+                        </div>
+                        {{-- Stage Name and Info --}}
+                        <div class="mt-3 text-center w-full">
+                            <p class="text-xs font-semibold text-gray-800 break-words">{{ $stage['stageName'] }}</p>
+                            <span class="block text-[10px] font-bold mt-1 {{ $stage['statusBadge'] }} rounded-full px-2 py-0.5 mx-auto w-fit">
+                                {{ $stage['statusText'] }}
+                            </span>
+                            @if ($stage['updatedAt'])
+                                <p class="text-[9px] text-gray-400 mt-1">
+                                    {{ \Carbon\Carbon::parse($stage['updatedAt'])->format('d/m/Y H:i') }}
+                                </p>
+                            @endif
+                        </div>
+                    </div>
+
+                    {{-- Connector Line --}}
+                    @if (!$loop->last)
+                        @php
+                            $lineClasses = 'bg-gray-200';
+                            $nextStage = $stageData[$index + 1] ?? null;
+                            if ($stage['statusString'] == 'disetujui') {
+                                $lineClasses = 'bg-teal-500';
+                            } elseif ($nextStage && $nextStage['statusString'] == 'ditolak') {
+                                $lineClasses = 'bg-red-500';
+                            }
+                        @endphp
+                        <div class="flex-1 h-0.5 mt-5 {{ $lineClasses }} -mx-4 z-0"></div>
+                    @endif
+                @endforeach
+            </div>
+        </div>
+    </div>
+</div>
+{{-- CARD 2: Detail Data Cuti/Lembur/Pensiun --}}
+<div class="bg-white rounded-lg shadow-lg max-w-full mx-auto mb-6">
+    <div class="mb-4 p-4 shadow-sm">
+        <span class="text-md font-semibold text-blue-700"># Section 2: Detail Pengajuan {{ $submissionType ?? 'Pengajuan' }}</span>
+        {{-- Menentukan layout grid berdasarkan jenis pengajuan --}}
+        {{-- Pensiun punya 3 kolom utama + 1 alasan ditolak, Cuti/Lembur punya 4 utama + 1 sisa cuti + 2 alasan --}}
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 text-sm mt-4">
+            {{-- Kolom 1: Jenis Pengajuan --}}
+            <div>
+                <p class="text-gray-500">Jenis {{ $submissionType ?? 'Pengajuan' }} yang diajukan</p>
+                <p class="font-medium text-gray-800 mt-1">
+                    **
+                    @if($submissionType == 'Cuti' && isset($submission->jenisCuti))
+                        {{ $submission->jenisCuti->nama_cuti }}
+                    @elseif($submissionType == 'Lembur')
+                        Lembur
+                    @elseif($submissionType == 'Pensiun')
+                        {{ $submission->jenis_pengajuan ?? 'N/A' }}
+                    @elseif($submissionType == 'Kenaikan Pangkat/Gaji/Tunjangan')
+                        {{ $submission->jenis_pengajuan ?? 'N/A' }}
+                    @else
+                        N/A
+                    @endif
+                    **
+                </p>
+            </div>
+            {{-- Kolom 2: TMT Pegawai / Tanggal Mulai --}}
+            <div>
+                <p class="text-gray-500">
+                    @if($submissionType == 'Pensiun' || $submissionType == 'Kenaikan Pangkat/Gaji/Tunjangan')
+                        Tmt pegawai
+                    @else
+                        Tanggal Mulai {{ $submissionType ?? 'Pengajuan' }}
+                    @endif
+                </p>
+                <p class="font-medium text-gray-800 mt-1">
+                    **
+                    @if($submissionType == 'Pensiun' || $submissionType == 'Kenaikan Pangkat/Gaji/Tunjangan')
+                        {{ \Carbon\Carbon::parse($submission->tmt_pegawai ?? 'N/A')->format('d F Y') }}
+                    @else
+                        {{ \Carbon\Carbon::parse($submission->tanggal_lembur ?? $submission->tanggal_mulai)->format('d F Y') }}
+                    @endif
+                    **
+                </p>
+            </div>
+            {{-- Kolom 3: TMT Pensiun / Tanggal Selesai / Jam Mulai & Selesai --}}
+            @if ($submissionType != 'Kenaikan Pangkat/Gaji/Tunjangan') {{-- **TAMBAHAN LOGIKA DI SINI** --}}
+            <div>
+                <p class="text-gray-500">
+                    @if ($submissionType == 'Lembur')
+                        Waktu Lembur
+                    @elseif ($submissionType == 'Pensiun')
+                        TMT Pensiun
+                    @else
+                        Tanggal Selesai
+                    @endif
+                </p>
+                <p class="font-medium text-gray-800 mt-1">
+                    @if ($submissionType == 'Lembur')
+                        {{-- Menampilkan Jam Mulai s/d Jam Selesai --}}
+                        {{ $submission->jam_mulai }} - {{ $submission->jam_selesai }}
+                    @elseif ($submissionType == 'Pensiun')
+                        {{ \Carbon\Carbon::parse($submission->tmt_pensiun ?? 'N/A')->format('d F Y') }}
+                    @else
+                        {{ \Carbon\Carbon::parse($submission->tanggal_selesai)->format('d F Y') }}
+                    @endif
+                </p>
+            </div>
+            @endif
+            {{-- Kolom 4: Masa Kerja / Total Jam / Lama Cuti --}}
+            <div>
+                <p class="text-gray-500">
+                    @if($submissionType == 'Pensiun' || $submissionType == 'Kenaikan Pangkat/Gaji/Tunjangan')
+                        Masa Kerja
+                    @else
+                        Total {{ $submissionType ?? 'Pengajuan' }} yang diajukan
+                    @endif
+                </p>
+                <p class="font-medium text-gray-800 mt-1">
+                    **
+                    @if($submissionType == 'Lembur')
+                        {{ $submission->total_jam_lembur }}
+                    @elseif($submissionType == 'Pensiun' || $submissionType == 'Kenaikan Pangkat/Gaji/Tunjangan')
+                        {{ $submission->masa_kerja ?? 'N/A' }}
+                    @else
+                        {{ $submission->jumlah_cuti ?? 'N/A' }} hari
+                    @endif
+                    **
+                </p>
+            </div>
+            {{-- Kolom 5: Hanya Tampilkan Sisa Cuti JIKA BUKAN Lembur atau Pensiun --}}
+            @if ($submissionType != 'Lembur' && $submissionType != 'Pensiun' && $submissionType != 'Kenaikan Pangkat/Gaji/Tunjangan') {{-- **TAMBAHAN LOGIKA DI SINI** --}}
+            <div>
+                <p class="text-gray-500">Sisa Cuti (Hari)</p>
+                <p class="font-medium text-gray-800 mt-1">
+                    **{{ $submission->sisa_cuti ?? 'N/A' }} hari**
+                </p>
+            </div>
+            @endif
+            {{-- Kolom Alasan Pengajuan (Hilang jika Pensiun) --}}
+            @if ($submissionType != 'Pensiun' && $submissionType != 'Kenaikan Pangkat/Gaji/Tunjangan') {{-- **TAMBAHAN LOGIKA DI SINI** --}}
+            <div>
+                <p class="text-gray-500">Alasan {{ $submissionType ?? 'Pengajuan' }}</p>
+                <p class="font-medium text-blue-600 mt-1">
+                    **{{ $submission->uraian_tugas ?? $submission->keterangan ?? 'N/A' }}**
+                </p>
+            </div>
+            @endif
+            {{-- Kolom Komentar Status (Sama untuk semua tipe, selalu tampil) --}}
+            <div>
+                <p class="text-gray-500">Alasan Disetujui / Ditolak</p>
+                <p class="font-medium text-blue-600 mt-1">
+                    **{{ $komentarStatus ?? 'N/A' }}**
+                </p>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@endsection

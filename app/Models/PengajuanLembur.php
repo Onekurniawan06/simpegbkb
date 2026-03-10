@@ -1,0 +1,74 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
+class PengajuanLembur extends Model
+{
+    use HasFactory;
+
+    // Menentukan primary key secara eksplisit
+    protected $primaryKey = 'id_lembur';
+
+    // Menentukan nama tabel secara eksplisit
+    protected $table = 'pengajuan_lembur';
+
+    // Menentukan kolom yang dapat diisi (fillable)
+    protected $fillable = [
+        'nomor_urut_pegawai',
+        'tanggal_lembur',
+        'jam_mulai',
+        'jam_selesai',
+        'total_jam_lembur',
+        'uraian_tugas',
+    ];
+
+    // Relasi ke Log Persetujuan
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'nomor_urut_pegawai', 'nomor_urut_pegawai');
+    }
+
+    public function pegawai(): BelongsTo
+    {
+        return $this->belongsTo(Pegawai::class, 'nomor_urut_pegawai', 'nomor_urut_pegawai');
+    }
+
+    public function logPersetujuanLembur(): HasMany
+    {
+        // Pastikan nama model dan foreign key di bawah ini sesuai dengan struktur database Anda
+        return $this->hasMany(LogPersetujuanLembur::class, 'lembur_id')
+        ->orderByDesc('updated_at');
+    }
+
+    public function pekerjaan(): BelongsTo
+    {
+        return $this->belongsTo(Pekerjaan::class, 'nomor_urut_pegawai', 'nomor_urut_pegawai');
+    }
+
+    public static function isOverlapDivisi($idDivisi, $tanggalLembur, $jamMulai, $jamSelesai, $ignoreId = null)
+    {
+        $query = self::whereHas('pegawai.pekerjaan', function ($q) use ($idDivisi) {
+                $q->where('id_divisi', $idDivisi);
+            })
+            ->where('tanggal_lembur', $tanggalLembur) // Pastikan di tanggal yang sama
+            ->where(function ($q) use ($jamMulai, $jamSelesai) {
+                $q->where(function ($inner) use ($jamMulai, $jamSelesai) {
+                    // Cek apakah jam mulai baru berada di antara jam lembur yang sudah ada
+                    $inner->where('jam_mulai', '<', $jamSelesai)
+                    ->where('jam_selesai', '>', $jamMulai);
+                });
+            });
+
+        // Abaikan ID ini jika sedang melakukan update
+        if ($ignoreId) {
+            $query->where('id_lembur', '!=', $ignoreId);
+        }
+
+        return $query->exists();
+    }
+}
