@@ -134,13 +134,17 @@ class SubmissionProcessorService
             $type = $submission['type'];
             $display = [];
 
-            // Kolom 1: Jenis
             $display['jenis_label'] = "Jenis Pengajuan";
             $display['jenis_val'] = match($type) {
-                'Cuti' => data_get($submission, 'pengajuancuti.jenisCuti.nama_cuti') ?? data_get($submission, 'pengajuancuti.jenis_cuti') ?? 'Cuti',
-                'Lembur' => 'Lembur',
+                'Cuti' => data_get($submission, 'pengajuancuti.jenisCuti.nama_cuti') 
+                        ?? data_get($submission, 'pengajuancuti.jenis_cuti') 
+                        ?? 'Cuti',
+                'Lembur'  => 'Lembur',
                 'Pensiun' => 'Pensiun',
-                'PangkatGajiTunjangan' => 'Kenaikan Pangkat/Gaji/Tunjangan',
+                
+                // Perbaikan di sini: Ambil data dinamis dari kolom 'jenis_pengajuan'
+                'PangkatGajiTunjangan' => data_get($submission, 'jenis_pengajuan') ?? 'Kenaikan Pangkat/Gaji/Tunjangan',
+                
                 default => $type ?? 'N/A'
             };
 

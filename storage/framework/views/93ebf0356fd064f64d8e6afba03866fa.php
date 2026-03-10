@@ -4,7 +4,7 @@
 
 <script src="https://unpkg.com" defer></script>
 
-<div class="h-full w-full shadow-lg flex flex-col overflow-hidden">
+<div class="h-full w-full flex flex-col overflow-hidden">
     <!-- Area Konten: Scrollable -->
     <div class="flex-1 overflow-y-auto custom-scroll-container">
         <div class="grid grid-cols-1 md:grid-cols-4 gap-2">
