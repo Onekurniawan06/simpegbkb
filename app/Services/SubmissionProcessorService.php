@@ -22,7 +22,6 @@ class SubmissionProcessorService
             $type = $submission['type'];
 
             // --- 2. Tentukan Alur (Flow) ---
-
             // DEFAULT FLOW (5 Tahap: Digunakan oleh Pegawai untuk Pensiun & PangkatGajiTunjangan)
             $flow = ['Pengajuan Awal', 'Kepala SKK & MR', 'Direktur Kepatuhan', 'Direktur Utama', 'HRO'];
 
@@ -136,15 +135,15 @@ class SubmissionProcessorService
 
             $display['jenis_label'] = "Jenis Pengajuan";
             $display['jenis_val'] = match($type) {
-                'Cuti' => data_get($submission, 'pengajuancuti.jenisCuti.nama_cuti') 
-                        ?? data_get($submission, 'pengajuancuti.jenis_cuti') 
+                'Cuti' => data_get($submission, 'pengajuancuti.jenisCuti.nama_cuti')
+                        ?? data_get($submission, 'pengajuancuti.jenis_cuti')
                         ?? 'Cuti',
                 'Lembur'  => 'Lembur',
                 'Pensiun' => 'Pensiun',
-                
+
                 // Perbaikan di sini: Ambil data dinamis dari kolom 'jenis_pengajuan'
                 'PangkatGajiTunjangan' => data_get($submission, 'jenis_pengajuan') ?? 'Kenaikan Pangkat/Gaji/Tunjangan',
-                
+
                 default => $type ?? 'N/A'
             };
 

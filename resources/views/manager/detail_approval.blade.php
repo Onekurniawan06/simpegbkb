@@ -9,79 +9,103 @@
 </div>
 
 @php
-    $status = strtolower($data->status);
-    $isApproved = in_array($status, ['disetujui', 'approved', 'selesai']);
-    $isRejected = in_array($status, ['ditolak', 'rejected', 'tidak disetujui']);
-    $isProcessed = $isApproved || $isRejected;
+    $totalHistory = count($historiLog);
+    $lastLog = $historiLog->last();
+    $statusTerakhir = strtolower($lastLog->status_persetujuan ?? $lastLog->status_pengajuan);
 
-    // Warna Dinamis
-    $activeBg = $isApproved ? 'bg-emerald-500' : ($isRejected ? 'bg-red-500' : 'bg-orange-500');
-    $activeRing = $isApproved ? 'border-emerald-100' : ($isRejected ? 'border-red-100' : 'border-orange-100');
-    $textColor = $isApproved ? 'text-emerald-600' : ($isRejected ? 'text-red-600' : 'text-orange-600');
-
-    // Garis Full jika sudah disetujui/ditolak
-    $lineWidth = $isProcessed ? 'w-[66.8%]' : 'w-[33.4%]';
+    // Cek apakah sudah disetujui sampai tahap paling akhir (misal HRO atau Direktur)
+    $isFinalApproved = ($statusTerakhir === 'disetujui' && ($lastLog->tahap_persetujuan === 'HRO' || $lastLog->tahap_persetujuan === 'Selesai'));
 @endphp
 
-<!-- Tracking Status Stepper -->
 <div class="bg-white border-b border-gray-100 max-w-full py-4 shadow-sm">
-    <div class="max-w-2xl mx-auto px-6">
-        <div class="relative">
-            <!-- Garis Dasar -->
-            <div class="absolute top-5 left-0 right-0 h-1 bg-gray-100 mx-[16.6%] rounded-full"></div>
-            <!-- Garis Progres -->
-            <div class="absolute top-5 left-0 {{ $lineWidth }} h-1 {{ $activeBg }} mx-[16.6%] transition-all duration-700 ease-in-out rounded-full shadow-sm"></div>
-            <div class="relative flex justify-between items-start">
+    <div class="max-w-4xl mx-auto px-6">
+        <div class="relative flex items-start">
+            @foreach($historiLog as $index => $log)
+@php
+    $logStatus = strtolower($log->status_persetujuan ?? $log->status_pengajuan);
+    $isDone = ($logStatus === 'disetujui');
+    $isCurrent = ($logStatus === 'diproses');
+    $isRejected = ($logStatus === 'ditolak');
 
-                <!-- STEP 1: Pengajuan -->
-                <div class="flex flex-col items-center w-1/3">
-                    <!-- Ditambahkan inline style transition & hover scale -->
-                    <div class="w-10 h-10 rounded-full {{ $activeBg }} {{ $activeRing }} border-[5px] flex items-center justify-center z-10 shadow-sm cursor-pointer"
-                        style="transition: transform 0.2s ease-in-out;"
-                        onmouseover="this.style.transform='scale(1.3)'"
-                        onmouseout="this.style.transform='scale(1)'">
-                        <div class="w-2 h-2 bg-white rounded-full"></div>
-                    </div>
-                    <div class="mt-4 text-center">
-                        <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Tahap 1</p>
-                        <p class="text-sm font-semibold text-gray-900 mt-1">Pengajuan Awal</p>
-                    </div>
+    $timeCol = (isset($sumber) && $sumber === 'pensiun') ? 'update_at' : 'updated_at';
+    $waktuTampil = $log->tgl_persetujuan ?? $log->tgl_pengajuan ?? ($log->$timeCol ?? null);
+
+    $nextLog = $historiLog[$index + 1] ?? null;
+    $nextStatus = $nextLog ? strtolower($nextLog->status_persetujuan ?? $nextLog->status_pengajuan) : null;
+
+    // LOGIKA GARIS (DIUBAH AGAR SETELAH MERAH JADI MERAH)
+    if ($nextStatus === 'ditolak') {
+        $lineColor = 'bg-red-500'; // Garis ke arah penolakan jadi MERAH
+    } elseif ($nextStatus === 'diproses') {
+        $lineColor = 'bg-orange-500'; // Garis ke arah yang sedang diproses jadi ORANGE
+    } elseif ($nextStatus === 'disetujui') {
+        $lineColor = 'bg-emerald-500'; // Garis ke arah yang sudah disetujui jadi HIJAU
+    } elseif ($isRejected) {
+        $lineColor = 'bg-red-500'; // Garis setelah titik merah tetap MERAH
+    } else {
+        $lineColor = 'bg-gray-200'; // Sisanya ABU-ABU
+    }
+
+    $circleClass = $isDone ? 'bg-emerald-500 border-emerald-100' : ($isCurrent ? 'bg-orange-500 border-orange-100 shadow-[0_0_15px_rgba(249,115,22,0.4)]' : ($isRejected ? 'bg-red-500 border-red-100 shadow-[0_0_15px_rgba(239,68,68,0.4)]' : 'bg-gray-200 border-gray-50'));
+@endphp
+
+<div class="flex flex-col items-center flex-1 relative">
+    <!-- GARIS PENGHUBUNG -->
+    @if(!$loop->last)
+        <div class="absolute top-5 left-1/2 w-full h-[2.5px] z-0 {{ $lineColor }}"></div>
+    @else
+        <div class="absolute top-5 left-1/2 w-full h-[2.5px] z-0 {{ (isset($isFinalApproved) && $isFinalApproved) ? 'bg-emerald-500' : 'bg-gray-100' }}"></div>
+    @endif
+
+    <!-- Bulatan -->
+    <div class="w-10 h-10 rounded-full {{ $circleClass }} border-[5px] flex items-center justify-center z-10 transition-all duration-300">
+        @if($isDone)
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+        @elseif($isRejected)
+            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+        @elseif($isCurrent)
+            <div class="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+        @else
+            <div class="w-2 h-2 bg-white rounded-full"></div>
+        @endif
+    </div>
+
+    <!-- Label Info -->
+    <div class="mt-4 text-center px-2">
+        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tahap {{ $index + 1 }}</p>
+        <p class="text-[11px] font-semibold text-gray-900 mt-1 leading-tight">
+            {{ $log->tahap_persetujuan == 'Pengajuan Awal' ? 'Pengajuan' : $log->tahap_persetujuan }}
+        </p>
+        <p class="text-[9px] font-bold {{ $isDone ? 'text-emerald-600' : ($isCurrent ? 'text-orange-600' : ($isRejected ? 'text-red-600' : 'text-gray-400')) }} mt-1 italic uppercase">
+            {{ $logStatus }}
+        </p>
+
+        @if($waktuTampil)
+            <div class="mt-2">
+                <p class="text-[9px] text-gray-500 font-medium whitespace-nowrap">
+                    {{ \Carbon\Carbon::parse($waktuTampil)->translatedFormat('d M Y') }}
+                    <span class="text-gray-400 ml-1">{{ \Carbon\Carbon::parse($waktuTampil)->format('H:i') }} WIB</span>
+                </p>
+            </div>
+        @endif
+    </div>
+</div>
+@endforeach
+
+            <!-- TITIK AKHIR (DINAMIS) -->
+            <div class="flex flex-col items-center flex-1 relative">
+                <div class="w-10 h-10 rounded-full {{ $isFinalApproved ? 'bg-emerald-500 border-emerald-100' : 'bg-gray-100' }} border-[5px] flex items-center justify-center z-10">
+                    <div class="w-2 h-2 bg-white rounded-full"></div>
                 </div>
-
-                <!-- TAHAP 2: Verifikasi Manager -->
-                <div class="flex flex-col items-center w-1/3">
-                    <div class="w-10 h-10 rounded-full {{ $activeBg }} {{ $activeRing }} border-[5px] flex items-center justify-center z-10 shadow-sm cursor-pointer"
-                        style="transition: transform 0.2s ease-in-out;"
-                        onmouseover="this.style.transform='scale(1.3)'"
-                        onmouseout="this.style.transform='scale(1)'">
-                        <div class="w-2 h-2 bg-white rounded-full"></div>
-                    </div>
-                    <div class="mt-4 text-center">
-                        <p class="text-xs font-bold text-blue-600 uppercase tracking-widest">Tahap 2</p>
-                        <p class="text-sm font-semibold text-gray-900 mt-1">Verifikasi Manager</p>
-                        <p class="text-xs font-bold {{ $textColor }} mt-2 bg-gray-50 px-2 py-0.5 rounded-full inline-block">
-                            {{ \Carbon\Carbon::parse($data->tanggal_proses)->format('d/m/Y H:i') }}
-                        </p>
-                    </div>
-                </div>
-
-                <!-- STEP 3: Selesai -->
-                <div class="flex flex-col items-center w-1/3">
-                    <div class="w-10 h-10 rounded-full {{ $isProcessed ? $activeBg.' '.$activeRing : 'bg-gray-100 border-gray-50' }} border-[5px] flex items-center justify-center z-10 shadow-sm cursor-pointer"
-                        style="transition: transform 0.2s ease-in-out;"
-                        onmouseover="this.style.transform='scale(1.3)'"
-                        onmouseout="this.style.transform='scale(1)'">
-                        <div class="w-2 h-2 bg-white rounded-full"></div>
-                    </div>
-                    <div class="mt-4 text-center {{ $isProcessed ? '' : 'opacity-40' }}">
-                        <p class="text-xs font-bold {{ $isProcessed ? $textColor : 'text-gray-400' }} uppercase tracking-widest text-opacity-70">Tahap 3</p>
-                        <p class="text-sm font-semibold {{ $isProcessed ? 'text-gray-900' : 'text-gray-400' }} mt-1">Selesai</p>
-                    </div>
+                <div class="mt-4 text-center {{ $isFinalApproved ? '' : 'opacity-40' }}">
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Akhir</p>
+                    <p class="text-[11px] font-semibold text-gray-400 mt-1">Selesai</p>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
 
 <!-- Container: Kita tambah tingginya ke h-[580px] agar pas untuk textarea 5 baris + 2 tombol di kanan -->
 <div class="max-w-full flex flex-col h-[450px] overflow-hidden bg-white border border-slate-200 shadow-xl">
@@ -187,7 +211,9 @@
 
         <!-- Kolom Kanan: Action (Light Slate Theme) -->
         <div class="lg:col-span-1 flex flex-col bg-slate-50 p-4">
-            <h3 class="text-xs font-bold text-indigo-600 uppercase tracking-[0.2em] mb-3">Keputusan Manager</h3>
+            <h3 class="text-xs font-bold text-indigo-600 uppercase tracking-[0.2em] mb-3">
+                Keputusan {{ str_replace('Verifikasi ', '', $tahapTeks) }}
+            </h3>
 
             <form id="formApproval" action="{{ route('manager.updateStatus', [$sumber, $id_log]) }}" method="POST" class="flex flex-col h-full">
                 @csrf

@@ -24,70 +24,45 @@
     <!-- Tab Content Container -->
         <!-- Content for 'Data Pengajuan' (Visible by default) -->
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-                <!-- Card 1: Menunggu Persetujuan -->
-                <div class="bg-amber-500 p-5 rounded-lg shadow-md flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-semibold text-white">Pengajuan Menunggu Persetujuan</p>
-                        <p class="text-1xl font-semibold text-white">{{ $totalMenunggu }} <span class="text-xs text-white">Data Pengajuan</span></p>
+            <!-- Card Statistik: Pengajuan Menunggu Persetujuan -->
+<div class="bg-amber-600 rounded-l-md p-3 text-white shadow-xl relative overflow-hidden group hover:shadow-2xl transition-all duration-300">
+    <!-- Ornamen Background (Lingkaran Dekoratif) -->
+    <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full group-hover:scale-110 transition-transform duration-500"></div>
+    <div class="absolute -right-5 -bottom-5 w-24 h-24 bg-white/5 rounded-full group-hover:scale-125 transition-transform duration-700"></div>
 
-                        <div class="mt-2 flex gap-3">
-                            @foreach($detailMenunggu as $detail)
-                                <span class="text-[10px] uppercase tracking-wider text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                                    <strong>{{ $detail['label'] }} :</strong> {{ $detail['jumlah'] }}
-                                </span>
-                            @endforeach
-                        </div>
-                    </div>
-                    <div class="p-3 bg-yellow-100 rounded-full">
-                        <svg xmlns="http://www.w3.org" class="h-6 w-6 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                    </div>
+    <div class="relative z-10">
+        <div class="flex justify-between items-start">
+            <div>
+                <h2 class="text-sm font-bold uppercase tracking-[0.15em] text-indigo-100 opacity-90 mb-1">Pengajuan Menunggu Persetujuan</h2>
+                <div class="flex items-baseline gap-2 mb-5">
+                    <span class="text-4xl font-black">{{ $totalMenunggu }}</span>
+                    <span class="text-xs font-medium text-indigo-200 uppercase tracking-widest">Data Pengajuan</span>
                 </div>
-
-                {{-- <!-- Card 2: Disetujui -->
-                <div class="bg-white p-5 rounded-lg shadow-md flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-semibold text-gray-500">Pengajuan Disetujui</p>
-                        <p class="text-1xl font-semibold text-gray-900">{{ $totalDisetujui }} <span class="text-xs text-gray-400">Data Pengajuan</span></p>
-
-                        <div class="mt-2 flex gap-3">
-                            @foreach($detailDisetujui as $detail)
-                                <span class="text-[10px] uppercase tracking-wider text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                                    <strong>{{ $detail['label'] }} :</strong> {{ $detail['jumlah'] }}
-                                </span>
-                            @endforeach
-                        </div>
-                    </div>
-                    <div class="p-3 bg-green-100 rounded-full">
-                        <svg xmlns="http://www.w3.org" class="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                        </svg>
-                    </div>
-                </div>
-
-                <!-- Card 3: Ditolak -->
-                <div class="bg-white p-5 rounded-lg shadow-md flex items-center justify-between">
-                    <div>
-                        <p class="text-sm font-semibold text-gray-500">Pengajuan Ditolak</p>
-                        <p class="text-1xl font-semibold text-gray-900">{{ $totalDitolak }} <span class="text-xs text-gray-400">Data Pengajuan</span></p>
-
-                        <div class="mt-2 flex gap-3">
-                            @foreach($detailDitolak as $detail)
-                                <span class="text-[10px] uppercase tracking-wider text-gray-500 bg-gray-100 px-2 py-1 rounded">
-                                    <strong>{{ $detail['label'] }} :</strong> {{ $detail['jumlah'] }}
-                                </span>
-                            @endforeach
-                        </div>
-                    </div>
-                    <div class="p-3 bg-red-100 rounded-full">
-                        <svg xmlns="http://www.w3.org" class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </div>
-                </div> --}}
             </div>
+            
+            <!-- Icon Kanan yang sudah dirapikan -->
+            <div class="bg-white/20 p-3 rounded-xl backdrop-blur-md border border-white/30 shadow-inner">
+                <svg xmlns="http://www.w3.org" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+            </div>
+        </div>
+
+        <!-- List Badge Dinamis -->
+        <div class="flex flex-wrap gap-3">
+            @foreach($detailMenunggu as $detail)
+                @if($detail['jumlah'] > 0)
+                <div class="bg-white/10 backdrop-blur-sm border border-white/20 px-4 py-2 rounded-xl flex items-center gap-3 hover:bg-white/20 transition-colors cursor-default">
+                    <div class="flex flex-col">
+                        <span class="text-[9px] font-black text-indigo-100 uppercase tracking-tighter leading-none mb-1">{{ $detail['label'] }}</span>
+                        <span class="text-lg font-bold leading-none">{{ $detail['jumlah'] }}</span>
+                    </div>
+                </div>
+                @endif
+            @endforeach
+        </div>
+    </div>
+</div>
 
     <!-- TOMBOL BACK TO TOP (Ditempatkan di sini, akan melayang di atas mainContent) -->
     {{-- <button id="backToTop" style="display: none;" class="fixed bottom-10 right-10 bg-blue-300 text-white p-3 rounded-full shadow-2xl hover:bg-blue-600 transition-all duration-300 z-50 flex items-center justify-center" title="Kembali ke atas">

@@ -677,43 +677,9 @@
                 <?php echo $__env->yieldContent('content'); ?>
             </main>
 
-            <!-- Modal Sukses Dinamis -->
-            <div id="successModal" class="<?php echo e(Session::has('success') ? 'flex' : 'hidden'); ?> fixed inset-0 bg-black/50 items-center justify-center z-50 backdrop-blur-sm">
-                <div class="bg-gray-50 p-8 rounded-xl shadow-2xl w-full max-w-lg mx-4 relative">
-                    <!-- Tombol X Close -->
-                    <button onclick="document.getElementById('successModal').classList.add('hidden')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
-                        <svg xmlns="http://www.w3.org" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
+            <?php echo $__env->make('partials.modal-success', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
 
-                    <div class="text-center">
-                        <svg class="mx-auto h-16 w-16 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        
-                        <!-- Judul Dinamis -->
-                        <h2 class="mt-4 text-2xl font-bold text-gray-900">
-                            <?php echo e(Session::get('modal_title') ?? 'Pengajuan Berhasil Dibuat!'); ?>
-
-                        </h2>
-                        
-                        <!-- Pesan Dinamis -->
-                        <p class="mt-2 text-sm text-gray-500">
-                            <?php echo e(Session::get('success')); ?> <br>
-                            Permintaan Anda telah tercatat dan menunggu persetujuan atasan. Silahkan tunggu notifikasi secara berkala.
-                        </p>
-                    </div>
-
-                    <div class="mt-6 flex justify-center">
-                        <!-- Tombol Link Dinamis -->
-                        <a href="<?php echo e(Session::get('modal_link') ?? '#'); ?>" class="px-6 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors">
-                            Lihat Pengajuan
-                        </a>
-                    </div>
-                </div>
             </div>
-
 
         </div>
             <?php echo $__env->yieldPushContent('scripts'); ?>
