@@ -45,40 +45,129 @@
         <div class="mb-2 p-4 shadow-sm">
             <span class="text-sm font-semibold text-blue-700"># Section 1: Status Lacak Pengajuan {{ $submissionType ?? 'Pengajuan' }}</span>
             {{-- CARD 1: Tracking Persetujuan Horizontal (Badges Modern) --}}
-            <div class="flex justify-between items-center mt-4">
-                <div class="w-full flex justify-between items-start overflow-hidden">
+            <div class="flex justify-between items-center mt-6">
+                {{-- <div class="w-full flex justify-between items-start overflow-hidden"> --}}
+                <div class="w-full flex justify-between items-start overflow-visible">
                     {{-- Loop stageData yang sudah diproses di DataPengajuanController --}}
                     @foreach ($submission['stageData'] as $stage)
+                        @php
+                            // Pemetaan status untuk style agar sinkron dengan atasan
+                            $isDone = ($stage['statusString'] == 'disetujui');
+                            $isFail = ($stage['statusString'] == 'ditolak');
+                            $isCurr = $stage['isCurrent'];
+
+                            $circleClass = $isDone ? 'bg-emerald-500 border-emerald-100 text-white' :
+                                        ($isFail ? 'bg-red-500 border-red-100 text-white' :
+                                        ($isCurr ? 'bg-orange-500 border-orange-100 text-white' : 'bg-gray-200 border-gray-50 text-gray-400'));
+                        @endphp
+
                         <div class="flex flex-col items-center flex-1 relative">
-                            {{-- Icon Lingkaran --}}
-                            <div class="relative z-10 flex items-center justify-center w-12 h-12 rounded-full border-2 shadow-md
-                                {{ $stage['statusString'] == 'disetujui' ? 'border-teal-500 bg-teal-500 text-white' :
-                                ($stage['statusString'] == 'ditolak' ? 'border-red-500 bg-red-500 text-white' :
-                                ($stage['isCurrent'] ? 'border-orange-500 bg-white text-orange-500' : 'border-gray-300 bg-white text-gray-400')) }}">
-                                @if ($stage['statusString'] == 'ditolak')
-                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M6 18L18 6M6 6l12 12" stroke-width="2")/></svg>
-                                @elseif ($stage['statusString'] == 'disetujui')
-                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M5 13l4 4L19 7" stroke-width="2")/></svg>
-                                @else
-                                    <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" stroke-width="2")/></svg>
+                            {{-- Garis Penghubung (Mengikuti Logic Atasan) --}}
+                            {{-- Garis Penghubung (Logika: Merah jika ditolak, Hijau jika disetujui, Abu jika putus) --}}
+                            @if (!$loop->last)
+                                @php
+                                    $lineColor = 'bg-gray-100'; // Default Abu-abu
+                                    if ($isDone) {
+                                        $lineColor = 'bg-emerald-500'; // Hijau jika sukses
+                                    } elseif ($isFail) {
+                                        $lineColor = 'bg-red-500'; // Merah jika ditolak
+                                    }
+
+                                    // KUNCI: Jika tahap SEBELUMNYA sudah ditolak, maka garis ini HARUS Abu-abu (Putus)
+                                    // Kita cek apakah ada status ditolak di urutan sebelum index ini
+                                    $hasPreviousReject = collect($submission['stageData'])->take($loop->index)->contains('statusString', 'ditolak');
+                                    if ($hasPreviousReject) {
+                                        $lineColor = 'bg-gray-100';
+                                    }
+                                @endphp
+                                <div class="absolute top-5 left-1/2 w-full h-[2.5px] z-0 {{ $lineColor }}"></div>
+                            @endif
+
+                            {{-- Container Bulatan dengan Efek Radar --}}
+                            <div class="relative flex items-center justify-center z-10 group">
+                                @if($isCurr)
+                                    <span class="absolute inline-flex h-9 w-9 rounded-full bg-orange-400 opacity-20 animate-ping"></span>
                                 @endif
+
+                                {{-- KOTAK ALASAN (Hanya untuk Atasan & Muncul di Area Garis) --}}
+                                @php
+                                    $forbiddenStages = ['Pengajuan Awal', 'Pengajuan', 'Selesai', 'Akhir'];
+                                @endphp
+
+                                @if(isset($stage['comment']) && $stage['comment'] && !in_array($stage['stageName'], $forbiddenStages))
+                                    <div class="absolute bottom-[110%] left-[80%] -translate-x-0 mb-2
+                                                invisible group-hover:visible opacity-0 group-hover:opacity-100
+                                                w-48 p-3 bg-gray-900 text-white text-[10px] rounded-xl shadow-2xl
+                                                z-50 transition-all duration-300 pointer-events-none">
+
+                                        <div class="font-bold border-b border-gray-700 pb-1 mb-1 uppercase tracking-widest text-amber-400">
+                                            Catatan {{ $stage['stageName'] }}:
+                                        </div>
+                                        <p class="italic text-gray-200 leading-relaxed">"{{ $stage['comment'] }}"</p>
+
+                                        {{-- Segitiga (Geser sedikit ke kiri agar pas di atas garis) --}}
+                                        <div class="absolute top-full left-4 border-8 border-transparent border-t-gray-900"></div>
+                                    </div>
+                                @endif
+
+                                {{-- Bulatan Utama --}}
+                                <div class="w-10 h-10 rounded-full {{ $circleClass }} border-[5px] flex items-center justify-center shadow-sm cursor-help transition-all duration-300">
+                                    @if ($isFail)
+                                        <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                                    @elseif ($isDone)
+                                        <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+                                    @else
+                                        <div class="w-2 h-2 bg-white rounded-full"></div>
+                                    @endif
+                                </div>
                             </div>
 
-                            {{-- Label & Badge --}}
-                            <div class="mt-3 text-center w-full">
-                                <p class="text-sm font-semibold text-gray-800">{{ $stage['stageName'] }}</p>
-                                <span class="block text-[12px] font-bold mt-1 {{ $stage['statusBadge'] }} rounded-full px-2 py-0.5 mx-auto w-fit">
+                            {{-- Label & Info Waktu --}}
+                            <div class="mt-4 text-center px-2">
+                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tahap {{ $loop->iteration }}</p>
+                                <p class="text-[11px] font-semibold text-gray-900 mt-1 leading-tight">{{ $stage['stageName'] }}</p>
+
+                                <p class="text-[9px] font-bold {{ $isDone ? 'text-emerald-600' : ($isFail ? 'text-red-600' : ($isCurr ? 'text-orange-600' : 'text-gray-400')) }} mt-1 italic uppercase">
                                     {{ $stage['statusText'] }}
-                                </span>
+                                </p>
+
                                 @if ($stage['updatedAt'])
-                                    <p class="text-[11px] text-gray-600 mt-1">{{ $stage['updatedAt'] }}</p>
+                                    <p class="text-[8px] text-gray-500 mt-1 whitespace-nowrap">
+                                        {{ $stage['updatedAt'] }}
+                                    </p>
                                 @endif
                             </div>
                         </div>
-                        @if (!$loop->last)
-                            <div class="flex-1 h-0.5 mt-5 {{ $stage['lineColor'] }} -mx-4 z-0"></div>
-                        @endif
                     @endforeach
+                    {{-- TITIK AKHIR (SELESAI) - DENGAN GARIS PENGHUBUNG --}}
+                    @php
+                        $lastStage = collect($submission['stageData'])->last();
+                        $isHRODone = ($lastStage['stageName'] === 'HRO' && $lastStage['statusString'] === 'disetujui');
+                        $isHROFail = ($lastStage['stageName'] === 'HRO' && $lastStage['statusString'] === 'ditolak');
+                    @endphp
+
+                    <div class="flex flex-col items-center flex-1 relative">
+                        {{-- GARIS PENGHUBUNG MANUAL (Dari HRO ke Selesai) --}}
+                        <div class="absolute top-5 -left-1/2 w-full h-[2.5px] z-0
+                            {{ $isHRODone ? 'bg-emerald-500' : ($isHROFail ? 'bg-red-500' : 'bg-gray-100') }}">
+                        </div>
+
+                        {{-- Bulatan Selesai --}}
+                        <div class="w-10 h-10 rounded-full {{ $isHRODone ? 'bg-emerald-500 border-emerald-100' : 'bg-gray-100' }} border-[5px] flex items-center justify-center z-10 shadow-sm transition-all duration-300">
+                            @if($isHRODone)
+                                <svg class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                            @else
+                                <div class="w-2 h-2 bg-white rounded-full"></div>
+                            @endif
+                        </div>
+
+                        <div class="mt-4 text-center {{ $isHRODone ? '' : 'opacity-40' }}">
+                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Akhir</p>
+                            <p class="text-[11px] font-semibold text-gray-400 mt-1">Selesai</p>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

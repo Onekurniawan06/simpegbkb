@@ -148,6 +148,7 @@ class ManagerDashboard extends Controller
 
         $pegawai = $query->select('pegawai.*', 'pekerjaan.*', 'detail_pribadi.*', 'divisi.nama_divisi')->first();
 
+
         if (!$pegawai) {
             return redirect()->route('manager.pegawaidivisi')->with('error', 'Akses ditolak.');
         }

@@ -21,7 +21,7 @@
     <!-- HEADER & STATISTIK (Tetap di Atas) -->
     <div class="p-3 pb-2 pr-0">
         <div class="mb-4 text-gray-800">
-            <h5 class="text-[11px] font-bold uppercase tracking-widest opacity-50">Total Pegawai Divisi ini</h5>
+            <h5 class="text-[11px] font-bold uppercase tracking-widest opacity-50">Total Pegawai</h5>
             <h2 class="text-3xl font-black leading-none">{{ $pegawaiDivisi->total() }} <span class="text-xs font-normal opacity-40">Pegawai</span></h2>
         </div>
 

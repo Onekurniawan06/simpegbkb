@@ -60,25 +60,52 @@
                 <div class="p-8 flex justify-center items-center">
                     <img src="<?php echo e(asset('images/logoputih.png')); ?>" alt="Logo Bank Kota Bogor" class="h-11 w-auto">
                 </div>
-                
-                
             </div>
 
             <!-- Menghapus overflow-y-auto dari sidebar-content -->
             <nav id="sidebar-content" class="flex-1 px-2 py-4 space-y-2">
-                <div class="text-xs font-semibold uppercase tracking-wider text-white pt-3 sidebar-text">Navigasi</div>
-                <!-- Garis batas horizontal antara logo dan menu -->
-                
+                <!-- Judul Navigasi Dinamis Berdasarkan Jabatan -->
+                <div class="pt-5 pb-2 px-3 sidebar-text">
+                    <?php
+                        $userJabatan = strtolower(auth()->user()->jabatan->nama_jabatan ?? '');
+                        $isHRO_Blade = str_contains($userJabatan, 'hro') || str_contains($userJabatan, 'human resources');
+                        $isSKK_Blade = str_contains($userJabatan, 'kepatuhan') || str_contains($userJabatan, 'skk');
+                        $isManagerBiasa = !$isHRO_Blade && !$isSKK_Blade;
+                    ?>
+
+                    <div class="flex flex-col">
+                        <span class="text-[10px] font-bold uppercase tracking-[0.15em] text-amber-400 opacity-80">
+                            Akses Level
+                        </span>
+                        <span class="text-xs font-extrabold uppercase tracking-wider text-white mt-0.5 break-words leading-tight">
+                            <?php if($isHRO_Blade): ?>
+                                Human Resources (HRO)
+                            <?php elseif($isSKK_Blade): ?>
+                                Kepatuhan & SKK
+                            <?php else: ?>
+                                Manager <?php echo e(auth()->user()->divisi->nama_divisi ?? 'Divisi'); ?>
+
+                            <?php endif; ?>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Garis Pemisah Tipis agar Rapi -->
+                <div class="px-3 mb-2">
+                    <div class="h-[1px] w-full bg-white/10 shadow-sm"></div>
+                </div>
+
+                <!-- Menu Dashboard Utama -->
                 <a href="<?php echo e(Auth::user()->dashboard_link); ?>"
-                    class="flex items-center justify-between p-3 text-xs font-medium rounded-lg hover:bg-amber-500 hover:text-white transition duration-150">
+                    class="flex items-center justify-between p-3 text-xs font-medium rounded-lg hover:bg-amber-500 hover:text-white transition duration-150 group">
                     <span class="flex items-center">
                         <svg xmlns="http://www.w3.org" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2-2m0 0l7-7 7 7M19 10v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                         </svg>
                         <span class="sidebar-text whitespace-nowrap">Dashboard</span>
                     </span>
-                    <!-- Icon Chevron: class group-hover:text-white tetap berfungsi karena parent-nya sudah benar -->
-                    <svg xmlns="http://www.w3.org" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-3 w-3 group-hover:text-white">
+                    <!-- Icon Chevron -->
+                    <svg xmlns="http://www.w3.org" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-3 w-3 opacity-50 group-hover:opacity-100 transition-opacity">
                         <path stroke-linecap="round" stroke-linejoin="round" d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5" />
                     </svg>
                 </a>
@@ -108,30 +135,27 @@
                     </div>
                 </div>
 
+                <!-- MENU DATA PEGAWAI -->
                 <div class="relative group">
-                    <!-- Tombol Induk (Area hover yang memicu flyout) -->
                     <a href="<?php echo e(route('manager.pegawaidivisi')); ?>" class="flex items-center justify-between p-3 text-xs font-medium rounded-lg hover:bg-amber-500 hover:text-white transition duration-150 cursor-pointer">
                         <span class="flex items-center">
-                            <!-- Icon Utama -->
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 mr-2 shrink-0">
+                            <svg xmlns="http://www.w3.org" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 mr-2 shrink-0">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 0 1-2.25 2.25M16.5 7.5V18a2.25 2.25 0 0 0 2.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 0 0 2.25 2.25h13.5M6 7.5h3v3H6v-3Z" />
                             </svg>
 
-                            
                             <span class="sidebar-text whitespace-nowrap overflow-hidden text-ellipsis">
-                                Data Pegawai Divisi <?php echo e(auth()->user()->divisi->nama_divisi ?? 'Divisi'); ?>
+                                <?php if($isManagerBiasa): ?>
+                                    Data Pegawai Divisi <?php echo e(auth()->user()->divisi->nama_divisi ?? 'Divisi'); ?>
 
+                                <?php else: ?>
+                                    Data Pegawai
+                                <?php endif; ?>
                             </span>
                         </span>
-
-                        <!-- Icon Chevron -->
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-3 w-3 shrink-0 ml-2">
+                        <svg xmlns="http://www.w3.org" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-3 w-3 shrink-0 ml-2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5" />
                         </svg>
                     </a>
-
-                    <!-- Submenu Flyout (Menggunakan CSS Murni) -->
-                    
                 </div>
 
                 <!-- Bagian Absensi Saya -->
@@ -144,38 +168,52 @@
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 mr-2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                             </svg>
-
                             <span class="sidebar-text whitespace-nowrap">Data Absensi Saya</span>
                         </span>
-                        <!-- Icon Chevron: class group-hover:text-white tetap berfungsi karena parent-nya sudah benar -->
-                        
                     </a>
                 </div>
 
                 <!-- Bagian Laporan -->
+                <!-- BAGIAN LAPORAN -->
                 <div class="text-xs font-semibold uppercase tracking-wider text-white pt-3 sidebar-text">Laporan</div>
                 <div class="relative group" id="laporan-menu-container">
+
+                    <!-- Menu Absensi -->
                     <a href="#" class="flex items-center justify-between p-3 text-xs font-medium rounded-lg hover:bg-amber-500 hover:text-white transition duration-150 cursor-pointer">
                         <span class="flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 mr-2">
+                            <svg xmlns="http://www.w3.org" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 mr-2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
                             </svg>
-                            <span class="sidebar-text whitespace-nowrap">Absensi Pegawai Divisi <?php echo e(auth()->user()->divisi->nama_divisi ?? 'Divisi'); ?></span>
+                            <span class="sidebar-text whitespace-nowrap overflow-hidden text-ellipsis">
+                                <?php if($isManagerBiasa): ?>
+                                    Absensi Pegawai Divisi <?php echo e(auth()->user()->divisi->nama_divisi ?? 'Divisi'); ?>
+
+                                <?php else: ?>
+                                    Absensi Pegawai
+                                <?php endif; ?>
+                            </span>
                         </span>
-                        <!-- Icon Chevron: Tambahkan class 'group-hover:text-white' di sini -->
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-3 w-3 group-hover:text-white">
+                        <svg xmlns="http://www.w3.org" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-3 w-3 group-hover:text-white">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5" />
                         </svg>
                     </a>
+
+                    <!-- Menu Pengajuan -->
                     <a href="<?php echo e(route('laporan.index')); ?>" class="flex items-center justify-between p-3 text-xs font-medium rounded-lg hover:bg-amber-500 hover:text-white transition duration-150 cursor-pointer">
                         <span class="flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 mr-2">
+                            <svg xmlns="http://www.w3.org" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 mr-2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25M9 16.5v.75m3-3v3M15 12v5.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                             </svg>
-                            <span class="sidebar-text whitespace-nowrap">Pengajuan Pegawai Divisi <?php echo e(auth()->user()->divisi->nama_divisi ?? 'Divisi'); ?></span>
+                            <span class="sidebar-text whitespace-nowrap overflow-hidden text-ellipsis">
+                                <?php if($isManagerBiasa): ?>
+                                    Pengajuan Pegawai Divisi <?php echo e(auth()->user()->divisi->nama_divisi ?? 'Divisi'); ?>
+
+                                <?php else: ?>
+                                    Pengajuan Pegawai
+                                <?php endif; ?>
+                            </span>
                         </span>
-                        <!-- Icon Chevron: Tambahkan class 'group-hover:text-white' di sini -->
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-3 w-3 group-hover:text-white">
+                        <svg xmlns="http://www.w3.org" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-3 w-3 group-hover:text-white">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m5.25 4.5 7.5 7.5-7.5 7.5m6-15 7.5 7.5-7.5 7.5" />
                         </svg>
                     </a>

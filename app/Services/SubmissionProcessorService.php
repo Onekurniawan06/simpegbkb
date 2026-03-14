@@ -23,16 +23,16 @@ class SubmissionProcessorService
 
             // --- 2. Tentukan Alur (Flow) ---
             // DEFAULT FLOW (5 Tahap: Digunakan oleh Pegawai untuk Pensiun & PangkatGajiTunjangan)
-            $flow = ['Pengajuan Awal', 'Kepala SKK & MR', 'Direktur Kepatuhan', 'Direktur Utama', 'HRO'];
+            $flow = ['Pengajuan Awal', 'Kepala SKK & SKKMR', 'Direktur Kepatuhan', 'Direktur Utama', 'HRO'];
 
             if ($isManager) {
                 // LOGIKA KHUSUS USER MANAGER
                 if ($type === 'PangkatGajiTunjangan') {
-                    // Alur Manager Pangkat/Gaji (Tanpa Kepala SKK & MR)
+                    // Alur Manager Pangkat/Gaji (Tanpa Kepala SKK & SKKMR)
                     $flow = ['Pengajuan Awal', 'Direktur Kepatuhan', 'Direktur Utama', 'HRO'];
                 } elseif ($type === 'Pensiun') {
                     // Alur Pensiun Manager disamakan dengan pegawai (5 tahap)
-                    $flow = ['Pengajuan Awal', 'Kepala SKK & MR', 'Direktur Kepatuhan', 'Direktur Utama', 'HRO'];
+                    $flow = ['Pengajuan Awal', 'Kepala SKK & SKKMR', 'Direktur Kepatuhan', 'Direktur Utama', 'HRO'];
                 } elseif ($type === 'Cuti') {
                     // Cuti Manager: Pengajuan -> Dir. Operasional -> HRO
                     $flow = ['Pengajuan Awal', 'Direktur Operasional', 'HRO'];
@@ -45,9 +45,9 @@ class SubmissionProcessorService
                 if (in_array($type, ['Cuti', 'Lembur'])) {
                     $flow = ['Pengajuan Awal', 'Manager', 'Direktur Operasional', 'HRO'];
 
-                    // Penyesuaian Label khusus Lembur Pegawai: Ganti Dir. Operasional menjadi Kepala SKK MR
+                    // Penyesuaian Label khusus Lembur Pegawai: Ganti Dir. Operasional menjadi Kepala SKK & SKKMR
                     if ($type === 'Lembur') {
-                        $flow = array_map(fn($s) => ($s == 'Direktur Operasional') ? 'Kepala SKK MR' : $s, $flow);
+                        $flow = array_map(fn($s) => ($s == 'Direktur Operasional') ? 'Kepala SKK & SKKMR' : $s, $flow);
                     }
                 }
             }
@@ -99,12 +99,12 @@ class SubmissionProcessorService
                     'statusString' => $status,
                     'statusText' => $statusText,
                     'statusBadge' => $statusBadge,
-                    // Cek kolom 'update_at' atau 'updated_at' (sesuaikan dengan tabel log Anda)
-                    'updatedAt' => isset($log['updated_at'])
-                        ? Carbon::parse($log['updated_at'])->format('d/m/Y H:i')
-                        : (isset($log['update_at']) ? Carbon::parse($log['update_at'])->format('d/m/Y H:i') : null),
-                    'isCurrent' => $isCurrent
-                ];
+                    'comment'     => $log['komentar'] ?? ($log['catatan'] ?? null),
+                        'updatedAt'   => isset($log['updated_at'])
+                            ? Carbon::parse($log['updated_at'])->format('d/m/Y H:i')
+                            : (isset($log['update_at']) ? Carbon::parse($log['update_at'])->format('d/m/Y H:i') : null),
+                        'isCurrent'   => $isCurrent
+                    ];
             }
 
             // --- 1. Logika Warna Garis (DIPERBAIKI) ---
@@ -114,13 +114,19 @@ class SubmissionProcessorService
 
                     // Garis hijau jika tahap saat ini sudah disetujui
                     if ($currentStage['statusString'] == 'disetujui') {
-                        $currentStage['lineColor'] = 'bg-teal-500';
+                        // Jika tahap ini BERHASIL, cek tahap depannya
+                        if ($nextStage['statusString'] == 'disetujui' || $nextStage['isCurrent']) {
+                            $currentStage['lineColor'] = 'bg-teal-500'; // Hijau ke Hijau/Orange
+                        } else {
+                            $currentStage['lineColor'] = 'bg-gray-200'; // Hijau ke Abu-abu
+                        }
                     }
-                    // Garis merah jika tahap BERIKUTNYA ditolak (menunjukkan aliran berhenti di sana)
-                    elseif ($nextStage['statusString'] == 'ditolak') {
+                    elseif ($currentStage['statusString'] == 'ditolak') {
+                        // KUNCI: Jika tahap ini DITOLAK, garis setelahnya harus MERAH
                         $currentStage['lineColor'] = 'bg-red-500';
                     }
                     else {
+                        // Sisanya (menunggu atau sedang proses) garis abu-abu
                         $currentStage['lineColor'] = 'bg-gray-200';
                     }
                 } else {

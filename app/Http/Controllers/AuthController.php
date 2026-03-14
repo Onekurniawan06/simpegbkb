@@ -87,7 +87,7 @@ class AuthController extends Controller
             'verification' => 'Username atau password salah.',
         ])->onlyInput('username');
     }
-    
+
     public function showRegistrationForm()
     {
         return view('register');
@@ -126,6 +126,14 @@ class AuthController extends Controller
 
             // Untuk pegawai baru, ID Jabatan/Divisi mungkin default atau null sementara
         } else {
+            // Ambil data dari tabel pegawai untuk mendapatkan level_id
+            $dataPegawai = DB::table('pegawai')
+                ->where('nomor_urut_pegawai', $nomorUrutPegawai)
+                ->first();
+
+            // Masukkan ke variabel agar bisa dipakai di User::create
+            $idLevelTerpilih = $dataPegawai ? $dataPegawai->level_id : null;
+
             $dataPekerjaan = DB::table('pekerjaan')
                 ->where('nomor_urut_pegawai', $nomorUrutPegawai)
                 ->first();
@@ -155,6 +163,7 @@ class AuthController extends Controller
                 'nomor_urut_pegawai' => $nomorUrutPegawai,
                 'jabatan_id' => $idJabatanTerpilih, // Simpan ID Jabatan
                 'id_divisi' => $idDivisiTerpilih,   // Simpan ID Divisi
+                'level_id' => $idLevelTerpilih,     //Simpan ID Level
             ]);
 
             if (empty($request->nomor_urut_pegawai)) {

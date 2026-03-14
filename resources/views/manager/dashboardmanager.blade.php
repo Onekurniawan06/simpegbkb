@@ -4,6 +4,7 @@
 {{-- Konten Utama Halaman Dashboard Admin --}}
 
 @section('content')
+
     <div class="bg-gray-100 rounded-tl-md shadow-lg p-4 h-full overflow-y-auto" id="mainContent">
         {{-- <!-- Welcome Section (centered content below date) -->
         <div class="flex items-center justify-center flex-col text-center mb-2">

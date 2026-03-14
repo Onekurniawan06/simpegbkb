@@ -9,102 +9,149 @@
 </div>
 
 @php
-    $totalHistory = count($historiLog);
+    // 1. AMBIL DATA TERAKHIR DULU
     $lastLog = $historiLog->last();
     $statusTerakhir = strtolower($lastLog->status_persetujuan ?? $lastLog->status_pengajuan);
-
-    // Cek apakah sudah disetujui sampai tahap paling akhir (misal HRO atau Direktur)
-    $isFinalApproved = ($statusTerakhir === 'disetujui' && ($lastLog->tahap_persetujuan === 'HRO' || $lastLog->tahap_persetujuan === 'Selesai'));
+    // 2. DEFINISIKAN VARIABLE CEK (Agar tidak error "Undefined")
+    $isHRODone = ($statusTerakhir === 'disetujui' && $lastLog->tahap_persetujuan === 'HRO');
+    $isFailFinal = ($statusTerakhir === 'ditolak');
+    // 3. Tentukan Nama Atasan Berikutnya secara Dinamis
+    $nextStepName = '-';
+    if ($statusTerakhir !== 'ditolak' && $lastLog->tahap_persetujuan === 'Pengajuan Awal') {
+        if ($sumber === 'pensiun' || $sumber === 'pangkatgajitunjangan') {
+            $nextStepName = 'Kepala SKK & SKKMR';
+        } else {
+            $nextStepName = 'Manager';
+        }
+    }
 @endphp
 
+<!-- Tracking Status Stepper -->
 <div class="bg-white border-b border-gray-100 max-w-full py-4 shadow-sm">
     <div class="max-w-4xl mx-auto px-6">
         <div class="relative flex items-start">
+
+            {{-- 1. LOOP HISTORI (Data dari Database) --}}
             @foreach($historiLog as $index => $log)
-@php
-    $logStatus = strtolower($log->status_persetujuan ?? $log->status_pengajuan);
-    $isDone = ($logStatus === 'disetujui');
-    $isCurrent = ($logStatus === 'diproses');
-    $isRejected = ($logStatus === 'ditolak');
+                @php
+                    // --- 1. DEFINISI STATUS (TETAP UTUH, TIDAK ADA YANG DIHAPUS) ---
+                    $logStatus = strtolower($log->status_persetujuan ?? $log->status_pengajuan);
+                    $isDone = ($logStatus === 'disetujui');
+                    $isCurr = ($logStatus === 'diproses');
+                    $isFail = ($logStatus === 'ditolak'); // Ini tetap ada untuk warna MERAH
+                    $timeCol = ($sumber === 'pensiun') ? 'update_at' : 'updated_at'; // Ini tetap ada untuk TANGGAL
 
-    $timeCol = (isset($sumber) && $sumber === 'pensiun') ? 'update_at' : 'updated_at';
-    $waktuTampil = $log->tgl_persetujuan ?? $log->tgl_pengajuan ?? ($log->$timeCol ?? null);
+                    $nextLog = $historiLog[$index + 1] ?? null;
+                    $nextStatus = $nextLog ? strtolower($nextLog->status_persetujuan ?? $nextLog->status_pengajuan) : null;
 
-    $nextLog = $historiLog[$index + 1] ?? null;
-    $nextStatus = $nextLog ? strtolower($nextLog->status_persetujuan ?? $nextLog->status_pengajuan) : null;
+                    if ($isDone) {
+                        // Garis HIJAU jika depannya sudah ada aksi
+                        $lineColor = ($nextStatus === 'disetujui' || $nextStatus === 'diproses' || $nextStatus === 'ditolak')
+                                    ? 'bg-emerald-500'
+                                    : 'bg-gray-200';
+                    } elseif ($isCurr) {
+                        $lineColor = 'bg-orange-500';
+                    } elseif ($isFail) {
+                        // --- KUNCI DI SINI: Kalau ditolak, garis ke tahap berikutnya harus MERAH ---
+                        $lineColor = 'bg-red-500';
+                    } else {
+                        $lineColor = 'bg-gray-200';
+                    }
+                @endphp
 
-    // LOGIKA GARIS (DIUBAH AGAR SETELAH MERAH JADI MERAH)
-    if ($nextStatus === 'ditolak') {
-        $lineColor = 'bg-red-500'; // Garis ke arah penolakan jadi MERAH
-    } elseif ($nextStatus === 'diproses') {
-        $lineColor = 'bg-orange-500'; // Garis ke arah yang sedang diproses jadi ORANGE
-    } elseif ($nextStatus === 'disetujui') {
-        $lineColor = 'bg-emerald-500'; // Garis ke arah yang sudah disetujui jadi HIJAU
-    } elseif ($isRejected) {
-        $lineColor = 'bg-red-500'; // Garis setelah titik merah tetap MERAH
-    } else {
-        $lineColor = 'bg-gray-200'; // Sisanya ABU-ABU
-    }
+                <div class="flex flex-col items-center flex-1 relative">
+                    {{-- Garis Penghubung (Menggunakan $lineColor yang sudah support Orange) --}}
+                    @if(!$loop->last)
+                        <div class="absolute top-5 left-1/2 w-full h-[2.5px] z-0 {{ $lineColor }}"></div>
+                    @else
+                        {{-- Garis dari titik DB terakhir menuju titik OTOMATIS atau AKHIR --}}
+                        <div class="absolute top-5 left-1/2 w-full h-[2.5px] z-0 {{ $isHRODone ? 'bg-emerald-500' : ($isFailFinal ? 'bg-red-500' : ($isCurr ? 'bg-orange-500' : 'bg-gray-100')) }}"></div>
+                    @endif
 
-    $circleClass = $isDone ? 'bg-emerald-500 border-emerald-100' : ($isCurrent ? 'bg-orange-500 border-orange-100 shadow-[0_0_15px_rgba(249,115,22,0.4)]' : ($isRejected ? 'bg-red-500 border-red-100 shadow-[0_0_15px_rgba(239,68,68,0.4)]' : 'bg-gray-200 border-gray-50'));
-@endphp
+                    {{-- Bulatan Utama --}}
+                    <div class="relative flex items-center justify-center z-10">
+                        @if($isCurr)
+                            <span class="absolute inline-flex h-9 w-9 rounded-full bg-orange-400 opacity-20 animate-ping"></span>
+                        @endif
 
-<div class="flex flex-col items-center flex-1 relative">
-    <!-- GARIS PENGHUBUNG -->
-    @if(!$loop->last)
-        <div class="absolute top-5 left-1/2 w-full h-[2.5px] z-0 {{ $lineColor }}"></div>
-    @else
-        <div class="absolute top-5 left-1/2 w-full h-[2.5px] z-0 {{ (isset($isFinalApproved) && $isFinalApproved) ? 'bg-emerald-500' : 'bg-gray-100' }}"></div>
-    @endif
+                        <div class="w-10 h-10 rounded-full {{ $isDone ? 'bg-emerald-500 border-emerald-100' : ($isFail ? 'bg-red-500 border-red-100' : 'bg-orange-500 border-orange-100') }} border-[5px] flex items-center justify-center shadow-sm transition-all duration-300">
+                            @if($isDone)
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                            @elseif($isFail)
+                                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                            @else
+                                <div class="w-2 h-2 bg-white rounded-full"></div>
+                            @endif
+                        </div>
+                    </div>
 
-    <!-- Bulatan -->
-    <div class="w-10 h-10 rounded-full {{ $circleClass }} border-[5px] flex items-center justify-center z-10 transition-all duration-300">
-        @if($isDone)
-            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
-        @elseif($isRejected)
-            <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
-        @elseif($isCurrent)
-            <div class="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-        @else
-            <div class="w-2 h-2 bg-white rounded-full"></div>
-        @endif
-    </div>
+                    {{-- Label Info --}}
+                    <div class="mt-4 text-center px-2">
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tahap {{ $index + 1 }}</p>
+                        <p class="text-[11px] font-semibold text-gray-900 mt-1 leading-tight">{{ $log->tahap_persetujuan == 'Pengajuan Awal' ? 'Pengajuan' : $log->tahap_persetujuan }}</p>
+                        <p class="text-[9px] font-bold {{ $isDone ? 'text-emerald-600' : ($isFail ? 'text-red-600' : 'text-orange-600') }} mt-1 italic uppercase">{{ $logStatus }}</p>
 
-    <!-- Label Info -->
-    <div class="mt-4 text-center px-2">
-        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tahap {{ $index + 1 }}</p>
-        <p class="text-[11px] font-semibold text-gray-900 mt-1 leading-tight">
-            {{ $log->tahap_persetujuan == 'Pengajuan Awal' ? 'Pengajuan' : $log->tahap_persetujuan }}
-        </p>
-        <p class="text-[9px] font-bold {{ $isDone ? 'text-emerald-600' : ($isCurrent ? 'text-orange-600' : ($isRejected ? 'text-red-600' : 'text-gray-400')) }} mt-1 italic uppercase">
-            {{ $logStatus }}
-        </p>
-
-        @if($waktuTampil)
-            <div class="mt-2">
-                <p class="text-[9px] text-gray-500 font-medium whitespace-nowrap">
-                    {{ \Carbon\Carbon::parse($waktuTampil)->translatedFormat('d M Y') }}
-                    <span class="text-gray-400 ml-1">{{ \Carbon\Carbon::parse($waktuTampil)->format('H:i') }} WIB</span>
-                </p>
-            </div>
-        @endif
-    </div>
-</div>
-@endforeach
-
-            <!-- TITIK AKHIR (DINAMIS) -->
-            <div class="flex flex-col items-center flex-1 relative">
-                <div class="w-10 h-10 rounded-full {{ $isFinalApproved ? 'bg-emerald-500 border-emerald-100' : 'bg-gray-100' }} border-[5px] flex items-center justify-center z-10">
-                    <div class="w-2 h-2 bg-white rounded-full"></div>
+                        {{-- Tanggal (Menggunakan $timeCol yang tetap terjaga) --}}
+                        @if($log->$timeCol)
+                            <p class="text-[8px] text-gray-400 mt-1">{{ \Carbon\Carbon::parse($log->$timeCol)->format('d/m H:i') }} WIB</p>
+                        @endif
+                    </div>
                 </div>
-                <div class="mt-4 text-center {{ $isFinalApproved ? '' : 'opacity-40' }}">
+            @endforeach
+
+            {{-- 2. TITIK ATASAN OTOMATIS (Next Step) - Muncul jika baru Pengajuan Awal --}}
+            @if(count($historiLog) == 1 && $statusTerakhir !== 'ditolak')
+                <div class="flex flex-col items-center flex-1 relative">
+                    {{-- Garis Abu-abu ke arah Selesai (Ini biarkan abu-abu karena proses berhenti di Manager) --}}
+                    <div class="absolute top-5 left-1/2 w-full h-[2.5px] z-0 bg-gray-100"></div>
+
+                    {{-- Bulatan Manager (WAJIB ORANGE & EFEK PING) --}}
+                    <div class="relative flex items-center justify-center z-10">
+                        {{-- Efek Radar Orange --}}
+                        <span class="absolute inline-flex h-9 w-9 rounded-full bg-orange-400 opacity-20 animate-ping"></span>
+
+                        {{-- Bulatan Utama Orange --}}
+                        <div class="w-10 h-10 rounded-full bg-orange-500 border-[5px] border-orange-100 flex items-center justify-center shadow-sm transition-all duration-300">
+                            <div class="w-2 h-2 bg-white rounded-full"></div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4 text-center px-2">
+                        <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tahap 2</p>
+                        <p class="text-[11px] font-semibold text-gray-900 mt-1 leading-tight">{{ $nextStepName }}</p>
+                        {{-- STATUS TETAP DIPROSES ORANGE --}}
+                        <p class="text-[9px] font-bold text-orange-600 mt-1 italic uppercase">DIPROSES</p>
+                    </div>
+                </div>
+            @endif
+
+            {{-- 3. TITIK AKHIR (Selesai) --}}
+            <div class="flex flex-col items-center flex-1 relative">
+                {{-- Bulatan Akhir: Hijau jika HRO Done, Merah jika ada yang Ditolak, Abu-abu jika masih proses --}}
+                <div class="w-10 h-10 rounded-full
+                    {{ $isHRODone ? 'bg-emerald-500 border-emerald-100' : ($isFailFinal ? 'bg-red-500 border-red-100' : 'bg-gray-100') }}
+                    border-[5px] flex items-center justify-center z-10 shadow-sm transition-all duration-300">
+
+                    @if($isHRODone)
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                    @elseif($isFailFinal)
+                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    @else
+                        <div class="w-2 h-2 bg-white rounded-full"></div>
+                    @endif
+                </div>
+
+                <div class="mt-4 text-center {{ ($isHRODone || $isFailFinal) ? '' : 'opacity-40' }}">
                     <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Akhir</p>
-                    <p class="text-[11px] font-semibold text-gray-400 mt-1">Selesai</p>
+                    <p class="text-[11px] font-semibold {{ $isFailFinal ? 'text-red-600' : ($isHRODone ? 'text-emerald-600' : 'text-gray-400') }} mt-1 leading-tight">
+                        {{ $isFailFinal ? 'BERHENTI' : 'Selesai' }}
+                    </p>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
 
 
 <!-- Container: Kita tambah tingginya ke h-[580px] agar pas untuk textarea 5 baris + 2 tombol di kanan -->
@@ -132,7 +179,16 @@
                 </div>
                 <div>
                     <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Jenis Pengajuan</label>
-                    <p class="text-sm text-indigo-600 font-medium">{{ $sumber == 'cuti' ? $data->Jenis_cuti : 'Lembur Kerja' }}</p>
+                    <p class="text-sm text-indigo-600 font-medium italic">
+                        @if($sumber == 'cuti')
+                            {{ $data->Jenis_cuti }}
+                        @elseif($sumber == 'lembur')
+                            Lembur Kerja
+                        @else
+                            {{-- Mengambil kolom jenis_pengajuan dari tabel pensiun atau pangkatgaji --}}
+                            {{ $data->jenis_pengajuan ?? ucfirst($sumber) }}
+                        @endif
+                    </p>
                 </div>
             </div>
 
