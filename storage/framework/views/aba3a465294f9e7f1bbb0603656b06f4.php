@@ -112,7 +112,7 @@
                                 ?>
 
                                 <?php if(isset($stage['comment']) && $stage['comment'] && !in_array($stage['stageName'], $forbiddenStages)): ?>
-                                    <div class="absolute bottom-[110%] left-[80%] -translate-x-0 mb-2
+                                    <div class="absolute bottom-[110%] left-[0%] -translate-x-0 mb-2
                                                 invisible group-hover:visible opacity-0 group-hover:opacity-100
                                                 w-48 p-3 bg-gray-900 text-white text-[10px] rounded-xl shadow-2xl
                                                 z-50 transition-all duration-300 pointer-events-none">

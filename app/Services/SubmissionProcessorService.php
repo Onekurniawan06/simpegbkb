@@ -17,37 +17,44 @@ class SubmissionProcessorService
                 ->where('level_id', $user->level_id)
                 ->first();
 
-            // Cek apakah user adalah manager berdasarkan route_name di database
+            // 1. Identifikasi Role (Gunakan role_name dari mapping lu)
             $isManager = $roleMapping && str_contains($roleMapping->route_name, 'manager');
+            $isSKAI = $roleMapping && str_contains(strtolower($roleMapping->role_name), 'skai'); // Nangkep Kepala SKAI
+            $isSKK = $roleMapping && str_contains(strtolower($roleMapping->role_name), 'kepatuhan'); // Nangkep Kepala SKK & SKKMR
             $type = $submission['type'];
 
             // --- 2. Tentukan Alur (Flow) ---
-            // DEFAULT FLOW (5 Tahap: Digunakan oleh Pegawai untuk Pensiun & PangkatGajiTunjangan)
+            // DEFAULT FLOW (5 Tahap Standar)
             $flow = ['Pengajuan Awal', 'Kepala SKK & SKKMR', 'Direktur Kepatuhan', 'Direktur Utama', 'HRO'];
 
             if ($isManager) {
-                // LOGIKA KHUSUS USER MANAGER
+                // --- LOGIKA KHUSUS USER MANAGER / KEPALA UNIT ---
                 if ($type === 'PangkatGajiTunjangan') {
-                    // Alur Manager Pangkat/Gaji (Tanpa Kepala SKK & SKKMR)
                     $flow = ['Pengajuan Awal', 'Direktur Kepatuhan', 'Direktur Utama', 'HRO'];
                 } elseif ($type === 'Pensiun') {
-                    // Alur Pensiun Manager disamakan dengan pegawai (5 tahap)
                     $flow = ['Pengajuan Awal', 'Kepala SKK & SKKMR', 'Direktur Kepatuhan', 'Direktur Utama', 'HRO'];
                 } elseif ($type === 'Cuti') {
                     // Cuti Manager: Pengajuan -> Dir. Operasional -> HRO
                     $flow = ['Pengajuan Awal', 'Direktur Operasional', 'HRO'];
-                } else {
-                    // Alur Umum Manager (Termasuk Lembur Manager): Pengajuan -> Dir. Operasional -> Dir. Utama -> HRO
-                    $flow = ['Pengajuan Awal', 'Direktur Operasional', 'Direktur Utama', 'HRO'];
+                } elseif ($type === 'Lembur') {
+                    // Lembur Manager: Pengajuan -> Kepala SKK & SKKMR -> HRO (DIROPS DIBUANG)
+                    $flow = ['Pengajuan Awal', 'Kepala SKK & SKKMR', 'HRO'];
                 }
             } else {
-                // LOGIKA KHUSUS USER PEGAWAI (Cuti & Lembur)
+                // --- LOGIKA KHUSUS USER PEGAWAI ---
                 if (in_array($type, ['Cuti', 'Lembur'])) {
+                    // DEFAULT PEGAWAI: Pengajuan -> Manager -> Dir. Operasional -> HRO
                     $flow = ['Pengajuan Awal', 'Manager', 'Direktur Operasional', 'HRO'];
 
-                    // Penyesuaian Label khusus Lembur Pegawai: Ganti Dir. Operasional menjadi Kepala SKK & SKKMR
                     if ($type === 'Lembur') {
-                        $flow = array_map(fn($s) => ($s == 'Direktur Operasional') ? 'Kepala SKK & SKKMR' : $s, $flow);
+                        // PENYESUAIAN LEMBUR PEGAWAI (FIX TANPA DIREKTUR OPS)
+                        if ($isSKAI) {
+                            // RUTE AUDIT: Pengajuan -> Kepala SK Audit -> Kepala SKK & SKKMR -> HRO
+                            $flow = ['Pengajuan Awal', 'Kepala SK Audit', 'Kepala SKK & SKKMR', 'HRO'];
+                        } else {
+                            // RUTE PEGAWAI BIASA: Pengajuan -> Manager -> Kepala SKK & SKKMR -> HRO
+                            $flow = ['Pengajuan Awal', 'Manager', 'Kepala SKK & SKKMR', 'HRO'];
+                        }
                     }
                 }
             }

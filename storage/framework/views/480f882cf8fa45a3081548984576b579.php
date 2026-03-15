@@ -65,7 +65,7 @@
             <!-- Menghapus overflow-y-auto dari sidebar-content -->
             <nav id="sidebar-content" class="flex-1 px-2 py-4 space-y-2">
                 <!-- Judul Navigasi Dinamis Berdasarkan Jabatan -->
-                <div class="pt-5 pb-2 px-3 sidebar-text">
+                
                     <?php
                         $userJabatan = strtolower(auth()->user()->jabatan->nama_jabatan ?? '');
                         $isHRO_Blade = str_contains($userJabatan, 'hro') || str_contains($userJabatan, 'human resources');
@@ -73,7 +73,7 @@
                         $isManagerBiasa = !$isHRO_Blade && !$isSKK_Blade;
                     ?>
 
-                    <div class="flex flex-col">
+                    <div class="flex flex-col pt-3 pb-3">
                         <span class="text-[10px] font-bold uppercase tracking-[0.15em] text-amber-400 opacity-80">
                             Akses Level
                         </span>
@@ -81,19 +81,19 @@
                             <?php if($isHRO_Blade): ?>
                                 Human Resources (HRO)
                             <?php elseif($isSKK_Blade): ?>
-                                Kepatuhan & SKK
+                                Kepala SKK & SKKMR
                             <?php else: ?>
                                 Manager <?php echo e(auth()->user()->divisi->nama_divisi ?? 'Divisi'); ?>
 
                             <?php endif; ?>
                         </span>
                     </div>
-                </div>
+                
 
                 <!-- Garis Pemisah Tipis agar Rapi -->
-                <div class="px-3 mb-2">
-                    <div class="h-[1px] w-full bg-white/10 shadow-sm"></div>
-                </div>
+                
+                    <div class="h-[1px] w-full bg-white shadow-md"></div>
+                
 
                 <!-- Menu Dashboard Utama -->
                 <a href="<?php echo e(Auth::user()->dashboard_link); ?>"

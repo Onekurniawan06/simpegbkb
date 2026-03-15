@@ -67,10 +67,8 @@
                 <!-- Judul Navigasi Dinamis Berdasarkan Jabatan -->
                 {{-- <div class="pb-2 px-3 sidebar-text"> --}}
                     @php
-                        $userJabatan = strtolower(auth()->user()->jabatan->nama_jabatan ?? '');
-                        $isHRO_Blade = str_contains($userJabatan, 'hro') || str_contains($userJabatan, 'human resources');
-                        $isSKK_Blade = str_contains($userJabatan, 'kepatuhan') || str_contains($userJabatan, 'skk');
-                        $isManagerBiasa = !$isHRO_Blade && !$isSKK_Blade;
+                        // Langsung ambil nama asli dari tabel jabatan (Direktur Kepatuhan / Operasional / Utama)
+                        $namaJabatan = auth()->user()->jabatan->nama_jabatan ?? 'Direktur';
                     @endphp
 
                     <div class="flex flex-col pt-3 pb-3">
@@ -78,16 +76,9 @@
                             Akses Level
                         </span>
                         <span class="text-xs font-extrabold uppercase tracking-wider text-white mt-0.5 break-words leading-tight">
-                            @if($isHRO_Blade)
-                                Human Resources (HRO)
-                            @elseif($isSKK_Blade)
-                                Kepala SKK & SKKMR
-                            @else
-                                Manager {{ auth()->user()->divisi->nama_divisi ?? 'Divisi' }}
-                            @endif
+                            {{ $namaJabatan }}
                         </span>
                     </div>
-                {{-- </div> --}}
 
                 <!-- Garis Pemisah Tipis agar Rapi -->
                 {{-- <div class="px-3 mb-2"> --}}
