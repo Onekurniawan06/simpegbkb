@@ -26,58 +26,57 @@ class CreatePengajuan extends Controller
         $user = Auth::user();
         $userNomorUrut = $user->nomor_urut_pegawai;
 
-        // --- 1. Logika Status Kartu (Existing) ---
-        $pendingCutiManager = LogPersetujuanCuti::where('nomor_urut_pegawai', $userNomorUrut)
+        // --- 1. Logika Status Kartu (LENGKAP 4 TABEL) ---
+        $pendingCutiManager = \DB::table('log_persetujuan_cuti')
+            ->where('nomor_urut_pegawai', $userNomorUrut)
             ->where('status_pengajuan', 'diproses')->exists();
-        $pendingLemburManager = LogPersetujuanLembur::where('nomor_urut_pegawai', $userNomorUrut)
-            ->where('status_persetujuan', 'diproses')->exists();
-        $pendingPensiunManager = LogPersetujuanPensiun::where('nomor_urut_pegawai', $userNomorUrut)
+
+        $pendingLemburManager = \DB::table('log_persetujuan_lembur')
+            ->where('nomor_urut_pegawai', $userNomorUrut)
             ->where('status_persetujuan', 'diproses')->exists();
 
-        // --- 2. Logika Tabel Pengajuan ---
-        // Asumsi: fetchSubmissions, submissionProcessor, dan paginateSubmissions sudah ada di Controller/Trait Anda
+        $pendingPensiunManager = \DB::table('log_persetujuan_pensiun')
+            ->where('nomor_urut_pegawai', $userNomorUrut)
+            ->where('status_persetujuan', 'diproses')->exists();
+
+        // --- TAMBAHAN: Logika Pangkat, Gaji & Tunjangan ---
+        $pendingPangkatManager = \DB::table('log_persetujuan_pangkatgajitunjangan')
+            ->where('nomor_urut_pegawai', $userNomorUrut)
+            ->where('status_persetujuan', 'diproses')->exists();
+
+        // KUNCI: Sekarang ngecek ke 4 variabel
+        $isAnyPending = ($pendingCutiManager || $pendingLemburManager || $pendingPensiunManager || $pendingPangkatManager);
+
+        // --- 2. Logika Tabel Pengajuan (Tetap) ---
         $allSubmissions = $this->fetchSubmissions($user, $request);
-
         $filterType = $request->type;
         if ($filterType) {
             $allSubmissions = $allSubmissions->filter(fn($item) => strtolower($item['type']) === strtolower($filterType));
         }
-
         $processedSubmissions = $this->submissionProcessor->processSubmissions($allSubmissions->sortByDesc('created_at'));
         $paginatedSubmissions = $this->paginateSubmissions($processedSubmissions, 5)->appends($request->query());
 
-        // --- 3. LOGIKA DINAMIS & BEBAS HARDCODE ---
-
+        // --- 3. Breadcrumbs & Route (Tetap) ---
         $pageTitle = 'Manajemen Pengajuan';
-
-        // Mengambil link dashboard otomatis dari Accessor yang kita buat di Model User
-        // Ini akan otomatis menghasilkan /manager/umum, /manager/kredit, dll.
         $dashboardRoute = $user->dashboard_link;
-
-        // Definisikan Route Utama untuk halaman ini
         $parentRoute = route('manager.pilihpengajuan');
-
-        // Susun Breadcrumbs secara dinamis tanpa mengetik nama divisi manual
-        $breadcrumbs = [
-            'Beranda' => $dashboardRoute, // Otomatis mengarah ke dashboard divisi manager yang login
-        ];
-
+        $breadcrumbs = ['Beranda' => $dashboardRoute];
         if ($filterType) {
             $breadcrumbs['Manajemen Pengajuan ↦ Pengajuan Saya'] = $parentRoute;
             $breadcrumbs['Pengajuan ' . ucfirst($filterType)] = null;
-        } else {
-            $breadcrumbs['Manajemen Pengajuan ↦ Pengajuan Saya'] = null;
-        }
+        } else { $breadcrumbs['Manajemen Pengajuan ↦ Pengajuan Saya'] = null; }
 
-        // --- 4. Return View ---
+        // --- 4. Return View (SEMUA VARIABEL MASUK SINI) ---
         return view('manager.pengajuanmanager', compact(
             'pageTitle',
             'breadcrumbs',
+            'isAnyPending',
             'pendingCutiManager',
             'pendingLemburManager',
             'pendingPensiunManager',
+            'pendingPangkatManager', // <--- Pastikan ini terkirim!
             'paginatedSubmissions',
-            'dashboardRoute' // Dikirim agar Sidebar tahu link Beranda yang benar
+            'dashboardRoute'
         ));
     }
 

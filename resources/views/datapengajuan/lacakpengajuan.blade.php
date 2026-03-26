@@ -65,23 +65,23 @@
                             {{-- Garis Penghubung (Mengikuti Logic Atasan) --}}
                             {{-- Garis Penghubung (Logika: Merah jika ditolak, Hijau jika disetujui, Abu jika putus) --}}
                             @if (!$loop->last)
-                                @php
-                                    $lineColor = 'bg-gray-100'; // Default Abu-abu
-                                    if ($isDone) {
-                                        $lineColor = 'bg-emerald-500'; // Hijau jika sukses
-                                    } elseif ($isFail) {
-                                        $lineColor = 'bg-red-500'; // Merah jika ditolak
-                                    }
+    @php
+        // 1. Ambil warna yang sudah ditentukan di Controller (stageData)
+        $lineColor = $stage['lineColor'] ?? 'bg-gray-100'; 
 
-                                    // KUNCI: Jika tahap SEBELUMNYA sudah ditolak, maka garis ini HARUS Abu-abu (Putus)
-                                    // Kita cek apakah ada status ditolak di urutan sebelum index ini
-                                    $hasPreviousReject = collect($submission['stageData'])->take($loop->index)->contains('statusString', 'ditolak');
-                                    if ($hasPreviousReject) {
-                                        $lineColor = 'bg-gray-100';
-                                    }
-                                @endphp
-                                <div class="absolute top-5 left-1/2 w-full h-[2.5px] z-0 {{ $lineColor }}"></div>
-                            @endif
+        // 2. Tambahkan logika pengaman: Jika ada penolakan sebelumnya, garis tetap abu-abu (putus)
+        $hasPreviousReject = collect($submission['stageData'])->take($loop->index)->contains('statusString', 'ditolak');
+        if ($hasPreviousReject) {
+            $lineColor = 'bg-gray-100';
+        }
+
+        // 3. Pastikan class warna menggunakan Emerald agar seragam dengan bulatan Anda
+        // (Opsional: Jika di Controller pakai bg-teal-500, ganti ke bg-emerald-500 di sini)
+        $lineColor = str_replace('bg-teal-500', 'bg-emerald-500', $lineColor);
+    @endphp
+    
+    <div class="absolute top-5 left-1/2 w-full h-[2.5px] z-0 {{ $lineColor }}"></div>
+@endif
 
                             {{-- Container Bulatan dengan Efek Radar --}}
                             <div class="relative flex items-center justify-center z-10 group">

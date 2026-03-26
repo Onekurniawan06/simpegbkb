@@ -115,31 +115,34 @@ class SubmissionProcessorService
             }
 
             // --- 1. Logika Warna Garis (DIPERBAIKI) ---
-            foreach ($stageData as $index => &$currentStage) {
-                if (isset($stageData[$index + 1])) {
-                    $nextStage = $stageData[$index + 1];
+            // --- Logika Warna Garis (DENGAN TRANSISI ORANGE) ---
+foreach ($stageData as $index => &$currentStage) {
+    if (isset($stageData[$index + 1])) {
+        $nextStage = $stageData[$index + 1];
 
-                    // Garis hijau jika tahap saat ini sudah disetujui
-                    if ($currentStage['statusString'] == 'disetujui') {
-                        // Jika tahap ini BERHASIL, cek tahap depannya
-                        if ($nextStage['statusString'] == 'disetujui' || $nextStage['isCurrent']) {
-                            $currentStage['lineColor'] = 'bg-teal-500'; // Hijau ke Hijau/Orange
-                        } else {
-                            $currentStage['lineColor'] = 'bg-gray-200'; // Hijau ke Abu-abu
-                        }
-                    }
-                    elseif ($currentStage['statusString'] == 'ditolak') {
-                        // KUNCI: Jika tahap ini DITOLAK, garis setelahnya harus MERAH
-                        $currentStage['lineColor'] = 'bg-red-500';
-                    }
-                    else {
-                        // Sisanya (menunggu atau sedang proses) garis abu-abu
-                        $currentStage['lineColor'] = 'bg-gray-200';
-                    }
-                } else {
-                    $currentStage['lineColor'] = 'bg-transparent';
-                }
+        if ($currentStage['statusString'] == 'disetujui') {
+            // JIKA TAHAP SELANJUTNYA SEDANG DIPROSES -> ORANGE
+            if ($nextStage['isCurrent'] || $nextStage['statusString'] == 'diproses') {
+                $currentStage['lineColor'] = 'bg-orange-500'; 
+            } 
+            // JIKA TAHAP SELANJUTNYA SUDAH SELESAI JUGA -> HIJAU
+            elseif ($nextStage['statusString'] == 'disetujui' || $nextStage['statusString'] == 'ditolak') {
+                $currentStage['lineColor'] = 'bg-teal-500'; 
+            } 
+            // DEFAULT JIKA MASIH MENUNGGU JAUH DI DEPAN -> ABU-ABU
+            else {
+                $currentStage['lineColor'] = 'bg-gray-200';
             }
+        } elseif ($currentStage['statusString'] == 'ditolak') {
+            $currentStage['lineColor'] = 'bg-red-500';
+        } else {
+            $currentStage['lineColor'] = 'bg-gray-200';
+        }
+    } else {
+        $currentStage['lineColor'] = 'bg-transparent';
+    }
+}
+
             $submission['stageData'] = $stageData;
 
             // --- 2. DATA TRANSFORMER (SECTION 2 - DETAIL) ---

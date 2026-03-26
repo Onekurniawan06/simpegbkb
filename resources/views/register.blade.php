@@ -332,7 +332,7 @@
             clearTimeout(timeout);
 
             // Jika input dihapus atau terlalu pendek
-            if (nomor.length < 3) {
+            if (nomor.length < 1) {
                 msg.classList.add('hidden');
                 spinner.classList.add('hidden');
                 if (submitBtn) {

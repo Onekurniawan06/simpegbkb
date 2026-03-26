@@ -17,98 +17,135 @@
 
     
         <!-- Menu Grid Section (5 columns) -->
-        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <!-- Card Cuti & Izin -->
-            <?php if($pendingCutiManager): ?>
-                <div class="block h-full cursor-not-allowed group" title="Anda memiliki pengajuan cuti yang masih dalam proses persetujuan.">
-                    <div class="bg-white p-4 rounded-lg shadow flex items-center flex-col text-center h-full opacity-50">
-                        <div class="h-12 w-12 bg-orange-100 rounded-full mb-2">
-                            <img src="<?php echo e(asset('images/ico/user-travel.svg')); ?>" alt="User Travel Icon" class="w-8 h-8 m-2 mt-2 text-gray-500">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 overflow-visible">
+
+            <!-- 1. CARD CUTI & IZIN -->
+            <div class="relative h-full group">
+                <?php if($isAnyPending && !$pendingCutiManager): ?>
+                    <div class="absolute inset-0 z-20 bg-red-50/30 rounded-md flex flex-col items-center justify-center border-2 border-red-200 cursor-not-allowed">
+                        <div class="bg-red-600 text-white p-2 rounded-full shadow-lg mb-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z""")/>></svg>
                         </div>
-                        <p class="font-semibold text-gray-700 text-sm">Cuti & Izin</p>
-                        <p class="text-xs text-red-500 mt-1 mb-2">Pengajuan sedang diproses</p>
+                        <span class="text-[10px] font-black text-red-600 uppercase tracking-widest bg-white px-3 py-1 rounded-full shadow-md border border-red-200">Akses Terkunci</span>
                     </div>
-                </div>
-            <?php else: ?>
-                <a href="<?php echo e(route('cuti.formCutiIzin')); ?>" class="block h-full">
-                    <div class="bg-white p-4 rounded-lg shadow hover:shadow-md hover:bg-orange-50 transition duration-300 cursor-pointer flex items-center flex-col text-center h-full">
-                        <div class="h-12 w-12 bg-orange-100 rounded-full mb-2">
-                            <img src="<?php echo e(asset('images/ico/user-travel.svg')); ?>" alt="User Travel Icon" class="w-8 h-8 m-2 mt-2 text-gray-500">
+                <?php endif; ?>
+
+                <?php if($pendingCutiManager): ?>
+                    <div class="bg-white p-4 rounded-xl shadow-md border-2 border-orange-500 flex flex-col items-center text-center h-full ring-4 ring-orange-50">
+                        <div class="h-12 w-12 bg-orange-100 rounded-full mb-2 flex items-center justify-center"><img src="<?php echo e(asset('images/ico/user-travel.svg')); ?>" class="w-8 h-8"></div>
+                        <p class="font-bold text-gray-800 text-sm">Cuti & Izin</p>
+                        <div class="mt-2 px-3 py-1 bg-orange-500 rounded-full animate-pulse shadow-sm"><p class="text-[9px] font-black text-white uppercase tracking-widest">Sedang Diproses</p></div>
+                    </div>
+                <?php else: ?>
+                    <a href="<?php echo e(route('cuti.formCutiIzin')); ?>" class="block h-full group">
+                        <div class="bg-white p-4 rounded-xl shadow-sm hover:shadow-xl hover:bg-orange-50 transition-all duration-300 flex flex-col items-center text-center h-full border border-gray-100 group-hover:border-orange-300">
+                            <div class="h-12 w-12 bg-orange-50 rounded-full mb-2 flex items-center justify-center group-hover:scale-110 transition-transform"><img src="<?php echo e(asset('images/ico/user-travel.svg')); ?>" class="w-8 h-8"></div>
+                            <p class="font-semibold text-gray-700 text-sm">Cuti & Izin</p>
+                            <p class="text-[10px] text-gray-400 mt-1 italic font-medium">Klik untuk buat pengajuan</p>
                         </div>
-                        <p class="font-semibold text-gray-700 text-sm">Cuti & Izin</p>
-                        <p class="text-xs text-gray-500 mt-1">Klik untuk buat pengajuan</p>
+                    </a>
+                <?php endif; ?>
+            </div>
+
+            <!-- 2. CARD LEMBUR -->
+            <div class="relative h-full group">
+                <?php if($isAnyPending && !$pendingLemburManager): ?>
+                    <div class="absolute inset-0 z-20 bg-red-50/30 rounded-md flex flex-col items-center justify-center border-2 border-red-200 cursor-not-allowed">
+                        <div class="bg-red-600 text-white p-2 rounded-full shadow-lg mb-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z""")/>></svg>
+                        </div>
+                        <span class="text-[10px] font-black text-red-600 uppercase tracking-widest bg-white px-3 py-1 rounded-full shadow-md border border-red-200">Akses Terkunci</span>
+                    </div>
+                <?php endif; ?>
+
+                <?php if($pendingLemburManager): ?>
+                    <div class="bg-white p-4 rounded-xl shadow-md border-2 border-blue-500 flex flex-col items-center text-center h-full ring-4 ring-blue-50">
+                        <div class="h-12 w-12 bg-blue-100 rounded-full mb-2 flex items-center justify-center"><img src="<?php echo e(asset('images/ico/over-time.svg')); ?>" class="w-8 h-8"></div>
+                        <p class="font-bold text-gray-800 text-sm">Lembur</p>
+                        <div class="mt-2 px-3 py-1 bg-blue-500 rounded-full animate-pulse shadow-sm"><p class="text-[9px] font-black text-white uppercase tracking-widest">Sedang Diproses</p></div>
+                    </div>
+                <?php else: ?>
+                    <a href="<?php echo e(route('lembur.formLembur')); ?>" class="block h-full group">
+                        <div class="bg-white p-4 rounded-xl shadow-sm hover:shadow-xl hover:bg-blue-50 transition-all duration-300 flex flex-col items-center text-center h-full border border-gray-100 group-hover:border-blue-300">
+                            <div class="h-12 w-12 bg-blue-50 rounded-full mb-2 flex items-center justify-center group-hover:scale-110 transition-transform"><img src="<?php echo e(asset('images/ico/over-time.svg')); ?>" class="w-8 h-8"></div>
+                            <p class="font-semibold text-gray-700 text-sm">Lembur</p>
+                            <p class="text-[10px] text-gray-400 mt-1 italic font-medium">Klik untuk buat pengajuan</p>
+                        </div>
+                    </a>
+                <?php endif; ?>
+            </div>
+
+            <!-- 3. CARD PENSIUN -->
+            <div class="relative h-full group">
+                <?php if($isAnyPending && !$pendingPensiunManager): ?>
+                    <div class="absolute inset-0 z-20 bg-red-50/30 rounded-md flex flex-col items-center justify-center border-2 border-red-200 cursor-not-allowed">
+                        <div class="bg-red-600 text-white p-2 rounded-full shadow-lg mb-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z""")/>></svg>
+                        </div>
+                        <span class="text-[10px] font-black text-red-600 uppercase tracking-widest bg-white px-3 py-1 rounded-full shadow-md border border-red-200">Akses Terkunci</span>
+                    </div>
+                <?php endif; ?>
+
+                <?php if($pendingPensiunManager): ?>
+                    <div class="bg-white p-4 rounded-xl shadow-md border-2 border-yellow-500 flex flex-col items-center text-center h-full ring-4 ring-yellow-50">
+                        <div class="h-12 w-12 bg-yellow-100 rounded-full mb-2 flex items-center justify-center"><img src="<?php echo e(asset('images/ico/work-retirement.svg')); ?>" class="w-8 h-8"></div>
+                        <p class="font-bold text-gray-800 text-sm">Pensiun</p>
+                        <div class="mt-2 px-3 py-1 bg-yellow-500 rounded-full animate-pulse shadow-sm"><p class="text-[9px] font-black text-white uppercase tracking-widest">Sedang Diproses</p></div>
+                    </div>
+                <?php else: ?>
+                    <a href="<?php echo e(route('pensiun.formPensiun')); ?>" class="block h-full group">
+                        <div class="bg-white p-4 rounded-xl shadow-sm hover:shadow-xl hover:bg-yellow-50 transition-all duration-300 flex flex-col items-center text-center h-full border border-gray-100 group-hover:border-yellow-300">
+                            <div class="h-12 w-12 bg-yellow-50 rounded-full mb-2 flex items-center justify-center group-hover:scale-110 transition-transform"><img src="<?php echo e(asset('images/ico/work-retirement.svg')); ?>" class="w-8 h-8"></div>
+                            <p class="font-semibold text-gray-700 text-sm">Pensiun</p>
+                            <p class="text-[10px] text-gray-400 mt-1 italic font-medium">Klik untuk buat pengajuan</p>
+                        </div>
+                    </a>
+                <?php endif; ?>
+            </div>
+
+            <!-- 4. CARD PANGKAT, GAJI & TUNJANGAN -->
+            <div class="relative h-full group">
+                <?php if($isAnyPending && !$pendingPangkatManager): ?>
+                    <div class="absolute inset-0 z-20 bg-red-50/30 rounded-md flex flex-col items-center justify-center border-2 border-red-200 cursor-not-allowed">
+                        <div class="bg-red-600 text-white p-2 rounded-full shadow-lg mb-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="3"><path d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z""")/>></svg>
+                        </div>
+                        <span class="text-[10px] font-black text-red-600 uppercase tracking-widest bg-white px-3 py-1 rounded-full shadow-md border border-red-200">Akses Terkunci</span>
+                    </div>
+                <?php endif; ?>
+
+                <?php if($pendingPangkatManager): ?>
+                    <div class="bg-white p-4 rounded-xl shadow-md border-2 border-green-500 flex flex-col items-center text-center h-full ring-4 ring-green-50">
+                        <div class="h-12 w-12 bg-green-100 rounded-full mb-2 flex items-center justify-center"><img src="<?php echo e(asset('images/ico/promotion-in-salary.svg')); ?>" class="w-8 h-8"></div>
+                        <p class="font-bold text-gray-800 text-sm">Pangkat & Gaji</p>
+                        <div class="mt-2 px-3 py-1 bg-green-500 rounded-full animate-pulse shadow-sm"><p class="text-[9px] font-black text-white uppercase tracking-widest">Sedang Diproses</p></div>
+                    </div>
+                <?php else: ?>
+                    <a href="<?php echo e(route('kenaikanpangkatgajitunjangan.pangkatgajitunjangan')); ?>" class="block h-full group">
+                        <div class="bg-white p-4 rounded-xl shadow-sm hover:shadow-xl hover:bg-green-50 transition-all duration-300 flex flex-col items-center text-center h-full border border-gray-100 group-hover:border-green-300">
+                            <div class="h-12 w-12 bg-green-50 rounded-full mb-2 flex items-center justify-center group-hover:scale-110 transition-transform"><img src="<?php echo e(asset('images/ico/promotion-in-salary.svg')); ?>" class="w-8 h-8"></div>
+                            <p class="font-semibold text-gray-700 text-sm">Pangkat & Gaji</p>
+                            <p class="text-[10px] text-gray-400 mt-1 italic font-medium">Klik untuk buat pengajuan</p>
+                        </div>
+                    </a>
+                <?php endif; ?>
+            </div>
+
+            <!-- 5. CARD PENGHARGAAN (SELALU ENABLED) -->
+            <div class="h-full">
+                <a href="#" class="block h-full group">
+                    <div class="bg-white p-4 rounded-l-md shadow-sm hover:shadow-xl hover:bg-purple-50 transition-all duration-300 flex flex-col items-center text-center h-full border border-gray-100 group-hover:border-purple-300">
+                        <div class="h-12 w-12 bg-purple-50 rounded-full mb-2 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <img src="<?php echo e(asset('images/ico/service-award.svg')); ?>" class="w-8 h-8">
+                        </div>
+                        <p class="font-semibold text-gray-700 text-sm">Masa Kerja</p>
+                        
                     </div>
                 </a>
-            <?php endif; ?>
+            </div>
 
-            <?php if($pendingLemburManager): ?>
-                <div class="block h-full cursor-not-allowed group" title="Anda memiliki pengajuan Lembur yang masih dalam proses persetujuan.">
-                    <div class="bg-white p-4 rounded-lg shadow flex items-center flex-col text-center h-full opacity-50">
-                        <div class="h-12 w-12 bg-orange-100 rounded-full mb-2">
-                            <img src="<?php echo e(asset('images/ico/over-time.svg')); ?>" alt="User Travel Icon" class="w-8 h-8 m-2 mt-2 text-gray-500">
-                        </div>
-                        <p class="font-semibold text-gray-700 text-sm">Lembur</p>
-                        <p class="text-xs text-red-500 mt-1 mb-2">Pengajuan sedang diproses</p>
-                    </div>
-                </div>
-            <?php else: ?>
-                <!-- Card Lembur -->
-                <a href="<?php echo e(route('lembur.formLembur')); ?>" class="block h-full">
-                    <div class="bg-white p-4 rounded-lg shadow hover:shadow-md hover:bg-blue-50 transition duration-300 cursor-pointer flex items-center flex-col text-center h-full">
-                        <div class="h-12 w-12 bg-orange-100 rounded-full mb-2">
-                            <img src="<?php echo e(asset('images/ico/over-time.svg')); ?>" alt="User Travel Icon" class="w-8 h-8 m-2 mt-2 text-gray-500">
-                        </div>
-                        <p class="font-semibold text-gray-700 text-sm">Lembur</p>
-                        <p class="text-xs text-gray-500 mt-1">Klik untuk buat pengajuan</p>
-                    </div>
-                </a>
-            <?php endif; ?>
-
-            <?php if($pendingPensiunManager): ?>
-                <div class="block h-full cursor-not-allowed group" title="Anda memiliki pengajuan Lembur yang masih dalam proses persetujuan.">
-                    <div class="bg-white p-4 rounded-lg shadow flex items-center flex-col text-center h-full opacity-50">
-                        <div class="h-12 w-12 bg-orange-100 rounded-full mb-2">
-                            <img src="<?php echo e(asset('images/ico/work-retirement.svg')); ?>" alt="User Travel Icon" class="w-8 h-8 m-2 mt-2 text-gray-500">
-                        </div>
-                        <p class="font-semibold text-gray-700 text-sm">Pensiun</p>
-                        <p class="text-xs text-red-500 mt-1 mb-2">Pengajuan sedang diproses</p>
-                    </div>
-                </div>
-            <?php else: ?>
-                <!-- Card Pensiun -->
-                <a href="<?php echo e(route('pensiun.formPensiun')); ?>" class="block h-full">
-                    <div class="bg-white p-4 rounded-lg shadow hover:shadow-md hover:bg-blue-50 transition duration-300 cursor-pointer flex items-center flex-col text-center h-full">
-                        <div class="h-12 w-12 bg-yellow-100 rounded-full mb-2">
-                            <img src="<?php echo e(asset('images/ico/work-retirement.svg')); ?>" alt="User Travel Icon" class="w-8 h-8 m-2 mt-2 text-gray-500">
-                        </div>
-                        <p class="font-semibold text-gray-700 text-sm">Pensiun</p>
-                        <p class="text-xs text-gray-500 mt-1">Klik untuk buat pengajuan</p>
-                    </div>
-                </a>
-            <?php endif; ?>
-
-            <!-- Card Kenaikan Pangkat, Gaji & Tunjangan -->
-            <a href="<?php echo e(route('kenaikanpangkatgajitunjangan.pangkatgajitunjangan')); ?>" class="block h-full">
-                <div class="bg-white p-4 rounded-lg shadow hover:shadow-md hover:bg-green-50 transition duration-300 cursor-pointer flex items-center flex-col text-center h-full">
-                    <div class="h-12 w-12 bg-yellow-100 rounded-full mb-2">
-                        <img src="<?php echo e(asset('images/ico/promotion-in-salary.svg')); ?>" alt="User Travel Icon" class="w-8 h-8 m-2 mt-2 text-gray-500">
-                    </div>
-                    <p class="font-semibold text-gray-700 text-sm">Kenaikan Pangkat, Gaji & Tunjangan</p>
-                    <p class="text-xs text-gray-500 mt-1">Klik untuk buat pengajuan</p>
-                </div>
-            </a>
-
-            <!-- Card Penghargaan Masa Kerja -->
-            <a href="#" class="block h-full">
-                <div class="bg-white p-4 rounded-l-lg shadow hover:shadow-md hover:bg-red-50 transition duration-300 cursor-pointer flex items-center flex-col text-center h-full">
-                    <div class="h-12 w-12 bg-yellow-100 rounded-full mb-2">
-                        <img src="<?php echo e(asset('images/ico/service-award.svg')); ?>" alt="User Travel Icon" class="w-8 h-8 m-2 mt-2 text-gray-500">
-                    </div>
-                    <p class="font-semibold text-gray-700 text-sm">Penghargaan Masa Kerja</p>
-                    <p class="text-xs text-gray-500 mt-1">Klik untuk buat pengajuan</p>
-                </div>
-            </a>
         </div>
+
 
     
     <div class="bg-white shadow-sm rounded-l-lg overflow-hidden border border-gray-100 mt-2 h-full flex flex-col">

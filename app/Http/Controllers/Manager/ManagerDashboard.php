@@ -11,9 +11,25 @@ class ManagerDashboard extends Controller
 {
     public function index($divisi = null)
     {
-        $user = auth()->user(); // Bisa Manajer atau Kepala yang sedang login
+        $user = auth()->user();
 
-        // 1. Logika Keamanan: Cek slug divisi agar tidak nyasar ke dashboard divisi lain
+        // 1. Identifikasi Jabatan yang sedang Login (Manager/Direktur/HRO)
+        $role = DB::table('roles_mapping')
+            ->where('jabatan_id', $user->jabatan_id)
+            ->where('level_id', $user->level_id)
+            ->first();
+        $jabatanLogin = $role->role_name ?? 'Manager';
+
+        // *** NORMALISASI UNTUK SEMUA ATASAN (TERMASUK SKAI) ***
+        if (str_contains(strtolower($jabatanLogin), 'manajer') || str_contains(strtolower($jabatanLogin), 'manager')) {
+            $jabatanLogin = 'Manager';
+        } elseif (str_contains(strtolower($jabatanLogin), 'audit') || str_contains(strtolower($jabatanLogin), 'skai')) {
+            // Paksa jadi 'Kepala SK Audit' biar sinkron sama isi kolom 'tahap_persetujuan' di log
+            $jabatanLogin = 'Kepala SK Audit';
+        } elseif (str_contains(strtolower($jabatanLogin), 'skk') || str_contains(strtolower($jabatanLogin), 'kepatuhan')) {
+            $jabatanLogin = 'Kepala SKK & SKKMR';
+        }
+
         $slugUser = strtolower(str_replace(' ', '-', $user->divisi->nama_divisi));
         if ($divisi && $divisi !== $slugUser) {
             return redirect()->route('manager.dashboardmanager', ['divisi' => $slugUser]);
@@ -29,34 +45,32 @@ class ManagerDashboard extends Controller
         ];
 
         foreach ($tables as $table) {
-            // QUERY UTAMA: Join log ke tabel users
             $baseQuery = DB::table($table['name'])
                 ->join('users', $table['name'] . '.nomor_urut_pegawai', '=', 'users.nomor_urut_pegawai')
-                // Filter Divisi: Mengambil pegawai di divisi yang sama dengan user login (Manager/Kepala)
                 ->where('users.id_divisi', $user->id_divisi)
-                // Filter Level: HANYA menghitung level_id = 1 (Pegawai)
-                // Ini otomatis mengabaikan user dengan level 2 (Manajer/Kepala)
                 ->where('users.level_id', 1);
 
-            // A. HITUNG MENUNGGU: Semua status 'diproses' (termasuk tahap Pengajuan Awal)
+            // A. *** KUNCI: HITUNG MENUNGGU (Hanya yang antri di MEJA SAYA) ***
+            // Jadi kalau data status 'diproses' tapi tahapnya 'HRO', Manager gak akan liat angka itu.
             $totalMenunggu += (clone $baseQuery)
                 ->where($table['col'], 'diproses')
+                ->where($table['name'] . '.tahap_persetujuan', $jabatanLogin)
                 ->count();
 
-            // B. HITUNG DISETUJUI: Kecuali tahap 'Pengajuan Awal'
+            // B. HITUNG DISETUJUI (Kecuali Pengajuan Awal)
             $totalDisetujui += (clone $baseQuery)
                 ->where($table['col'], 'disetujui')
-                ->where($table['name'] . '.tahap_persetujuan', '!=', 'Pengajuan Awal')
+                ->where($table['name'] . '.tahap_persetujuan', $jabatanLogin)
                 ->count();
 
-            // C. HITUNG DITOLAK: Kecuali tahap 'Pengajuan Awal'
+            // C. HITUNG DITOLAK (Kecuali Pengajuan Awal)
             $totalDitolak += (clone $baseQuery)
                 ->where($table['col'], 'ditolak')
-                ->where($table['name'] . '.tahap_persetujuan', '!=', 'Pengajuan Awal')
+                ->where($table['name'] . '.tahap_persetujuan', $jabatanLogin)
                 ->count();
         }
 
-        // Ambil data tambahan (Berita)
+        // Ambil data berita (Opsional)
         $daftar_berita = Berita::where('tanggal_posting', '>=', now()->subHours(72))
             ->orderBy('tanggal_posting', 'desc')
             ->paginate(5);
@@ -68,6 +82,7 @@ class ManagerDashboard extends Controller
             'daftar_berita', 'total_belum_dibaca'
         ));
     }
+
 
     public function dataPegawaiGlobal(Request $request)
     {

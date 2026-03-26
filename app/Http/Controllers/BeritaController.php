@@ -13,30 +13,47 @@ class BeritaController extends Controller
 {
     public function index()
     {
-        $userNomorUrut = optional(Auth::user())->nomor_urut_pegawai; // Asumsi field ini ada di model User
+        $user = Auth::user();
+        $userNomorUrut = $user->nomor_urut_pegawai;
 
-        $hasPendingCuti = LogPersetujuanCuti::where('nomor_urut_pegawai', $userNomorUrut)
-                                            ->where('status_pengajuan', 'diproses')
-                                            ->exists();
+        // --- 1. Logika Status Kartu (CEK SEMUA TABEL) ---
+        $hasPendingCuti = \DB::table('log_persetujuan_cuti')
+            ->where('nomor_urut_pegawai', $userNomorUrut)
+            ->where('status_pengajuan', 'diproses')->exists();
 
-        $hasPendingLembur = LogPersetujuanLembur::where('nomor_urut_pegawai', $userNomorUrut)
-                                            ->where('status_persetujuan', 'diproses')
-                                            ->exists();
+        $hasPendingLembur = \DB::table('log_persetujuan_lembur')
+            ->where('nomor_urut_pegawai', $userNomorUrut)
+            ->where('status_persetujuan', 'diproses')->exists();
 
-        $hasPendingPensiun = LogPersetujuanPensiun::where('nomor_urut_pegawai', $userNomorUrut)
-                                            ->where('status_persetujuan', 'diproses')
-                                            ->exists();
+        $hasPendingPensiun = \DB::table('log_persetujuan_pensiun')
+            ->where('nomor_urut_pegawai', $userNomorUrut)
+            ->where('status_persetujuan', 'diproses')->exists();
 
-        // Kita ambil berita dari 3 hari terakhir (72 jam) agar ada rentang waktu
-        // untuk pengecekan "sudah dibaca" di sisi client sebelum benar-benar hilang.
+        // Tambahkan Pangkat, Gaji & Tunjangan
+        $hasPendingPangkat = \DB::table('log_persetujuan_pangkatgajitunjangan')
+            ->where('nomor_urut_pegawai', $userNomorUrut)
+            ->where('status_persetujuan', 'diproses')->exists();
+
+        // KUNCI: Gabungan untuk me-lock semua kartu di dashboard pegawai
+        $isAnyPending = ($hasPendingCuti || $hasPendingLembur || $hasPendingPensiun || $hasPendingPangkat);
+
+        // --- 2. Logika Berita (Tetap Sama) ---
         $daftar_berita = Berita::where('tanggal_posting', '>=', now()->subHours(72))
             ->orderBy('tanggal_posting', 'desc')
             ->paginate(5);
-            // dd($daftar_berita);
-        
+
         $total_belum_dibaca = Berita::where('tanggal_posting', '>=', now()->subDay())->count();
 
-        // Mengirim data ke view 'berita.index'
-        return view('pegawai.dashboard', compact('daftar_berita','hasPendingCuti', 'hasPendingLembur', 'hasPendingPensiun', 'total_belum_dibaca'));
+        // --- 3. Return View (Kirim semua variabel ke dashboard pegawai) ---
+        return view('pegawai.dashboard', compact(
+            'daftar_berita',
+            'hasPendingCuti',
+            'hasPendingLembur',
+            'hasPendingPensiun',
+            'hasPendingPangkat', // <--- Variabel baru
+            'isAnyPending',      // <--- Kunci utama buat lock kartu
+            'total_belum_dibaca'
+        ));
     }
+
 }

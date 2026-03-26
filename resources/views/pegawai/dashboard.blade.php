@@ -33,121 +33,164 @@
 
         <!-- Menu Grid Section (5 columns) -->
         <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-            <!-- Card Cuti & Izin -->
-            @if($hasPendingCuti)
-                {{-- Tautan dinonaktifkan secara visual dan fungsional dengan teks inline --}}
-                <div class="block h-full cursor-not-allowed group" title="Anda memiliki pengajuan cuti yang masih dalam proses persetujuan.">
-                    <div class="bg-white p-4 rounded-lg shadow flex items-center flex-col text-center h-full opacity-50">
-                        <div class="h-12 w-12 bg-orange-100 rounded-full mb-2">
-                            <img src="{{ asset('images/ico/user-travel.svg') }}" alt="User Travel Icon" class="w-8 h-8 m-2 mt-2 text-gray-500">
+                        <!-- Card Cuti & Izin -->
+            <div class="relative h-full">
+                @if($isAnyPending && !$hasPendingCuti)
+                    <div class="absolute inset-0 z-50 bg-white/60 rounded-lg flex flex-col items-center justify-center p-2 cursor-not-allowed">
+                        <div class="bg-red-600 text-white p-2 rounded-full mb-2 shadow-lg">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>
                         </div>
-                        <p class="font-semibold text-gray-700 text-sm">Cuti & Izin</p>
-                        {{-- Teks peringatan inline berwarna merah dan kecil --}}
-                        <p class="text-xs text-red-500 mt-1 mb-2">Pengajuan sedang diproses</p>
-                        {{-- Tambahan item menu untuk Lacak Pengajuan --}}
-                        <a href="{{ route('datapengajuan.formDataPengajuan') }}" class="block h-full">
-                            <div class="bg-white p-2 rounded-lg shadow hover:shadow-md hover:bg-blue-50 transition duration-300 cursor-pointer flex items-center flex-col text-center h-full">
-                                <p class="font-semibold text-gray-700 text-xs">Lacak Pengajuan</p>
-                            </div>
-                        </a>
-                    </div>
-                </div>
-            @else
-                {{-- Tautan normal jika tidak ada yang pending --}}
-                <a href="{{ route('cuti.formCutiIzin') }}" class="block h-full">
-                    <div class="bg-white p-4 rounded-lg shadow hover:shadow-md hover:bg-orange-50 transition duration-300 cursor-pointer flex items-center flex-col text-center h-full">
-                        <div class="h-12 w-12 bg-orange-100 rounded-full mb-2">
-                            <img src="{{ asset('images/ico/user-travel.svg') }}" alt="User Travel Icon" class="w-8 h-8 m-2 mt-2 text-gray-500">
+                        <div class="bg-red-600 px-3 py-1 rounded-full shadow-md border border-red-400">
+                            <p class="text-[9px] font-black text-white uppercase tracking-widest text-center">Akses Terkunci</p>
                         </div>
-                        <p class="font-semibold text-gray-700 text-sm">Cuti & Izin</p>
-                        <p class="text-xs text-gray-500 mt-1">Klik untuk buat pengajuan</p>
                     </div>
-                </a>
-            @endif
+                @endif
 
-            @if($hasPendingLembur)
-                {{-- Tautan dinonaktifkan secara visual dan fungsional dengan teks inline --}}
-                <div class="block h-full cursor-not-allowed group" title="Anda memiliki pengajuan Lembur yang masih dalam proses persetujuan.">
-                    <div class="bg-white p-4 rounded-lg shadow flex items-center flex-col text-center h-full opacity-50">
-                        <div class="h-12 w-12 bg-orange-100 rounded-full mb-2">
-                            <img src="{{ asset('images/ico/over-time.svg') }}" alt="User Travel Icon" class="w-8 h-8 m-2 mt-2 text-gray-500">
-                        </div>
-                        <p class="font-semibold text-gray-700 text-sm">Lembur</p>
-                        {{-- Teks peringatan inline berwarna merah dan kecil --}}
-                        <p class="text-xs text-red-500 mt-1 mb-2">Pengajuan sedang diproses</p>
-                        {{-- Tambahan item menu untuk Lacak Pengajuan --}}
-                        <a href="{{ route('datapengajuan.formDataPengajuan') }}" class="block h-full">
-                            <div class="bg-white p-2 rounded-lg shadow hover:shadow-md hover:bg-green-50 transition duration-300 cursor-pointer flex items-center flex-col text-center h-full">
-                                <p class="font-semibold text-gray-900 text-xs">Lacak Pengajuan</p>
+                @if($hasPendingCuti)
+                    <div class="block h-full cursor-not-allowed group" title="Anda memiliki pengajuan cuti yang masih dalam proses persetujuan.">
+                        <div class="bg-white p-4 rounded-lg shadow flex items-center flex-col text-center h-full">
+                            <div class="h-12 w-12 bg-orange-100 rounded-full mb-2">
+                                <img src="{{ asset('images/ico/user-travel.svg') }}" alt="User Travel Icon" class="w-8 h-8 m-2 mt-2 text-gray-500">
                             </div>
-                        </a>
-                    </div>
-                </div>
-            @else
-                <!-- Card Lembur -->
-                <a href="{{ route('lembur.formLembur') }}" class="block h-full">
-                    <div class="bg-white p-4 rounded-lg shadow hover:shadow-md hover:bg-blue-50 transition duration-300 cursor-pointer flex items-center flex-col text-center h-full">
-                        <div class="h-12 w-12 bg-orange-100 rounded-full mb-2">
-                            <img src="{{ asset('images/ico/over-time.svg') }}" alt="User Travel Icon" class="w-8 h-8 m-2 mt-2 text-gray-500">
+                            <p class="font-semibold text-gray-700 text-sm">Cuti & Izin</p>
+                            <p class="text-xs text-red-500 mt-1 mb-2">Pengajuan sedang diproses</p>
+                            <a href="{{ route('datapengajuan.formDataPengajuan') }}" class="block w-full">
+                                <div class="bg-white p-2 rounded-lg shadow border border-gray-200 hover:bg-blue-50 transition duration-300 cursor-pointer flex items-center flex-col text-center h-full">
+                                    <p class="font-semibold text-gray-700 text-xs">Lacak Pengajuan</p>
+                                </div>
+                            </a>
                         </div>
-                        <p class="font-semibold text-gray-700 text-sm">Lembur</p>
-                        <p class="text-xs text-gray-500 mt-1">Klik untuk buat pengajuan</p>
                     </div>
-                </a>
-            @endif
+                @else
+                    <a href="{{ route('cuti.formCutiIzin') }}" class="block h-full">
+                        <div class="bg-white p-4 rounded-lg shadow hover:shadow-md hover:bg-orange-50 transition duration-300 cursor-pointer flex items-center flex-col text-center h-full">
+                            <div class="h-12 w-12 bg-orange-100 rounded-full mb-2">
+                                <img src="{{ asset('images/ico/user-travel.svg') }}" alt="User Travel Icon" class="w-8 h-8 m-2 mt-2 text-gray-500">
+                            </div>
+                            <p class="font-semibold text-gray-700 text-sm">Cuti & Izin</p>
+                            <p class="text-xs text-gray-500 mt-1">Klik untuk buat pengajuan</p>
+                        </div>
+                    </a>
+                @endif
+            </div>
 
-            @if($hasPendingPensiun)
-                {{-- Tautan dinonaktifkan secara visual dan fungsional dengan teks inline --}}
-                <div class="block h-full cursor-not-allowed group" title="Anda memiliki pengajuan Pensiun yang masih dalam proses persetujuan.">
-                    <div class="bg-white p-4 rounded-lg shadow flex items-center flex-col text-center h-full opacity-50">
-                        <div class="h-12 w-12 bg-orange-100 rounded-full mb-2">
-                            <img src="{{ asset('images/ico/work-retirement.svg') }}" alt="User Travel Icon" class="w-8 h-8 m-2 mt-2 text-gray-500">
+            <!-- Card Lembur -->
+            <div class="relative h-full">
+                @if($isAnyPending && !$hasPendingLembur)
+                    <div class="absolute inset-0 z-50 bg-white/60 rounded-lg flex flex-col items-center justify-center p-2 cursor-not-allowed">
+                        <div class="bg-red-600 text-white p-2 rounded-full mb-2 shadow-lg">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>
                         </div>
-                        <p class="font-semibold text-gray-700 text-sm">Pensiun</p>
-                        {{-- Teks peringatan inline berwarna merah dan kecil --}}
-                        <p class="text-xs text-red-500 mt-1 mb-2">Pengajuan sedang diproses</p>
-                        {{-- Tambahan item menu untuk Lacak Pengajuan --}}
-                        <a href="{{ route('datapengajuan.formDataPengajuan') }}" class="block h-full">
-                            <div class="bg-white p-2 rounded-lg shadow hover:shadow-md hover:bg-green-200 transition duration-300 cursor-pointer flex items-center flex-col text-center h-full">
-                                <p class="font-semibold text-gray-900 text-xs">Lacak Pengajuan</p>
-                            </div>
-                        </a>
+                        <div class="bg-red-600 px-3 py-1 rounded-full shadow-md border border-red-400">
+                            <p class="text-[9px] font-black text-white uppercase tracking-widest text-center">Akses Terkunci</p>
+                        </div>
                     </div>
-                </div>
-            @else
-                <!-- Card Pensiun -->
-                <a href="{{ route('pensiun.formPensiun') }}" class="block h-full">
-                    <div class="bg-white p-4 rounded-lg shadow hover:shadow-md hover:bg-blue-50 transition duration-300 cursor-pointer flex items-center flex-col text-center h-full">
+                @endif
+
+                @if($hasPendingLembur)
+                    <div class="block h-full cursor-not-allowed group" title="Anda memiliki pengajuan Lembur yang masih dalam proses persetujuan.">
+                        <div class="bg-white p-4 rounded-lg shadow flex items-center flex-col text-center h-full">
+                            <div class="h-12 w-12 bg-orange-100 rounded-full mb-2">
+                                <img src="{{ asset('images/ico/over-time.svg') }}" alt="User Travel Icon" class="w-8 h-8 m-2 mt-2 text-gray-500">
+                            </div>
+                            <p class="font-semibold text-gray-700 text-sm">Lembur</p>
+                            <p class="text-xs text-red-500 mt-1 mb-2">Pengajuan sedang diproses</p>
+                            <a href="{{ route('datapengajuan.formDataPengajuan') }}" class="block w-full">
+                                <div class="bg-white p-2 rounded-lg shadow border border-gray-200 hover:bg-green-50 transition duration-300 cursor-pointer flex items-center flex-col text-center h-full">
+                                    <p class="font-semibold text-gray-900 text-xs">Lacak Pengajuan</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                @else
+                    <a href="{{ route('lembur.formLembur') }}" class="block h-full">
+                        <div class="bg-white p-4 rounded-lg shadow hover:shadow-md hover:bg-blue-50 transition duration-300 cursor-pointer flex items-center flex-col text-center h-full">
+                            <div class="h-12 w-12 bg-orange-100 rounded-full mb-2">
+                                <img src="{{ asset('images/ico/over-time.svg') }}" alt="User Travel Icon" class="w-8 h-8 m-2 mt-2 text-gray-500">
+                            </div>
+                            <p class="font-semibold text-gray-700 text-sm">Lembur</p>
+                            <p class="text-xs text-gray-500 mt-1">Klik untuk buat pengajuan</p>
+                        </div>
+                    </a>
+                @endif
+            </div>
+
+            <!-- Card Pensiun -->
+            <div class="relative h-full">
+                @if($isAnyPending && !$hasPendingPensiun)
+                    <div class="absolute inset-0 z-50 bg-white/60 rounded-lg flex flex-col items-center justify-center p-2 cursor-not-allowed">
+                        <div class="bg-red-600 text-white p-2 rounded-full mb-2 shadow-lg">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>
+                        </div>
+                        <div class="bg-red-600 px-3 py-1 rounded-full shadow-md border border-red-400">
+                            <p class="text-[9px] font-black text-white uppercase tracking-widest text-center">Akses Terkunci</p>
+                        </div>
+                    </div>
+                @endif
+
+                @if($hasPendingPensiun)
+                    <div class="block h-full cursor-not-allowed group" title="Anda memiliki pengajuan Pensiun yang masih dalam proses persetujuan.">
+                        <div class="bg-white p-4 rounded-lg shadow flex items-center flex-col text-center h-full">
+                            <div class="h-12 w-12 bg-orange-100 rounded-full mb-2">
+                                <img src="{{ asset('images/ico/work-retirement.svg') }}" alt="User Travel Icon" class="w-8 h-8 m-2 mt-2 text-gray-500">
+                            </div>
+                            <p class="font-semibold text-gray-700 text-sm">Pensiun</p>
+                            <p class="text-xs text-red-500 mt-1 mb-2">Pengajuan sedang diproses</p>
+                            <a href="{{ route('datapengajuan.formDataPengajuan') }}" class="block w-full">
+                                <div class="bg-white p-2 rounded-lg shadow border border-gray-200 hover:bg-green-200 transition duration-300 cursor-pointer flex items-center flex-col text-center h-full">
+                                    <p class="font-semibold text-gray-900 text-xs">Lacak Pengajuan</p>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                @else
+                    <a href="{{ route('pensiun.formPensiun') }}" class="block h-full">
+                        <div class="bg-white p-4 rounded-lg shadow hover:shadow-md hover:bg-blue-50 transition duration-300 cursor-pointer flex items-center flex-col text-center h-full">
+                            <div class="h-12 w-12 bg-yellow-100 rounded-full mb-2">
+                                <img src="{{ asset('images/ico/work-retirement.svg') }}" alt="User Travel Icon" class="w-8 h-8 m-2 mt-2 text-gray-500">
+                            </div>
+                            <p class="font-semibold text-gray-700 text-sm">Pensiun</p>
+                            <p class="text-xs text-gray-500 mt-1">Klik untuk buat pengajuan</p>
+                        </div>
+                    </a>
+                @endif
+            </div>
+
+            <!-- Card Pangkat & Gaji -->
+            <div class="relative h-full">
+                @if($isAnyPending && !$hasPendingPangkat)
+                    <div class="absolute inset-0 z-50 bg-white/60 rounded-lg flex flex-col items-center justify-center p-2 cursor-not-allowed">
+                        <div class="bg-red-600 text-white p-2 rounded-full mb-2 shadow-lg">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clip-rule="evenodd"></path></svg>
+                        </div>
+                        <div class="bg-red-600 px-3 py-1 rounded-full shadow-md border border-red-400">
+                            <p class="text-[9px] font-black text-white uppercase tracking-widest text-center">Akses Terkunci</p>
+                        </div>
+                    </div>
+                @endif
+
+                <a href="{{ route('kenaikanpangkatgajitunjangan.pangkatgajitunjangan') }}" class="block h-full">
+                    <div class="bg-white p-4 rounded-lg shadow hover:shadow-md hover:bg-green-50 transition duration-300 cursor-pointer flex items-center flex-col text-center h-full">
                         <div class="h-12 w-12 bg-yellow-100 rounded-full mb-2">
-                            <img src="{{ asset('images/ico/work-retirement.svg') }}" alt="User Travel Icon" class="w-8 h-8 m-2 mt-2 text-gray-500">
+                            <img src="{{ asset('images/ico/promotion-in-salary.svg') }}" alt="User Travel Icon" class="w-8 h-8 m-2 mt-2 text-gray-500">
                         </div>
-                        <p class="font-semibold text-gray-700 text-sm">Pensiun</p>
+                        <p class="font-semibold text-gray-700 text-sm">Kenaikan Pangkat, Gaji & Tunjangan</p>
                         <p class="text-xs text-gray-500 mt-1">Klik untuk buat pengajuan</p>
                     </div>
                 </a>
-            @endif
+            </div>
 
-            <!-- Card Kenaikan Pangkat, Gaji & Tunjangan -->
-            <a href="{{ route('kenaikanpangkatgajitunjangan.pangkatgajitunjangan') }}" class="block h-full">
-                <div class="bg-white p-4 rounded-lg shadow hover:shadow-md hover:bg-green-50 transition duration-300 cursor-pointer flex items-center flex-col text-center h-full">
-                    <div class="h-12 w-12 bg-yellow-100 rounded-full mb-2">
-                        <img src="{{ asset('images/ico/promotion-in-salary.svg') }}" alt="User Travel Icon" class="w-8 h-8 m-2 mt-2 text-gray-500">
-                    </div>
-                    <p class="font-semibold text-gray-700 text-sm">Kenaikan Pangkat, Gaji & Tunjangan</p>
-                    <p class="text-xs text-gray-500 mt-1">Klik untuk buat pengajuan</p>
-                </div>
-            </a>
-
-            <!-- Card Penghargaan Masa Kerja -->
-            {{-- <a href="{{ route('cuti.create') }}" class="block h-full"> --}}
+            <!-- Card Masa Kerja -->
+            <div class="h-full">
                 <div class="bg-white p-4 rounded-lg shadow hover:shadow-md hover:bg-red-50 transition duration-300 cursor-pointer flex items-center flex-col text-center h-full">
-                    <div class="h-12 w-12 bg-yellow-100 rounded-full mb-2">
-                        <img src="{{ asset('images/ico/service-award.svg') }}" alt="User Travel Icon" class="w-8 h-8 m-2 mt-2 text-gray-500">
+                    <div class="h-12 w-12 bg-yellow-100 rounded-full mb-2 flex items-center justify-center">
+                        <img src="{{ asset('images/ico/service-award.svg') }}" alt="Service Award Icon" class="w-8 h-8">
                     </div>
-                    <p class="font-semibold text-gray-700 text-sm">Penghargaan Masa Kerja</p>
-                    <p class="text-xs text-gray-500 mt-1">Klik untuk buat pengajuan</p>
+                    <p class="font-semibold text-gray-700 text-sm">Masa Kerja</p>
+                    <p class="text-xs text-gray-500 mt-1 italic">Klik buat pengajuan</p>
                 </div>
-            {{-- </a> --}}
+            </div>
+
         </div>
     </div>
 

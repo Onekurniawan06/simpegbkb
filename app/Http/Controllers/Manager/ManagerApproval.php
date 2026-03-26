@@ -23,9 +23,9 @@ class ManagerApproval extends Controller
 
         if (str_contains($namaJabatanLower, 'kepatuhan') || str_contains($namaJabatanLower, 'skk')) {
             $isLintasDivisi = true;
-            $allowedSources = ['lembur', 'pensiun', 'pangkatgajitunjangan'];
-            // KUNCI: Jangan pake %Kepatuhan% aja, nanti jatah Direktur Kepatuhan ketarik!
-            $searchTahap = ['Kepala SKK & SKKMR', 'Kepala Satker Kepatuhan & M.R.'];
+            $allowedSources = ['lembur', 'pensiun', 'pangkatgajitunjanganpatuhan ketarik!
+            $searchTahap = ['Kepala SKK & SKKMR', 'Kepala Satker Kepatuhan &'];
+            // KUNCI: Jangan pake %Kepatuhan% aja, nanti jatah Direktur Ke M.R.'];
         } elseif (str_contains($namaJabatanLower, 'hro')) {
             $isLintasDivisi = true;
             $allowedSources = ['cuti', 'lembur', 'pensiun', 'pangkatgajitunjangan'];
