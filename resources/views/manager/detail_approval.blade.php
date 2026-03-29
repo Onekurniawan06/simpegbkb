@@ -30,7 +30,6 @@
 <div class="bg-white border-b border-gray-100 max-w-full py-4 shadow-sm">
     <div class="max-w-4xl mx-auto px-6">
         <div class="relative flex items-start">
-
             {{-- 1. LOOP HISTORI (Data dari Database) --}}
             @foreach($historiLog as $index => $log)
                 @php
@@ -40,19 +39,15 @@
                     $isCurr = ($logStatus === 'diproses');
                     $isFail = ($logStatus === 'ditolak'); // Ini tetap ada untuk warna MERAH
                     $timeCol = ($sumber === 'pensiun') ? 'update_at' : 'updated_at'; // Ini tetap ada untuk TANGGAL
-
                     $nextLog = $historiLog[$index + 1] ?? null;
                     $nextStatus = $nextLog ? strtolower($nextLog->status_persetujuan ?? $nextLog->status_pengajuan) : null;
 
                     if ($isDone) {
-                        // Garis HIJAU jika depannya sudah ada aksi
                         $lineColor = ($nextStatus === 'disetujui' || $nextStatus === 'diproses' || $nextStatus === 'ditolak')
-                                    ? 'bg-emerald-500'
-                                    : 'bg-gray-200';
+                                    ? 'bg-emerald-500' : 'bg-gray-200';
                     } elseif ($isCurr) {
                         $lineColor = 'bg-orange-500';
                     } elseif ($isFail) {
-                        // --- KUNCI DI SINI: Kalau ditolak, garis ke tahap berikutnya harus MERAH ---
                         $lineColor = 'bg-red-500';
                     } else {
                         $lineColor = 'bg-gray-200';
@@ -104,21 +99,18 @@
                 <div class="flex flex-col items-center flex-1 relative">
                     {{-- Garis Abu-abu ke arah Selesai (Ini biarkan abu-abu karena proses berhenti di Manager) --}}
                     <div class="absolute top-5 left-1/2 w-full h-[2.5px] z-0 bg-gray-100"></div>
-
                     {{-- Bulatan Manager (WAJIB ORANGE & EFEK PING) --}}
                     <div class="relative flex items-center justify-center z-10">
                         {{-- Efek Radar Orange --}}
                         <span class="absolute inline-flex h-9 w-9 rounded-full bg-orange-400 opacity-20 animate-ping"></span>
-
                         {{-- Bulatan Utama Orange --}}
                         <div class="w-10 h-10 rounded-full bg-orange-500 border-[5px] border-orange-100 flex items-center justify-center shadow-sm transition-all duration-300">
                             <div class="w-2 h-2 bg-white rounded-full"></div>
                         </div>
                     </div>
-
                     <div class="mt-4 text-center px-2">
                         <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tahap 2</p>
-                        <p class="text-[11px] font-semibold text-gray-900 mt-1 leading-tight">{{ $nextStepName }}</p>
+                        <p class="text-[11px] font-semibold text-gray-900 mt-1 leading-tight">{{ $tahapTeks }}</p>
                         {{-- STATUS TETAP DIPROSES ORANGE --}}
                         <p class="text-[9px] font-bold text-orange-600 mt-1 italic uppercase">DIPROSES</p>
                     </div>
@@ -129,9 +121,7 @@
             <div class="flex flex-col items-center flex-1 relative">
                 {{-- Bulatan Akhir: Hijau jika HRO Done, Merah jika ada yang Ditolak, Abu-abu jika masih proses --}}
                 <div class="w-10 h-10 rounded-full
-                    {{ $isHRODone ? 'bg-emerald-500 border-emerald-100' : ($isFailFinal ? 'bg-red-500 border-red-100' : 'bg-gray-100') }}
-                    border-[5px] flex items-center justify-center z-10 shadow-sm transition-all duration-300">
-
+                    {{ $isHRODone ? 'bg-emerald-500 border-emerald-100' : ($isFailFinal ? 'bg-red-500 border-red-100' : 'bg-gray-100') }} border-[5px] flex items-center justify-center z-10 shadow-sm transition-all duration-300">
                     @if($isHRODone)
                         <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                     @elseif($isFailFinal)
@@ -140,7 +130,6 @@
                         <div class="w-2 h-2 bg-white rounded-full"></div>
                     @endif
                 </div>
-
                 <div class="mt-4 text-center {{ ($isHRODone || $isFailFinal) ? '' : 'opacity-40' }}">
                     <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Akhir</p>
                     <p class="text-[11px] font-semibold {{ $isFailFinal ? 'text-red-600' : ($isHRODone ? 'text-emerald-600' : 'text-gray-400') }} mt-1 leading-tight">
@@ -151,8 +140,6 @@
         </div>
     </div>
 </div>
-
-
 
 <!-- Container: Kita tambah tingginya ke h-[580px] agar pas untuk textarea 5 baris + 2 tombol di kanan -->
 <div class="max-w-full flex flex-col h-[450px] overflow-hidden bg-white border border-slate-200 shadow-xl">

@@ -21,15 +21,19 @@ class ManagerApproval extends Controller
         $allowedSources = [];
         $searchTahap = [];
 
-        if (str_contains($namaJabatanLower, 'kepatuhan') || str_contains($namaJabatanLower, 'skk')) {
-            $isLintasDivisi = true;
-            $allowedSources = ['lembur', 'pensiun', 'pangkatgajitunjanganpatuhan ketarik!
-            $searchTahap = ['Kepala SKK & SKKMR', 'Kepala Satker Kepatuhan &'];
-            // KUNCI: Jangan pake %Kepatuhan% aja, nanti jatah Direktur Ke M.R.'];
-        } elseif (str_contains($namaJabatanLower, 'hro')) {
+        // --- 1. Tentukan Keyword Tahap (HRO HARUS DI ATAS) ---
+        if (str_contains($namaJabatanLower, 'hro') || str_contains($namaJabatanLower, 'human resources')) {
             $isLintasDivisi = true;
             $allowedSources = ['cuti', 'lembur', 'pensiun', 'pangkatgajitunjangan'];
-            $searchTahap = ['%HRO%'];
+
+            // Keyword pencarian tahap untuk HRO
+            $searchTahap = ['%HRO%', 'HRO', '%Human Resources%'];
+
+        } elseif (str_contains($namaJabatanLower, 'kepatuhan') || str_contains($namaJabatanLower, 'skk')) {
+            $isLintasDivisi = true;
+            $allowedSources = ['lembur', 'pensiun', 'pangkatgajitunjangan']; // Sesuaikan slug-nya
+            $searchTahap = ['Kepala SKK & SKKMR', 'Kepala Satker Kepatuhan & M.R.', 'Pengajuan Awal'];
+
         } else {
             $isLintasDivisi = false;
             $allowedSources = ['cuti', 'lembur'];
@@ -62,7 +66,9 @@ class ManagerApproval extends Controller
             // KUNCI 2: BUNGKUS LOGIKA TAHAP DALAM GROUP WHERE
             $baseQuery->where(function($queryGroup) use ($searchTahap, $cfg, $namaJabatanLower) {
                 $queryGroup->where(function($sub) use ($searchTahap) {
-                    foreach ($searchTahap as $st) { $sub->orWhere('log.tahap_persetujuan', 'LIKE', $st); }
+                    foreach ($searchTahap as $st) {
+                        $sub->orWhere('log.tahap_persetujuan', 'LIKE', $st);
+                    }
                 });
 
                 // Tambahan Khusus SKK: Cegah liat jatah Direktur
@@ -369,14 +375,15 @@ class ManagerApproval extends Controller
                     $kolomStatus => 'diproses',
                     'komentar' => 'Menunggu verifikasi ' . $nextTahap,
                 ]));
-            } else {
-                // Final Update Tabel Utama
-                $tabelUtama = 'pengajuan_' . $sumber;
-                $pk = ($sumber === 'lembur') ? 'id_lembur' : (($sumber === 'cuti') ? 'nomor_urut_pegawai' : 'id_pengajuan');
-                $val = ($sumber === 'lembur') ? $logLama->lembur_id : (($sumber === 'cuti') ? $logLama->nomor_urut_pegawai : $logLama->id_pengajuan);
-                $kolStatusUtama = ($sumber === 'lembur') ? 'status' : $kolomStatus;
-                \DB::table($tabelUtama)->where($pk, $val)->update([$kolStatusUtama => 'disetujui']);
             }
+            // else {
+            //     // Final Update Tabel Utama
+            //     $tabelUtama = 'pengajuan_' . $sumber;
+            //     $pk = ($sumber === 'lembur') ? 'id_lembur' : (($sumber === 'cuti') ? 'nomor_urut_pegawai' : 'id_pengajuan');
+            //     $val = ($sumber === 'lembur') ? $logLama->lembur_id : (($sumber === 'cuti') ? $logLama->nomor_urut_pegawai : $logLama->id_pengajuan);
+            //     $kolStatusUtama = ($sumber === 'lembur') ? 'status' : $kolomStatus;
+            //     \DB::table($tabelUtama)->where($pk, $val)->update([$kolStatusUtama => 'disetujui']);
+            // }
         }
 
         if ($request->ajax() || $request->wantsJson()) return response()->json(['success' => true]);

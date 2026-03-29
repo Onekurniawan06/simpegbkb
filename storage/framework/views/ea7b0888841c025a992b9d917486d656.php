@@ -1,19 +1,7 @@
-{{-- resources/views/dashboard.blade.php (Hanya HTML/Blade, tanpa JS inline) --}}
-@extends('layouts.app-direktur')
-
-{{-- Konten Utama Halaman Dashboard Admin --}}
-
-@section('content')
+<?php $__env->startSection('content'); ?>
 
     <div class="bg-gray-100 rounded-tl-md shadow-lg p-4 h-full overflow-y-auto" id="mainContent">
-        {{-- <!-- Welcome Section (centered content below date) -->
-        <div class="flex items-center justify-center flex-col text-center mb-2">
-            <!-- Ukuran font diatur menjadi text-sm (14px) -->
-            <h2 class="font-semibold text-gray-800 text-md">Selamat Datang, {{ Auth::user()->name ?? '' }} 👋</h2>
-        </div>
-
-        <!-- Garis batas horizontal  -->
-        <hr class="border-b border-gray-100 mt-4"> --}}
+        
 
         <!-- Tab Navigation Header -->
         <div class="flex justify-between items-center mb-4">
@@ -41,7 +29,7 @@
                         <div>
                             <p class="text-sm font-medium text-gray-500">Total Pengajuan Menunggu Persetujuan</p>
                             <!-- Menampilkan hasil hitung -->
-                            {{-- <p class="text-3xl font-semibold text-gray-900">{{ $totalMenunggu }}</p> --}}
+                            
                             <p class="text-xs text-gray-400">Data Pengajuan</p>
                         </div>
                         <div class="p-3 bg-yellow-100 rounded-full">
@@ -56,7 +44,7 @@
                         <div>
                             <p class="text-sm font-medium text-gray-500">Total Pengajuan Disetujui</p>
                             <!-- Tampilkan hasil hitung disetujui -->
-                            {{-- <p class="text-3xl font-semibold text-gray-900">{{ $totalDisetujui }}</p> --}}
+                            
                             <p class="text-xs text-gray-400">Data Pengajuan</p>
                         </div>
                         <div class="p-3 bg-green-100 rounded-full">
@@ -71,7 +59,7 @@
                         <div>
                             <p class="text-sm font-medium text-gray-500">Total Pengajuan Ditolak</p>
                             <!-- Tampilkan hasil hitung ditolak -->
-                            {{-- <p class="text-3xl font-semibold text-gray-900">{{ $totalDitolak }}</p> --}}
+                            
                             <p class="text-xs text-gray-400">Data Pengajuan</p>
                         </div>
                         <div class="p-3 bg-red-100 rounded-full">
@@ -129,18 +117,37 @@
         <!-- Informasi & Pengumuman Section -->
         <!-- Container Utama Livewire & Alpine.js -->
         
-        {{-- end Section informasi --}}
+        
 
         <!-- TOMBOL BACK TO TOP (Ditempatkan di sini, akan melayang di atas mainContent) -->
         <button id="backToTop" style="display: none;" class="fixed bottom-10 right-10 bg-blue-300 text-white p-3 rounded-full shadow-2xl hover:bg-blue-600 transition-all duration-300 z-50 flex items-center justify-center" title="Kembali ke atas">
-            <x-heroicon-o-chevron-up id="arrowIcon" class="h-6 w-6 " />
+            <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
+<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('heroicon-o-chevron-up'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['id' => 'arrowIcon','class' => 'h-6 w-6 ']); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
         </button>
 
     </div>
 </div>
 
-{{-- Skrip JavaScript yang menargetkan #mainContent --}}
-@push('scripts')
+
+<?php $__env->startPush('scripts'); ?>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const backToTopButton = document.getElementById('backToTop');
@@ -173,8 +180,10 @@
         toggleBackToTop();
     });
 </script>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@endsection
+<?php $__env->stopSection(); ?>
 
 
+
+<?php echo $__env->make('layouts.app-direktur', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\simpegbkb\resources\views/direktur/dashboarddirektur.blade.php ENDPATH**/ ?>

@@ -2,7 +2,7 @@
 
 <div class="bg-indigo-500 rounded-tl-md shadow-xl pl-4 pr-4 pb-4 pt-2">
     <span class="text-sm font-semibold text-white">#Section <?php echo e($pageTitle); ?></span>
-
+    
     <p class="text-xs text-white">Tinjau informasi pengajuan dengan teliti sebelum memberikan keputusan.</p>
 </div>
 
@@ -28,8 +28,7 @@
 <div class="bg-white border-b border-gray-100 max-w-full py-4 shadow-sm">
     <div class="max-w-4xl mx-auto px-6">
         <div class="relative flex items-start">
-
-
+            
             <?php $__currentLoopData = $historiLog; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $log): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                 <?php
                     // --- 1. DEFINISI STATUS (TETAP UTUH, TIDAK ADA YANG DIHAPUS) ---
@@ -38,19 +37,15 @@
                     $isCurr = ($logStatus === 'diproses');
                     $isFail = ($logStatus === 'ditolak'); // Ini tetap ada untuk warna MERAH
                     $timeCol = ($sumber === 'pensiun') ? 'update_at' : 'updated_at'; // Ini tetap ada untuk TANGGAL
-
                     $nextLog = $historiLog[$index + 1] ?? null;
                     $nextStatus = $nextLog ? strtolower($nextLog->status_persetujuan ?? $nextLog->status_pengajuan) : null;
 
                     if ($isDone) {
-                        // Garis HIJAU jika depannya sudah ada aksi
                         $lineColor = ($nextStatus === 'disetujui' || $nextStatus === 'diproses' || $nextStatus === 'ditolak')
-                                    ? 'bg-emerald-500'
-                                    : 'bg-gray-200';
+                                    ? 'bg-emerald-500' : 'bg-gray-200';
                     } elseif ($isCurr) {
                         $lineColor = 'bg-orange-500';
                     } elseif ($isFail) {
-                        // --- KUNCI DI SINI: Kalau ditolak, garis ke tahap berikutnya harus MERAH ---
                         $lineColor = 'bg-red-500';
                     } else {
                         $lineColor = 'bg-gray-200';
@@ -58,15 +53,15 @@
                 ?>
 
                 <div class="flex flex-col items-center flex-1 relative">
-
+                    
                     <?php if(!$loop->last): ?>
                         <div class="absolute top-5 left-1/2 w-full h-[2.5px] z-0 <?php echo e($lineColor); ?>"></div>
                     <?php else: ?>
-
+                        
                         <div class="absolute top-5 left-1/2 w-full h-[2.5px] z-0 <?php echo e($isHRODone ? 'bg-emerald-500' : ($isFailFinal ? 'bg-red-500' : ($isCurr ? 'bg-orange-500' : 'bg-gray-100'))); ?>"></div>
                     <?php endif; ?>
 
-
+                    
                     <div class="relative flex items-center justify-center z-10">
                         <?php if($isCurr): ?>
                             <span class="absolute inline-flex h-9 w-9 rounded-full bg-orange-400 opacity-20 animate-ping"></span>
@@ -83,13 +78,13 @@
                         </div>
                     </div>
 
-
+                    
                     <div class="mt-4 text-center px-2">
                         <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tahap <?php echo e($index + 1); ?></p>
                         <p class="text-[11px] font-semibold text-gray-900 mt-1 leading-tight"><?php echo e($log->tahap_persetujuan == 'Pengajuan Awal' ? 'Pengajuan' : $log->tahap_persetujuan); ?></p>
                         <p class="text-[9px] font-bold <?php echo e($isDone ? 'text-emerald-600' : ($isFail ? 'text-red-600' : 'text-orange-600')); ?> mt-1 italic uppercase"><?php echo e($logStatus); ?></p>
 
-
+                        
                         <?php if($log->$timeCol): ?>
                             <p class="text-[8px] text-gray-400 mt-1"><?php echo e(\Carbon\Carbon::parse($log->$timeCol)->format('d/m H:i')); ?> WIB</p>
                         <?php endif; ?>
@@ -97,40 +92,34 @@
                 </div>
             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
 
-
+            
             <?php if(count($historiLog) == 1 && $statusTerakhir !== 'ditolak'): ?>
                 <div class="flex flex-col items-center flex-1 relative">
-
+                    
                     <div class="absolute top-5 left-1/2 w-full h-[2.5px] z-0 bg-gray-100"></div>
-
-
+                    
                     <div class="relative flex items-center justify-center z-10">
-
+                        
                         <span class="absolute inline-flex h-9 w-9 rounded-full bg-orange-400 opacity-20 animate-ping"></span>
-
-
+                        
                         <div class="w-10 h-10 rounded-full bg-orange-500 border-[5px] border-orange-100 flex items-center justify-center shadow-sm transition-all duration-300">
                             <div class="w-2 h-2 bg-white rounded-full"></div>
                         </div>
                     </div>
-
                     <div class="mt-4 text-center px-2">
                         <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tahap 2</p>
-                        <p class="text-[11px] font-semibold text-gray-900 mt-1 leading-tight"><?php echo e($nextStepName); ?></p>
-
+                        <p class="text-[11px] font-semibold text-gray-900 mt-1 leading-tight"><?php echo e($tahapTeks); ?></p>
+                        
                         <p class="text-[9px] font-bold text-orange-600 mt-1 italic uppercase">DIPROSES</p>
                     </div>
                 </div>
             <?php endif; ?>
 
-
+            
             <div class="flex flex-col items-center flex-1 relative">
-
+                
                 <div class="w-10 h-10 rounded-full
-                    <?php echo e($isHRODone ? 'bg-emerald-500 border-emerald-100' : ($isFailFinal ? 'bg-red-500 border-red-100' : 'bg-gray-100')); ?>
-
-                    border-[5px] flex items-center justify-center z-10 shadow-sm transition-all duration-300">
-
+                    <?php echo e($isHRODone ? 'bg-emerald-500 border-emerald-100' : ($isFailFinal ? 'bg-red-500 border-red-100' : 'bg-gray-100')); ?> border-[5px] flex items-center justify-center z-10 shadow-sm transition-all duration-300">
                     <?php if($isHRODone): ?>
                         <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                     <?php elseif($isFailFinal): ?>
@@ -139,7 +128,6 @@
                         <div class="w-2 h-2 bg-white rounded-full"></div>
                     <?php endif; ?>
                 </div>
-
                 <div class="mt-4 text-center <?php echo e(($isHRODone || $isFailFinal) ? '' : 'opacity-40'); ?>">
                     <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Akhir</p>
                     <p class="text-[11px] font-semibold <?php echo e($isFailFinal ? 'text-red-600' : ($isHRODone ? 'text-emerald-600' : 'text-gray-400')); ?> mt-1 leading-tight">
@@ -151,8 +139,6 @@
         </div>
     </div>
 </div>
-
-
 
 <!-- Container: Kita tambah tingginya ke h-[580px] agar pas untuk textarea 5 baris + 2 tombol di kanan -->
 <div class="max-w-full flex flex-col h-[450px] overflow-hidden bg-white border border-slate-200 shadow-xl">
@@ -187,7 +173,7 @@
                         <?php elseif($sumber == 'lembur'): ?>
                             Lembur Kerja
                         <?php else: ?>
-
+                            
                             <?php echo e($data->jenis_pengajuan ?? ucfirst($sumber)); ?>
 
                         <?php endif; ?>

@@ -79,16 +79,16 @@
     <!-- Menghapus overflow-hidden dari app-container -->
     <div id="app-container" class="flex h-screen">
         <!-- Sidebar Container -->
-        <aside id="sidebar" class="w-68 bg-[#0f172a] text-white flex flex-col shadow-2xl transition-all duration-300 ease-in-out rounded-r-2xl border-r border-white/5">
+        <aside id="sidebar" class="w-68 bg-[#0f172a] text-white flex flex-col shadow-2xl transition-all duration-300 ease-in-out rounded-r-md">
 
             <!-- Header Logo -->
-            <div class="p-4 flex items-center justify-between h-24 shadow-md bg-white/5 backdrop-blur-sm rounded-tr-2xl">
-                <div class="p-8 flex justify-center items-center w-full">
-                    <img src="{{ asset('images/logoputih.png') }}" alt="Logo Bank Kota Bogor" class="h-12 w-auto drop-shadow-xl">
+            <div class="p-4 flex items-center justify-between h-20 shadow-md shadow-white-50">
+                <div class="p-8 flex justify-center items-center">
+                    <img src="{{ asset('images/logoputih.png') }}" alt="Logo Bank Kota Bogor" class="h-11 w-auto">
                 </div>
             </div>
 
-            <nav id="sidebar-content" class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+            <nav id="sidebar-content" class="flex-1 px-2 py-4 space-y-2">
                 <!-- Judul Navigasi Dinamis Berdasarkan Jabatan (Struktur PHP Tetap) -->
                 @php
                     // Langsung ambil nama asli dari tabel jabatan (Direktur Kepatuhan / Operasional / Utama)
@@ -116,9 +116,6 @@
                         </svg>
                         <span class="sidebar-text whitespace-nowrap">Dashboard</span>
                     </span>
-                    <svg xmlns="http://www.w3.org" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-3 w-3 opacity-0 group-hover:opacity-100 -translate-x-1 group-hover:translate-x-0 transition-all">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-                    </svg>
                 </a>
 
                 <!-- Menu Manajemen Pengajuan -->
@@ -137,8 +134,7 @@
 
                     <!-- Flyout Submenu -->
                     <div class="absolute left-full top-0 ml-4 w-64 bg-[#1e293b] shadow-2xl rounded-xl border border-white/10 invisible group-hover:visible opacity-0 group-hover:opacity-100 translate-x-3 group-hover:translate-x-0 transition-all duration-300 z-50 overflow-hidden">
-                        <a href="{{ url('/manager/pengajuanmanager') }}" class="block p-4 text-[11px] font-bold hover:bg-amber-600 hover:text-white transition-colors border-b border-white/5">Pengajuan Saya</a>
-                        <a href="{{ url('/manager/manajemenpengajuanmanager') }}" class="block p-4 text-[11px] font-bold hover:bg-amber-600 hover:text-white transition-colors">Approval Pengajuan Pegawai</a>
+                        <a href="{{ url('/manager/manajemenpengajuanmanager') }}" class="block p-4 text-[11px] font-bold hover:bg-amber-600 hover:text-white transition-colors">Approval Pengajuan Pegawai / Staff</a>
                     </div>
                 </div>
 

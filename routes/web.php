@@ -147,6 +147,18 @@ Route::middleware(['auth'])->group(function () {
 
 });
 
+// ==== START LEVEL DIREKTUR ====
+Route::middleware(['auth'])->group(function () {
+    
+    // Route untuk cek frontend Dashboard Direktur (Tanpa Controller)
+    Route::get('/direktur/dashboarddirektur', function () {
+        return view('direktur.dashboarddirektur');
+    })->name('direktur.dashboarddirektur');
+
+    // Route lain (Pegawai/Manager) bisa diletakkan di bawah sini...
+});
+// ==== END LEVEL DIREKTUR ====
+
 // ==== START LEVEL ADMIN/HRO ====
 // Rute Dashboard Administrator
 Route::get('/admin/dashboard', [DashboardController::class, 'index'])
