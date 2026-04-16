@@ -83,7 +83,6 @@ class ManagerDashboard extends Controller
         ));
     }
 
-
     public function dataPegawaiGlobal(Request $request)
     {
         $user = auth()->user();

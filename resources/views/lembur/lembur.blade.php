@@ -138,62 +138,28 @@
 
             <!-- === POPUP MODAL REVIEW === -->
             <div id="leaveModallembur" class="fixed inset-0 bg-black-50 flex items-center justify-center hidden z-50 backdrop-blur-sm">
-                <!-- Konten Modal (Background putih, tidak terpengaruh blur) -->
-                <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg mx-auto">
+                <!-- Konten Modal (Ubah max-w-lg jadi max-w-4xl agar lebih lebar) -->
+                <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-4xl mx-auto">
                     <!-- Modal Header -->
                     <div class="flex justify-between items-center border-b pb-3">
-                        <h2 class="text-sm font-semibold">Data Pengajuan Lembur</h2>
+                        <h2 class="text-sm font-semibold">Surat Pengajuan Lembur</h2>
                     </div>
-                    <!-- Modal Body (Area Review Data) -->
+
+                    <!-- Modal Body dengan Container Scroll -->
                     <div class="mt-4">
-                        <div class="space-y-4">
-                            <!-- Section 1: Review Header Info -->
-                            <div class="flex items-center p-3 bg-blue-50 rounded-md">
-                                <span class="text-blue-600 mr-3">📄</span>
-                                <div>
-                                    <!-- Target JS: review_jenis_cuti -->
-                                    <p class="font-small" id="review_nama_pegawai">[Jenis Cuti Placeholder]</p>
-                                    <p class="text-sm text-gray-500">Tanggal Pengajuan: {{ now()->format('d M Y') }}</p>
-                                </div>
-                            </div>
-                            <!-- Section 2: Data Cuti Details Grid -->
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <p class="text-sm font-medium text-gray-500">Tanggal Lembur</p>
-                                    <!-- Target JS: review_tanggal_mulai -->
-                                    <p class="mt-1 font-semibold text-sm" id="review_tanggal_lembur">[Tgl Mulai]</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-500">Jam Mulai Lembur</p>
-                                    <!-- Target JS: review_tanggal_selesai -->
-                                    <p class="mt-1 font-semibold text-sm" id="review_jam_mulai_lembur">[Jam Mulai Lembur]</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-500">Jam Selesai Lembur</p>
-                                    <!-- Target JS: review_jumlah_cuti -->
-                                    <p class="mt-1 font-semibold text-sm" id="review_jam_selesai_lembur">[Jam Selesai Lembur]</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-500">Total Jam Lembur</p>
-                                    <!-- Target JS: review_jatah_periode_hari -->
-                                    <p class="mt-1 font-semibold text-sm" id="review_total_lembur">[Total Jam Lembur]</p>
-                                </div>
-                                    <div class="col-span-2">
-                                    <p class="text-sm font-medium text-gray-500">Uraian Tugas/Kegiatan</p>
-                                    <p class="mt-1 font-semibold" id="review_uraian_tugas">[Uraian Tugas]</p>
-                                </div>
-                            </div>
+                        <div class="custom-scroll-container p-4" style="max-height: 70vh; overflow-y: auto;">
+                            @include('partials.lembur_letter_content')
                         </div>
                     </div>
 
-                    <!-- Modal Footer (Buttons) -->
+                    <!-- Modal Footer -->
                     <div class="flex justify-end mt-6 pt-4 border-t">
                         <button type="button" id="cancelButton" class="px-4 py-2 mr-3 text-sm text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">Batal</button>
-                        <!-- TOMBOL KONFIRMASI SUBMIT FORM -->
                         <button id="submitButton" class="px-4 py-2 text-white bg-blue-600 text-sm rounded-lg hover:bg-blue-700">Ya, Ajukan Lembur</button>
                     </div>
                 </div>
             </div>
+
             <!-- Modal Loading Overlay -->
             <div id="loadingModalLembur" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
                 <div class="bg-gray-50 p-8 rounded-xl shadow-2xl flex flex-col items-center">

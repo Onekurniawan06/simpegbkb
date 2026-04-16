@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3307
--- Generation Time: Mar 10, 2026 at 08:17 AM
+-- Generation Time: Apr 08, 2026 at 12:16 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -67,11 +67,11 @@ CREATE TABLE `detail_pribadi` (
 --
 
 INSERT INTO `detail_pribadi` (`nomor_urut_pegawai`, `tempat_lahir`, `tanggal_lahir`, `agama`, `alamat`, `email`, `nama_ibu`, `nama_ayah`, `pendidikan_terakhir`, `jurusan`, `no_telpon`, `status_perkawinan`, `jenis_kelamin`, `dokumen_ktp`, `dokumen_kk`, `dokumen_npwp`, `dokumen_buku_nikah`, `dokumen_akta_cerai`, `photo_selfie`) VALUES
-('1', 'Garut', '1972-05-02', NULL, 'Jl. Bojong Kaliki Kp. Rancabogo Wetan RT.002/014 Pataruman, Tarogong Kidul. Kabupaten Garut', NULL, 'Enah', NULL, 'S2', 'Ekonomi Manajemen', '087770011309', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-('2', 'Depok', '1973-03-12', NULL, 'Jl. Situ Asih Rt 01/09 Kel. Rangkapan Jaya, Kec. Pancoran Mas, Depok', NULL, 'Ernawati', NULL, 'S1', 'Administrasi Publik/Negara', '087874832632', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+('1', NULL, NULL, NULL, 'Jl. Bojong Kaliki Kp. Rancabogo Wetan RT.002/014 Pataruman, Tarogong Kidul. Kabupaten Garut', 'zeroxide.3@gmail.com', 'Enah', NULL, 'S2', 'Ekonomi Manajemen', '087770011309', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+('2', NULL, NULL, NULL, 'Jl. Situ Asih Rt 01/09 Kel. Rangkapan Jaya, Kec. Pancoran Mas, Depok', 'triyanto.kurniawan.3@gmail.com', 'Ernawati', NULL, 'S1', 'Administrasi Publik/Negara', '087874832632', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 ('200182003', 'Bogor', '1982-02-09', NULL, 'Perumahan Mega Sentul Blok A/41 RT01/08 Ds. Pasir Laja Kec. Sukaraja Kab. Bogor', NULL, 'Elis', NULL, 'S2', 'Ekonomi Syariah', '081318636444', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 ('200480004', 'Bogor', '1980-05-08', NULL, 'Pagentongan Residence Blok B/9 Bogor', NULL, 'Halimah Tusadiah', NULL, 'S1', 'Ekonomi Manajemen', '085774740816', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-('200779005', 'Bogor', '0000-00-00', NULL, 'Cilendek Indah Green Garden No. E5 Cilendek Barat Bogor', 'digitalloomcreations@gmail.com', 'IdaRT.i', NULL, 'S1', 'Pertanian Agribisnis', '085960663222', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+('200779005', NULL, NULL, NULL, 'Cilendek Indah Green Garden No. E5 Cilendek Barat Bogor', 'jammy.dez@gmail.com', 'IdaRT.i', NULL, 'S1', 'Pertanian Agribisnis', '085960663222', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 ('200781006', 'Bogor', '1981-04-12', NULL, 'Cimanggu Gg. Amil No. 12 RT. 01 RW. 04 Kel. Gedung Badak Kec. Tanah Sareal Bogor ', 'm.kurniawan.bondes@gmail.com', 'Patmi', NULL, 'S1', 'Ekonomi Manajemen', '087781714310', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 ('200783007', 'Bogor', '1983-03-22', NULL, 'Gang Kelor Rt 02/09 Menteng Bogor Barat', NULL, 'Chandra Sasih', NULL, 'S1', 'Ekonomi Manajemen', '081295005003', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 ('200877008', 'Padang', '1977-07-13', NULL, 'Jl. Sukasari III RT. 06/01 Kel. Sukasari Kec.Bogor Timur', NULL, 'Fauziah ', NULL, 'SMA', ' ', '087888307922', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
@@ -84,7 +84,7 @@ INSERT INTO `detail_pribadi` (`nomor_urut_pegawai`, `tempat_lahir`, `tanggal_lah
 ('201283015', 'Bogor', '1983-01-30', NULL, 'Babakan Sukamantri  Rt.003 Rw. 007  Kel. Pasir Kuda Kec. Bogor Barat  Kota Bogor', NULL, 'Ruminah ', NULL, 'SMK', 'Listrik Instalasi', '087860427887', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 ('201287016', 'Bogor', '1987-02-26', NULL, 'Jl. Kecubung No. 14 Blok A Pabaton Indah Rt.002 Rw.007', NULL, 'Kasiah', NULL, 'S1', 'Hukum ', '083806270672', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 ('201382017', 'Lombok', '1982-08-15', NULL, 'Jl. Ciomas Permai Blok C 28 No. 2', NULL, 'Asmani', NULL, 'Madrasah', 'Aliyah ', '087877302926', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-('201384018', 'Bogor', '1984-07-14', NULL, 'Jl. Abesin Gg. Langgar Rt. 03/04', NULL, 'Sofia', NULL, 'S1', 'Hukum ', '087770041982', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+('201384018', NULL, NULL, NULL, 'Jl. Abesin Gg. Langgar Rt. 03/04', 'admin@gmail.com', 'Sofia', NULL, 'S1', 'Hukum ', '087770041982', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 ('201481019', 'Bogor', '1981-06-22', NULL, 'Panggugah Ciomas No 45 Bogor Kp. Sukamulya ', NULL, 'Rohasih', NULL, 'S1', 'Hukum ', '085773733783', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 ('201578020', 'Bogor', '1978-04-25', NULL, 'Cimanggu Gg. Amil RT. 01/04 Bogor No. 13i', NULL, 'Rohyati', NULL, 'Madrasah', 'Aliyah ', '085710748002', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 ('201579021', 'Bogor', '1979-12-27', NULL, 'Jl. Bhayangkara Raya No. 19 Bogor', NULL, 'Eti Suhaeti', NULL, 'S1', 'Tehnik Arsitektur', '085693300021', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
@@ -116,8 +116,8 @@ INSERT INTO `detail_pribadi` (`nomor_urut_pegawai`, `tempat_lahir`, `tanggal_lah
 ('202097052', 'Bogor', '1997-08-19', NULL, 'Sindangbarang Pengkolan RT. 03/04 Kel. Sindangbarang, Kec. Bogor Barat, Kota Bogor.', NULL, 'Nuryati', NULL, ' D3 ', 'Akuntansi ', '085775170300', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 ('202097053', 'Bogor', '1997-10-12', NULL, 'Sindangbarang Pengkolan RT. 03/04 Kel. Sindangbarang, Kec. Bogor Barat, Kota Bogor.', NULL, 'Kusmiyati', NULL, ' S1 ', 'Ekonomi ', '089621183844', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 ('202396054', 'Bogor', '1996-04-08', NULL, 'Bojong Menteng No. 10 RT. 04/06 Kel. Pasir Kuda, Kec. Bogor Barat, Kota Bogor', NULL, '', NULL, ' S1 ', 'Komputer ', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
-('202690055', 'Bogor', '1990-06-08', 'Islam', 'Karadenan Cibinong Bogor', 'triyantokurniawan3@gmail.com', 'Aaaa', 'Bbbbb', 'D3', 'Sistem Informasi', '010101010104', 'Belum Kawin', 'Laki-laki', 'KTP_202690055_1772681075.png', 'KK_202690055_1772681078.png', 'NPWP_202690055_1772681078.png', 'BUKU_NIKAH_202690055_1772681078.jpg', 'AKTA_CERAI_202690055_1772681078.png', 'uploads/selfie/KmuzuZXlzwtYFPtsip0kZpR5EHjeUL5Yh7xNqC9w.jpg'),
-('3', 'Mandai', '1972-12-16', NULL, 'Apartemen H Residence Unit 1003 JL. Biru Laut X, Cawang Jakarta', NULL, 'Siti Sofiyah', NULL, 'S1', 'Sosial Politik', '081310413329', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
+('202690055', 'Bogor', '2000-06-08', 'Islam', 'Karadenan Cibinong Bogor', 'triyantokurniawan3@gmail.com', 'Aaaa', 'Bbbbb', 'D3', 'Sistem Informasi', '010101010104', 'Belum Kawin', 'Laki-laki', 'KTP_202690055_1772681075.png', 'KK_202690055_1772681078.png', 'NPWP_202690055_1772681078.png', 'BUKU_NIKAH_202690055_1772681078.jpg', 'AKTA_CERAI_202690055_1772681078.png', 'uploads/selfie/KmuzuZXlzwtYFPtsip0kZpR5EHjeUL5Yh7xNqC9w.jpg'),
+('3', NULL, NULL, NULL, 'Apartemen H Residence Unit 1003 JL. Biru Laut X, Cawang Jakarta', 'rideone.kurniawan01@gmail.com', 'Siti Sofiyah', NULL, 'S1', 'Sosial Politik', '081310413329', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL),
 ('PKWT', 'Bogor', '1987-03-28', NULL, 'Jalan A Yani Blk 14 No. 01 Air Mancur', NULL, '', NULL, 'S1', 'Pendidikan Keguruan', '', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
 
 -- --------------------------------------------------------
@@ -161,30 +161,6 @@ CREATE TABLE `file_persyaratanpangkatgajitunjangan` (
   `created_at` datetime DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
---
--- Dumping data for table `file_persyaratanpangkatgajitunjangan`
---
-
-INSERT INTO `file_persyaratanpangkatgajitunjangan` (`id`, `pengajuan_pangkatgajitunjangan_id`, `nomor_urut_pegawai`, `nama_file_asli`, `path_file_server`, `tipe_dokumen`, `created_at`) VALUES
-(1, 1, '202690055', '14_7572_unv111_122019_pdf.pdf', 'dokumen_pangkat_gaji/tunjangan-keluarga-anak/202690055/Surat_Permohonan_202690055_1772961732.pdf', 'Surat_Permohonan', '2026-03-08 16:22:14'),
-(2, 1, '202690055', '357919.pdf', 'dokumen_pangkat_gaji/tunjangan-keluarga-anak/202690055/Salinan_Akta_Kelahiran_202690055_1772961734.pdf', 'Salinan_Akta_Kelahiran', '2026-03-08 16:22:14'),
-(3, 1, '202690055', 'AdminLTE 3  DataTables.pdf', 'dokumen_pangkat_gaji/tunjangan-keluarga-anak/202690055/Salinan_Kartu_Keluarga__KK__202690055_1772961735.pdf', 'Salinan_Kartu_Keluarga__KK_', '2026-03-08 16:22:15'),
-(4, 2, '202690055', '14_7572_unv111_122019_pdf.pdf', 'dokumen_pangkat_gaji/tunjangan-keluarga-anak/202690055/Surat_Permohonan_202690055_1772962239.pdf', 'Surat_Permohonan', '2026-03-08 16:30:41'),
-(5, 2, '202690055', '357919.pdf', 'dokumen_pangkat_gaji/tunjangan-keluarga-anak/202690055/Salinan_Akta_Kelahiran_202690055_1772962241.pdf', 'Salinan_Akta_Kelahiran', '2026-03-08 16:30:41'),
-(6, 2, '202690055', 'AdminLTE 3  DataTables.pdf', 'dokumen_pangkat_gaji/tunjangan-keluarga-anak/202690055/Salinan_Kartu_Keluarga__KK__202690055_1772962241.pdf', 'Salinan_Kartu_Keluarga__KK_', '2026-03-08 16:30:41'),
-(7, 1, '202690055', '14_7572_unv111_122019_pdf.pdf', 'dokumen_pangkat_gaji/tunjangan-keluarga-anak/202690055/Surat_Permohonan_202690055_1772963101.pdf', 'Surat_Permohonan', '2026-03-08 16:45:01'),
-(8, 1, '202690055', '357919.pdf', 'dokumen_pangkat_gaji/tunjangan-keluarga-anak/202690055/Salinan_Akta_Kelahiran_202690055_1772963101.pdf', 'Salinan_Akta_Kelahiran', '2026-03-08 16:45:01'),
-(9, 1, '202690055', 'AdminLTE 3  DataTables.pdf', 'dokumen_pangkat_gaji/tunjangan-keluarga-anak/202690055/Salinan_Kartu_Keluarga__KK__202690055_1772963101.pdf', 'Salinan_Kartu_Keluarga__KK_', '2026-03-08 16:45:01'),
-(10, 2, '202690055', '14_7572_unv111_122019_pdf.pdf', 'dokumen_pangkat_gaji/tunjangan-keluarga-anak/202690055/Surat_Permohonan_202690055_1772964190.pdf', 'Surat_Permohonan', '2026-03-08 17:03:10'),
-(11, 2, '202690055', '357919.pdf', 'dokumen_pangkat_gaji/tunjangan-keluarga-anak/202690055/Salinan_Akta_Kelahiran_202690055_1772964190.pdf', 'Salinan_Akta_Kelahiran', '2026-03-08 17:03:10'),
-(12, 2, '202690055', 'AdminLTE 3  DataTables.pdf', 'dokumen_pangkat_gaji/tunjangan-keluarga-anak/202690055/Salinan_Kartu_Keluarga__KK__202690055_1772964190.pdf', 'Salinan_Kartu_Keluarga__KK_', '2026-03-08 17:03:10'),
-(13, 3, '200781006', 'Technology and Crime_Kriminologi G.pdf', 'dokumen_pangkat_gaji/tunjangan-keluarga-anak/200781006/Surat_Permohonan_200781006_1772987255.pdf', 'Surat_Permohonan', '2026-03-08 23:27:35'),
-(14, 3, '200781006', 'Petunjuk Pengajuan Layanan KTP  El  Baru Perekaman   Hilang   Rusak .pdf', 'dokumen_pangkat_gaji/tunjangan-keluarga-anak/200781006/Salinan_Akta_Kelahiran_200781006_1772987255.pdf', 'Salinan_Akta_Kelahiran', '2026-03-08 23:27:35'),
-(15, 3, '200781006', 'jbptunikompp-gdl-suryalagar-28817-10-unikom_s-4.pdf', 'dokumen_pangkat_gaji/tunjangan-keluarga-anak/200781006/Salinan_Kartu_Keluarga__KK__200781006_1772987255.pdf', 'Salinan_Kartu_Keluarga__KK_', '2026-03-08 23:27:35'),
-(16, 4, '200781006', '6.+JIKOSTIK_jurnal+ekohardi_QR+code_v1_fin_two+col_230821.pdf', 'dokumen_pangkat_gaji/tunjangan-keluarga-anak/200781006/Surat_Permohonan_200781006_1772988746.pdf', 'Surat_Permohonan', '2026-03-08 23:52:26'),
-(17, 4, '200781006', 'Surat_Cuti_20251219052.pdf', 'dokumen_pangkat_gaji/tunjangan-keluarga-anak/200781006/Salinan_Akta_Kelahiran_200781006_1772988747.pdf', 'Salinan_Akta_Kelahiran', '2026-03-08 23:52:27'),
-(18, 4, '200781006', '4982-9012-1-SM.pdf', 'dokumen_pangkat_gaji/tunjangan-keluarga-anak/200781006/Salinan_Kartu_Keluarga__KK__200781006_1772988747.pdf', 'Salinan_Kartu_Keluarga__KK_', '2026-03-08 23:52:27');
-
 -- --------------------------------------------------------
 
 --
@@ -200,32 +176,6 @@ CREATE TABLE `file_persyaratanpensiun` (
   `tipe_dokumen` varchar(100) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
-
---
--- Dumping data for table `file_persyaratanpensiun`
---
-
-INSERT INTO `file_persyaratanpensiun` (`id`, `pengajuan_pensiun_id`, `nomor_urut_pegawai`, `nama_file_asli`, `path_file_server`, `tipe_dokumen`, `created_at`) VALUES
-(1, 1, '202690055', '357919.pdf', 'dokumen_pensiun/202690055/Surat_Permohonan_202690055_1772809970.pdf', 'Surat_Permohonan', '2026-03-06 15:12:55'),
-(2, 1, '202690055', 'AdminLTE 3  DataTables.pdf', 'dokumen_pensiun/202690055/SK_Gaji_Pokok_Berkala_Terakhir_202690055_1772809975.pdf', 'SK_Gaji_Pokok_Berkala_Terakhir', '2026-03-06 15:12:55'),
-(3, 1, '202690055', 'Bukti_Ujian_12200015_2.pdf', 'dokumen_pensiun/202690055/SK_Pengangkatan_Pertama_Pegawai_Tetap_202690055_1772809975.pdf', 'SK_Pengangkatan_Pertama_Pegawai_Tetap', '2026-03-06 15:12:55'),
-(4, 1, '202690055', 'data_siswa_tglHariIni_2025-08-28.pdf', 'dokumen_pensiun/202690055/SK_Kenaikan_Pangkat_Terakhir_202690055_1772809975.pdf', 'SK_Kenaikan_Pangkat_Terakhir', '2026-03-06 15:12:55'),
-(5, 1, '202690055', '14_7572_unv111_122019_pdf.pdf', 'dokumen_pensiun/202690055/Daftar_Penilaian_Kerja_Terakhir_202690055_1772809975.pdf', 'Daftar_Penilaian_Kerja_Terakhir', '2026-03-06 15:12:55'),
-(6, 3, '200781006', 'Surat_Cuti_20251219052.pdf', 'dokumen_pensiun/200781006/Surat_Permohonan_200781006_1772985455.pdf', 'Surat_Permohonan', '2026-03-08 15:57:37'),
-(7, 3, '200781006', '4982-9012-1-SM.pdf', 'dokumen_pensiun/200781006/SK_Gaji_Pokok_Berkala_Terakhir_200781006_1772985457.pdf', 'SK_Gaji_Pokok_Berkala_Terakhir', '2026-03-08 15:57:37'),
-(8, 3, '200781006', 'landinfo.com-GeoData-Indonesia.pdf', 'dokumen_pensiun/200781006/SK_Pengangkatan_Pertama_Pegawai_Tetap_200781006_1772985457.pdf', 'SK_Pengangkatan_Pertama_Pegawai_Tetap', '2026-03-08 15:57:37'),
-(9, 3, '200781006', 'Lampiran_I_Rincian_Formasi.pdf', 'dokumen_pensiun/200781006/SK_Kenaikan_Pangkat_Terakhir_200781006_1772985457.pdf', 'SK_Kenaikan_Pangkat_Terakhir', '2026-03-08 15:57:37'),
-(10, 3, '200781006', 'app5_sebi143112_eng.pdf', 'dokumen_pensiun/200781006/Daftar_Penilaian_Kerja_Terakhir_200781006_1772985457.pdf', 'Daftar_Penilaian_Kerja_Terakhir', '2026-03-08 15:57:38'),
-(11, 4, '200781006', '6.+JIKOSTIK_jurnal+ekohardi_QR+code_v1_fin_two+col_230821.pdf', 'dokumen_pensiun/200781006/Surat_Permohonan_200781006_1772986793.pdf', 'Surat_Permohonan', '2026-03-08 16:19:54'),
-(12, 4, '200781006', 'Surat_Cuti_20251219052.pdf', 'dokumen_pensiun/200781006/SK_Gaji_Pokok_Berkala_Terakhir_200781006_1772986794.pdf', 'SK_Gaji_Pokok_Berkala_Terakhir', '2026-03-08 16:19:54'),
-(13, 4, '200781006', '4982-9012-1-SM.pdf', 'dokumen_pensiun/200781006/SK_Pengangkatan_Pertama_Pegawai_Tetap_200781006_1772986795.pdf', 'SK_Pengangkatan_Pertama_Pegawai_Tetap', '2026-03-08 16:19:55'),
-(14, 4, '200781006', 'landinfo.com-GeoData-Indonesia.pdf', 'dokumen_pensiun/200781006/SK_Kenaikan_Pangkat_Terakhir_200781006_1772986795.pdf', 'SK_Kenaikan_Pangkat_Terakhir', '2026-03-08 16:19:55'),
-(15, 4, '200781006', 'app5_sebi143112_eng.pdf', 'dokumen_pensiun/200781006/Daftar_Penilaian_Kerja_Terakhir_200781006_1772986795.pdf', 'Daftar_Penilaian_Kerja_Terakhir', '2026-03-08 16:19:55'),
-(16, 5, '200781006', '6.+JIKOSTIK_jurnal+ekohardi_QR+code_v1_fin_two+col_230821.pdf', 'dokumen_pensiun/200781006/Surat_Permohonan_200781006_1772988398.pdf', 'Surat_Permohonan', '2026-03-08 16:46:38'),
-(17, 5, '200781006', 'Surat_Cuti_20251219052.pdf', 'dokumen_pensiun/200781006/SK_Gaji_Pokok_Berkala_Terakhir_200781006_1772988398.pdf', 'SK_Gaji_Pokok_Berkala_Terakhir', '2026-03-08 16:46:39'),
-(18, 5, '200781006', '4982-9012-1-SM.pdf', 'dokumen_pensiun/200781006/SK_Pengangkatan_Pertama_Pegawai_Tetap_200781006_1772988399.pdf', 'SK_Pengangkatan_Pertama_Pegawai_Tetap', '2026-03-08 16:46:40'),
-(19, 5, '200781006', 'landinfo.com-GeoData-Indonesia.pdf', 'dokumen_pensiun/200781006/SK_Kenaikan_Pangkat_Terakhir_200781006_1772988400.pdf', 'SK_Kenaikan_Pangkat_Terakhir', '2026-03-08 16:46:40'),
-(20, 5, '200781006', 'app5_sebi143112_eng.pdf', 'dokumen_pensiun/200781006/Daftar_Penilaian_Kerja_Terakhir_200781006_1772988400.pdf', 'Daftar_Penilaian_Kerja_Terakhir', '2026-03-08 16:46:40');
 
 -- --------------------------------------------------------
 
@@ -260,7 +210,7 @@ INSERT INTO `jabatan` (`jabatan_id`, `nama_jabatan`, `level_jabatan`, `id_divisi
 (13, 'Finance Officer', NULL, NULL),
 (14, 'Funding & Service Banking Officer', NULL, NULL),
 (15, 'Hardware IT Officer & Programer', NULL, NULL),
-(16, 'Human Resources Officer, Legal, Analis Kepatuhan', NULL, NULL),
+(16, 'Human Resources Officer, Legal, Analis Kepatuhan dan Integritas Pelaporan Keuangan', NULL, NULL),
 (17, 'Kepala Kantor Kas', NULL, NULL),
 (18, 'Kepala Satker Kepatuhan & M.R.', NULL, NULL),
 (19, 'Kepala SKAI', NULL, NULL),
@@ -370,15 +320,6 @@ CREATE TABLE `log_persetujuan_cuti` (
   `user_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
---
--- Dumping data for table `log_persetujuan_cuti`
---
-
-INSERT INTO `log_persetujuan_cuti` (`id`, `nomor_urut_pegawai`, `tahap_persetujuan`, `nomor_urut_pegawai_penyetuju`, `status_pengajuan`, `komentar`, `updated_at`, `user_id`) VALUES
-(8, '202690055', 'Pengajuan Awal', NULL, 'disetujui', 'Menunggu verifikasi.', '2026-03-06 22:06:50', NULL),
-(9, '202690055', 'Manager', '200781006', 'disetujui', 'sdfsfsfsfdsdf', '2026-03-08 19:45:29', NULL),
-(13, '200781006', 'Pengajuan Awal', NULL, 'diproses', 'Menunggu verifikasi.', '2026-03-08 21:36:48', NULL);
-
 -- --------------------------------------------------------
 
 --
@@ -401,8 +342,10 @@ CREATE TABLE `log_persetujuan_lembur` (
 --
 
 INSERT INTO `log_persetujuan_lembur` (`id`, `lembur_id`, `nomor_urut_pegawai`, `tahap_persetujuan`, `nomor_urut_pegawai_penyetuju`, `status_persetujuan`, `komentar`, `updated_at`) VALUES
-(3, 3, '202690055', 'Pengajuan Awal', NULL, 'diproses', 'Menunggu Verifikasi.', '2026-03-06 22:09:19'),
-(5, 5, '200781006', 'Pengajuan Awal', NULL, 'diproses', 'Menunggu Verifikasi.', '2026-03-08 22:05:58');
+(71, 14, '200781006', 'Pengajuan Awal', NULL, 'diproses', 'Menunggu Verifikasi.', '2026-04-05 13:37:59'),
+(73, 16, '202690055', 'Pengajuan Awal', '200781006', 'disetujui', 'Disetujui', '2026-04-05 19:36:33'),
+(84, 16, '202690055', 'Manager', '200781006', 'disetujui', 'Disetujui oleh Manager', '2026-04-05 19:36:33'),
+(85, 16, '202690055', 'Kepala SKK & SKKMR', NULL, 'diproses', 'Menunggu verifikasi Kepala SKK & SKKMR', '2026-04-05 19:36:33');
 
 -- --------------------------------------------------------
 
@@ -421,14 +364,6 @@ CREATE TABLE `log_persetujuan_pangkatgajitunjangan` (
   `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
---
--- Dumping data for table `log_persetujuan_pangkatgajitunjangan`
---
-
-INSERT INTO `log_persetujuan_pangkatgajitunjangan` (`id`, `id_pengajuan`, `nomor_urut_pegawai`, `tahap_persetujuan`, `nomor_urut_pegawai_penyetuju`, `status_persetujuan`, `komentar`, `updated_at`) VALUES
-(4, 2, '202690055', 'Pengajuan Awal', NULL, 'diproses', 'Menunggu persetujuan.', '2026-03-08 17:03:10'),
-(6, 4, '200781006', 'Pengajuan Awal', NULL, 'diproses', 'Menunggu persetujuan.', '2026-03-08 23:52:26');
-
 -- --------------------------------------------------------
 
 --
@@ -445,14 +380,6 @@ CREATE TABLE `log_persetujuan_pensiun` (
   `komentar` text DEFAULT NULL,
   `update_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
-
---
--- Dumping data for table `log_persetujuan_pensiun`
---
-
-INSERT INTO `log_persetujuan_pensiun` (`id`, `id_pengajuan`, `nomor_urut_pegawai`, `tahap_persetujuan`, `nomor_urut_pegawai_penyetuju`, `status_persetujuan`, `komentar`, `update_at`) VALUES
-(1, 1, '202690055', 'Pengajuan Awal', NULL, 'diproses', 'Menunggu persetujuan.', '2026-03-06 22:12:50'),
-(4, 5, '200781006', 'Pengajuan Awal', NULL, 'diproses', 'Menunggu persetujuan.', '2026-03-08 23:46:38');
 
 -- --------------------------------------------------------
 
@@ -487,24 +414,24 @@ CREATE TABLE `pegawai` (
 --
 
 INSERT INTO `pegawai` (`nomor_urut_pegawai`, `nama`, `nik`, `npwp`, `level_id`, `nama_level`, `photo_path`) VALUES
-('1', 'Tommy I Gunawan', '3205050205720003', '09.397.386.5-443.000', NULL, 'Direktur Utama', NULL),
-('2', 'Anjas Asmara', '3276011203730011', '68.591.0218-412-000', NULL, 'Direktur Kepatuhan', NULL),
-('200182003', 'Cece Sulaeman', '3201040902820006', '47.386.326.4.434.000', NULL, 'Manajer Pelaporan & IT', NULL),
-('200480004', 'Lisda Meilina', '3271044805800014', '47.386.329.8.404.000', NULL, 'Manajer Dana & Jasa Layanan', NULL),
-('200779005', 'Herry Sofiyanto', '3271022903790001', '68.669.438.1.404.000', NULL, 'Kepala SKAI', NULL),
+('1', 'Tommy I Gunawan', '3205050205720003', '09.397.386.5-443.000', 3, 'Direktur Utama', NULL),
+('2', 'Anjas Asmara', '3276011203730011', '68.591.0218-412-000', 3, 'Direktur Kepatuhan', NULL),
+('200182003', 'Cece Sulaeman', '3201040902820006', '47.386.326.4.434.000', 2, 'Manajer Pelaporan & IT', NULL),
+('200480004', 'Lisda Meilina', '3271044805800014', '47.386.329.8.404.000', 2, 'Manajer Dana & Jasa Layanan', NULL),
+('200779005', 'Herry Sofiyanto', '3271022903790001', '68.669.438.1.404.000', 2, 'Kepala SKAI', NULL),
 ('200781006', 'M. Hasan Basri', '3271061204810002', '68.669.436.5.404.000', 2, 'Manajer Umum', NULL),
 ('200783007', 'Iin Harlina', '3271046203830014', '68.669.437.3.404.000', NULL, 'Kepala Kantor Kas', NULL),
 ('200877008', 'Fauzi', '3271021307770002', '68.669.447.2.404.000', NULL, 'Credit Maintenance Officer (Remedial)', NULL),
 ('200879009', 'Priyatno', '3201011109790015', '68.669.440.7.403.000', NULL, 'Kepala Kantor Kas', NULL),
 ('200885010', 'Darus Salam', '3271040612850006', '68.669.446.4.404.000', NULL, 'Credit Maintenance Officer (Remedial)', NULL),
-('200979011', 'Bambang Sulistyo', '3271042708790017', '68.669.445.6.404.000', NULL, 'Manajer Kredit', NULL),
+('200979011', 'Bambang Sulistyo', '3271042708790017', '68.669.445.6.404.000', 2, 'Manajer Kredit', NULL),
 ('200979012', 'Arif Darmawan J.', '3213041302790001', '68.669.443.1.404.000', NULL, 'Credit Marketing ', NULL),
-('200984013', 'Rika Dewi Kumalasari', '3271066207840003', '68.669.444.9.404.000', NULL, 'Kepala Satker Kepatuhan & M.R. ', NULL),
+('200984013', 'Rika Dewi Kumalasari', '3271066207840003', '68.669.444.9.404.000', 2, 'Kepala Satker Kepatuhan & M.R. ', NULL),
 ('201080014', 'Deni Prasetiya', '3271041607800019', '89.224.514.3.404.000', NULL, 'Funding & Service Banking Officer', NULL),
 ('201283015', 'Muliasari', '3271047001830015', '44.814.684.5.404.000', 1, 'Administrasi Umum Rumah Tangga / Logistik', NULL),
 ('201287016', 'Nurmedina', '3271066602870010', '44.814.594.6.404.000', NULL, 'Auditor Madya', NULL),
 ('201382017', 'Arif Budiman', '3201291508860004', '64.277.371.7.404.000', NULL, 'Credit Maintenance Officer (Remedial)', NULL),
-('201384018', 'Akhirianto Soedewo', '3271031407840003', '64.277.364.2.404.000', NULL, 'Human Resources Officer , Legal, Analis Kepatuhan ', NULL),
+('201384018', 'Akhirianto Soedewo', '3271031407840003', '64.277.364.2.404.000', 1, 'Human Resources Officer , Legal, Analis Kepatuhan ', NULL),
 ('201481019', 'R. Harry Darmawan', '3201292206810001', '55.258.669.5.434.000', NULL, 'Collector Dana', NULL),
 ('201578020', 'Endang Jaya', '3271062504780023', '89.050.368.3.404.000', NULL, 'Credit Maintenance Officer (Remedial)', NULL),
 ('201579021', 'Irvy Sumiyati', '3271066712790002', '71.978.621.2.404.000', NULL, 'Funding & Service Banking Officer', NULL),
@@ -537,7 +464,7 @@ INSERT INTO `pegawai` (`nomor_urut_pegawai`, `nama`, `nik`, `npwp`, `level_id`, 
 ('202097053', 'Nia Kaniyati', '3271045210970012', '73.237.097.8-404.000', NULL, 'Credit Administration Officer', NULL),
 ('202396054', 'Aprillia Purwanti', '3271044804960007', '94.991.740.5-404.000', NULL, 'Teller', NULL),
 ('202690055', 'Iwan Kurniawan', '01011044804960000', '94.991.111.1-000.000', 1, 'Finance Officer', NULL),
-('3', 'Bhima Irsi Faliandri', '3275081612720019', '09.263.872.5-432.000', NULL, 'Direktur Operasional', NULL),
+('3', 'Bhima Irsi Faliandri', '3275081612720019', '09.263.872.5-432.000', 3, 'Direktur Operasional', NULL),
 ('PKWT', 'Wemphy Jeliansah', '3271032803870003', '46.189.083.2.404.000', NULL, 'Teller', NULL);
 
 -- --------------------------------------------------------
@@ -639,14 +566,6 @@ CREATE TABLE `pengajuan_cuti` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
---
--- Dumping data for table `pengajuan_cuti`
---
-
-INSERT INTO `pengajuan_cuti` (`nomor_urut_pegawai`, `jenis_cuti`, `tanggal_mulai`, `tanggal_selesai`, `jumlah_cuti`, `jatah_periode_hari`, `sisa_cuti`, `keterangan`, `jalur_dokumen_pendukung`, `created_at`, `updated_at`) VALUES
-('200781006', 'Cuti Tahunan', '2026-03-26', '2026-03-31', 4, 12, 8, 'dfsdfsfsfs', NULL, '2026-03-08 14:36:48', '2026-03-08 14:36:48'),
-('202690055', 'Cuti Tahunan', '2026-03-09', '2026-03-12', 4, 12, 8, 'dsfsfsdfdsfsfs', NULL, '2026-03-06 15:06:50', '2026-03-06 15:06:50');
-
 -- --------------------------------------------------------
 
 --
@@ -670,8 +589,8 @@ CREATE TABLE `pengajuan_lembur` (
 --
 
 INSERT INTO `pengajuan_lembur` (`id_lembur`, `nomor_urut_pegawai`, `tanggal_lembur`, `jam_mulai`, `jam_selesai`, `total_jam_lembur`, `uraian_tugas`, `created_at`, `updated_at`) VALUES
-(3, '202690055', '2026-03-07', '09:00:00', '12:00:00', '3 jam 0 menit', 'sfsfsdfsdfsfsf', '2026-03-06 15:09:19', '2026-03-06 15:09:19'),
-(5, '200781006', '2026-03-21', '09:00:00', '12:00:00', '3 jam 0 menit', 'asdasdasdadada', '2026-03-08 15:05:58', '2026-03-08 15:05:58');
+(14, '200781006', '2026-04-07', '17:30:00', '21:00:00', '3 jam 30 menit', 'Cuan', '2026-04-05 06:37:59', '2026-04-05 06:37:59'),
+(16, '202690055', '2026-04-11', '09:00:00', '11:00:00', '2 jam 0 menit', 'Cuan', '2026-04-05 11:45:58', '2026-04-05 12:36:32');
 
 -- --------------------------------------------------------
 
@@ -694,14 +613,6 @@ CREATE TABLE `pengajuan_pangkatgajitunjangan` (
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
---
--- Dumping data for table `pengajuan_pangkatgajitunjangan`
---
-
-INSERT INTO `pengajuan_pangkatgajitunjangan` (`id_pengajuan`, `nomor_urut_pegawai`, `pangkat`, `grade`, `jabatan`, `unit_kerja`, `status_pegawai`, `tmt_pegawai`, `jenis_pengajuan`, `masa_kerja`, `created_at`, `updated_at`) VALUES
-(4, '200781006', 'Pengarah Bank Madya', 'G.7', 'Manajer Umum', 'Umum', 'Pegawai Tetap', '2007-08-01', 'Tunjangan Keluarga (Anak)', '18tahun4bulan', '2026-03-08 16:52:26', '2026-03-08 16:52:26'),
-(2, '202690055', 'Pelaksana Bank Madya', 'G.3', 'Finance Officer', 'Umum', 'Pegawai Tetap', '2023-01-02', 'Tunjangan Keluarga (Anak)', '2tahun11bulan', '2026-03-08 10:03:10', '2026-03-08 10:03:10');
-
 -- --------------------------------------------------------
 
 --
@@ -723,14 +634,6 @@ CREATE TABLE `pengajuan_pensiun` (
   `tmt_pensiun` date DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
-
---
--- Dumping data for table `pengajuan_pensiun`
---
-
-INSERT INTO `pengajuan_pensiun` (`id_pengajuan`, `nomor_urut_pegawai`, `nama_pegawai`, `pangkat`, `grade`, `jabatan`, `unit_kerja`, `status_pegawai`, `tmt_pegawai`, `jenis_pengajuan`, `masa_kerja`, `tmt_pensiun`, `created_at`) VALUES
-(1, '202690055', 'Iwan Kurniawan', 'Pelaksana Bank Madya', 'G.3', 'Finance Officer', 'Umum', 'Pegawai Tetap', '2023-01-02', 'Pensiun Normal', '2tahun11bulan', '2081-01-01', '2026-03-06 15:12:50'),
-(5, '200781006', 'M. Hasan Basri', 'Pengarah Bank Madya', 'G.7', 'Manajer Umum', 'Umum', 'Pegawai Tetap', '2007-08-01', 'Pensiun Normal', '18tahun4bulan', '2063-07-31', '2026-03-08 16:46:38');
 
 -- --------------------------------------------------------
 
@@ -790,13 +693,17 @@ CREATE TABLE `roles_mapping` (
 --
 
 INSERT INTO `roles_mapping` (`id`, `nup`, `level_id`, `id_divisi`, `jabatan_id`, `role_name`, `route_name`, `priority`, `created_at`, `updated_at`) VALUES
-(1, NULL, 2, 5, 20, 'Manajer Dana & Jasa Layanan', 'manager.dashboardmanager', 1, NULL, NULL),
-(2, NULL, 2, 3, 21, 'Manajer Kredit', 'manager.dashboardmanager', 1, NULL, NULL),
-(3, NULL, 2, 6, 22, 'Manajer Pelaporan & IT', 'manager.dashboardmanager', 1, NULL, NULL),
-(4, NULL, 2, 1, 23, 'Manajer Umum', 'manager.dashboardmanager', 1, NULL, NULL),
-(5, NULL, 2, 2, 19, 'Kepala SKAI', 'manager.dashboardmanager', 1, NULL, NULL),
-(6, NULL, 2, 4, 18, 'Kepala Satker Kepatuhan & M.R.', 'manager.dashboardmanager', 1, NULL, NULL),
-(7, NULL, 1, NULL, NULL, 'Pegawai', 'pegawai.dashboard', 10, NULL, NULL);
+(1, NULL, 2, 5, 20, 'Manajer Dana & Jasa Layanan', 'manager.dashboardmanager', 2, NULL, NULL),
+(2, NULL, 2, 3, 21, 'Manajer Kredit', 'manager.dashboardmanager', 2, NULL, NULL),
+(3, NULL, 2, 6, 22, 'Manajer Pelaporan & IT', 'manager.dashboardmanager', 2, NULL, NULL),
+(4, NULL, 2, 1, 23, 'Manajer Umum', 'manager.dashboardmanager', 2, NULL, NULL),
+(5, NULL, 2, 2, 19, 'Kepala SKAI', 'manager.dashboardmanager', 2, NULL, NULL),
+(6, NULL, 2, 4, 18, 'Kepala Satker Kepatuhan & M.R.', 'manager.dashboardmanager', 2, NULL, NULL),
+(7, NULL, 1, NULL, NULL, 'Pegawai', 'pegawai.dashboard', 10, NULL, NULL),
+(8, NULL, 1, 4, 16, 'Pegawai', 'manager.dashboardmanager', 2, NULL, NULL),
+(9, NULL, 3, NULL, NULL, 'Direktur Kepatuhan', 'direktur.dashboarddirektur', 1, NULL, NULL),
+(10, NULL, 3, NULL, NULL, 'Direktur Operasional', 'direktur.dashboarddirektur', 1, NULL, NULL),
+(11, NULL, 3, NULL, NULL, 'Direktur Utama', 'direktur.dashboarddirektur', 1, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -818,8 +725,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('VS6PmrxKIOndodHxQCO3yFqkT8PcrDBBYBmlZTuV', 200781006, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiYTFWNGVvdHhCN05Ea3VZSTNsZmd3bnNadEVRNU1UWUYyY3JVbjhMWiI7czozOiJ1cmwiO2E6MDp7fXM6OToiX3ByZXZpb3VzIjthOjI6e3M6MzoidXJsIjtzOjU0OiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvbWFuYWdlci9wZWdhd2FpL2RldGFpbC8yMDI2OTAwNTUiO3M6NToicm91dGUiO3M6MjI6Im1hbmFnZXIucGVnYXdhaS5kZXRhaWwiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7czo5OiIyMDA3ODEwMDYiO30=', 1773126844),
-('ZNMUxyfzkElY2qrmiZTnLSZjve60krveLf0MwpSF', 200781006, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiS3hobGdHQ0w2QjJ3bGtDOHUyOXdCU0xVNGVFeHBkMk5mbzFDdzFJWiI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6Mzc6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9tYW5hZ2VyL3BlZ2F3YWkiO3M6NToicm91dGUiO3M6MjE6Im1hbmFnZXIucGVnYXdhaWRpdmlzaSI7fXM6NjoiX2ZsYXNoIjthOjI6e3M6Mzoib2xkIjthOjA6e31zOjM6Im5ldyI7YTowOnt9fXM6NTA6ImxvZ2luX3dlYl81OWJhMzZhZGRjMmIyZjk0MDE1ODBmMDE0YzdmNThlYTRlMzA5ODlkIjtzOjk6IjIwMDc4MTAwNiI7czoyMjoiUEhQREVCVUdCQVJfU1RBQ0tfREFUQSI7YTowOnt9fQ==', 1773119073);
+('L16HOyL8tNypbrI1pWwnEOGI6vQQzTIlBeOfQZtR', 200781006, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoidXhxc2w2eHlVdUZQaEpSMGhTWVQzeHpLUHY1alpoN0F5M2ZHVGRjbCI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6NjU6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9tYW5hZ2VyL21hbmFqZW1lbnBlbmdhanVhbi9kZXRhaWwvbGVtYnVyLzczIjtzOjU6InJvdXRlIjtzOjIyOiJtYW5hZ2VyLmRldGFpbEFwcHJvdmFsIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO3M6OToiMjAwNzgxMDA2IjtzOjIyOiJQSFBERUJVR0JBUl9TVEFDS19EQVRBIjthOjA6e319', 1775392603);
 
 -- --------------------------------------------------------
 
@@ -871,10 +777,15 @@ CREATE TABLE `users` (
 --
 
 INSERT INTO `users` (`nomor_urut_pegawai`, `name`, `email`, `email_verified_at`, `password`, `level_akses`, `remember_token`, `id_divisi`, `jabatan_id`, `level_id`, `created_at`, `updated_at`) VALUES
+('1', 'Tommy I Gunawan', 'zeroxide.3@gmail.com', NULL, '$2y$12$Btdpaws5b6WuizoU5JZxte9z6q1BNXIrMhjsLkou8QP/ZGDi/Kwli', 'pegawai', NULL, NULL, 12, 3, '2026-03-26 05:45:10', '2026-03-26 05:45:10'),
+('2', 'Anjas Asmara', 'triyanto.kurniawan.3@gmail.com', NULL, '$2y$12$WMWgstPwdCWJK2pKwrWd3.VCuNW7Ln5k6VoWwk2VNL6RLLNs/kGna', 'pegawai', NULL, NULL, 10, 3, '2026-03-26 05:46:43', '2026-03-26 05:46:43'),
+('200779005', 'Herry Sofiyanto', 'jammy.dez@gmail.com', NULL, '$2y$12$jFODKed43nFUkRpHeZn3mOEuJW64k2jV35Ga83WJl/.iYUjIYv/Mu', 'pegawai', NULL, 2, 19, 2, '2026-03-14 08:14:03', '2026-03-14 08:14:03'),
 ('200781006', 'M. Hasan Basri', 'm.kurniawan.bondes@gmail.com', NULL, '$2y$12$kLlIHySiThhzRu.Es.KQAeY4GMUQ6sRbFkeC5F7oJ.naYsXOcRxY6', 'pegawai', NULL, 1, 23, 2, '2026-03-04 07:43:01', '2026-03-04 07:43:01'),
-('200979011', 'Bambang Sulistyo', 'saitokunjimmy@gmail.com', NULL, '$2y$12$qla734TYMVG4pqZdW3uTNeDbnK7cvMHTqOefiuF21g7uTHuYlNUfy', 'pegawai', NULL, 3, 21, 2, '2026-03-04 08:57:20', '2026-03-04 08:57:20'),
+('200979011', 'Bambang Sulistyo', 'saitokunjimmy@gmail.com', NULL, '$2y$12$cqn0NcJJkc0KcbwC2h5P1ul/oHmJGMJoqYEwc.Sl/AnCojqHKEmAm', 'pegawai', NULL, 3, 21, 2, '2026-03-26 05:43:49', '2026-03-26 05:43:49'),
 ('200984013', 'Rika Dewi Kumalasari', 'rideonexide@gmail.com', NULL, '$2y$12$bLdB/44hbL8lA0XEivJ4mO4QPHP7a2zuafS8XNk3dHmUKPfkgOMWC', 'pegawai', NULL, 4, 18, 2, '2026-03-04 07:51:16', '2026-03-04 07:51:16'),
-('202690055', 'Iwan Kurniawan', 'triyantokurniawan3@gmail.com', NULL, '$2y$12$R7HggQVlx6xcbN7Y7.dD9u6Mj7NK7TFzV7pozaQTeGCEnD8rmKud.', 'pegawai', NULL, 1, 13, 1, '2026-03-04 06:49:25', '2026-03-04 06:49:25');
+('201384018', 'Akhirianto Soedewo', 'admin@gmail.com', NULL, '$2y$12$HrtI0I4/yXEveGS05I7yqeIa6a.gdr1jUR7n5ljbzGNhZONMuoS.e', 'pegawai', NULL, 4, 16, 1, '2026-03-26 05:42:06', '2026-03-26 05:42:06'),
+('202690055', 'Iwan Kurniawan', 'triyantokurniawan3@gmail.com', NULL, '$2y$12$R7HggQVlx6xcbN7Y7.dD9u6Mj7NK7TFzV7pozaQTeGCEnD8rmKud.', 'pegawai', NULL, 1, 13, 1, '2026-03-04 06:49:25', '2026-03-04 06:49:25'),
+('3', 'Bhima Irsi Faliandri', 'rideone.kurniawan01@gmail.com', NULL, '$2y$12$BsR3JuLeE06I16.AnUDTKuMjXhrWute3KUzRF7mJt0/9/3ITLHZGu', 'pegawai', NULL, NULL, 11, 3, '2026-03-26 05:40:48', '2026-03-26 05:40:48');
 
 --
 -- Indexes for dumped tables
@@ -1098,13 +1009,13 @@ ALTER TABLE `divisi`
 -- AUTO_INCREMENT for table `file_persyaratanpangkatgajitunjangan`
 --
 ALTER TABLE `file_persyaratanpangkatgajitunjangan`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=30;
 
 --
 -- AUTO_INCREMENT for table `file_persyaratanpensiun`
 --
 ALTER TABLE `file_persyaratanpensiun`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=21;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=31;
 
 --
 -- AUTO_INCREMENT for table `jabatan`
@@ -1140,43 +1051,43 @@ ALTER TABLE `level_jabatan`
 -- AUTO_INCREMENT for table `log_persetujuan_cuti`
 --
 ALTER TABLE `log_persetujuan_cuti`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=29;
 
 --
 -- AUTO_INCREMENT for table `log_persetujuan_lembur`
 --
 ALTER TABLE `log_persetujuan_lembur`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=86;
 
 --
 -- AUTO_INCREMENT for table `log_persetujuan_pangkatgajitunjangan`
 --
 ALTER TABLE `log_persetujuan_pangkatgajitunjangan`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
 
 --
 -- AUTO_INCREMENT for table `log_persetujuan_pensiun`
 --
 ALTER TABLE `log_persetujuan_pensiun`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=27;
 
 --
 -- AUTO_INCREMENT for table `pengajuan_lembur`
 --
 ALTER TABLE `pengajuan_lembur`
-  MODIFY `id_lembur` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id_lembur` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `pengajuan_pangkatgajitunjangan`
 --
 ALTER TABLE `pengajuan_pangkatgajitunjangan`
-  MODIFY `id_pengajuan` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
+  MODIFY `id_pengajuan` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `pengajuan_pensiun`
 --
 ALTER TABLE `pengajuan_pensiun`
-  MODIFY `id_pengajuan` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+  MODIFY `id_pengajuan` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
 
 --
 -- AUTO_INCREMENT for table `punishment`
@@ -1194,7 +1105,7 @@ ALTER TABLE `reward`
 -- AUTO_INCREMENT for table `roles_mapping`
 --
 ALTER TABLE `roles_mapping`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `sub_jenis_cuti_penting`
@@ -1205,6 +1116,12 @@ ALTER TABLE `sub_jenis_cuti_penting`
 --
 -- Constraints for dumped tables
 --
+
+--
+-- Constraints for table `pegawai`
+--
+ALTER TABLE `pegawai`
+  ADD CONSTRAINT `fk_pegawai_level` FOREIGN KEY (`level_id`) REFERENCES `level_jabatan` (`level_id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 --
 -- Constraints for table `pekerjaan`

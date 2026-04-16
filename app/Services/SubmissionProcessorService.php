@@ -38,7 +38,7 @@ class SubmissionProcessorService
                     $flow = ['Pengajuan Awal', 'Direktur Operasional', 'HRO'];
                 } elseif ($type === 'Lembur') {
                     // Lembur Manager: Pengajuan -> Kepala SKK & SKKMR -> HRO (DIROPS DIBUANG)
-                    $flow = ['Pengajuan Awal', 'Kepala SKK & SKKMR', 'HRO'];
+                    $flow = ['Pengajuan Awal', 'Kepala SKK & SKKMR', 'Direktur Operasional', 'HRO'];
                 }
             } else {
                 // --- LOGIKA KHUSUS USER PEGAWAI ---
@@ -50,10 +50,10 @@ class SubmissionProcessorService
                         // PENYESUAIAN LEMBUR PEGAWAI (FIX TANPA DIREKTUR OPS)
                         if ($isSKAI) {
                             // RUTE AUDIT: Pengajuan -> Kepala SK Audit -> Kepala SKK & SKKMR -> HRO
-                            $flow = ['Pengajuan Awal', 'Kepala SK Audit', 'Kepala SKK & SKKMR', 'HRO'];
+                            $flow = ['Pengajuan Awal', 'Kepala SK Audit', 'Kepala SKK & SKKMR', 'Direktur Operasional', 'HRO'];
                         } else {
                             // RUTE PEGAWAI BIASA: Pengajuan -> Manager -> Kepala SKK & SKKMR -> HRO
-                            $flow = ['Pengajuan Awal', 'Manager', 'Kepala SKK & SKKMR', 'HRO'];
+                            $flow = ['Pengajuan Awal', 'Manager', 'Kepala SKK & SKKMR', 'Direktur Operasional', 'HRO'];
                         }
                     }
                 }
@@ -115,33 +115,32 @@ class SubmissionProcessorService
             }
 
             // --- 1. Logika Warna Garis (DIPERBAIKI) ---
-            // --- Logika Warna Garis (DENGAN TRANSISI ORANGE) ---
-foreach ($stageData as $index => &$currentStage) {
-    if (isset($stageData[$index + 1])) {
-        $nextStage = $stageData[$index + 1];
+            foreach ($stageData as $index => &$currentStage) {
+                if (isset($stageData[$index + 1])) {
+                    $nextStage = $stageData[$index + 1];
 
-        if ($currentStage['statusString'] == 'disetujui') {
-            // JIKA TAHAP SELANJUTNYA SEDANG DIPROSES -> ORANGE
-            if ($nextStage['isCurrent'] || $nextStage['statusString'] == 'diproses') {
-                $currentStage['lineColor'] = 'bg-orange-500'; 
-            } 
-            // JIKA TAHAP SELANJUTNYA SUDAH SELESAI JUGA -> HIJAU
-            elseif ($nextStage['statusString'] == 'disetujui' || $nextStage['statusString'] == 'ditolak') {
-                $currentStage['lineColor'] = 'bg-teal-500'; 
-            } 
-            // DEFAULT JIKA MASIH MENUNGGU JAUH DI DEPAN -> ABU-ABU
-            else {
-                $currentStage['lineColor'] = 'bg-gray-200';
+                    if ($currentStage['statusString'] == 'disetujui') {
+                        // JIKA TAHAP SELANJUTNYA SEDANG DIPROSES -> ORANGE
+                        if ($nextStage['isCurrent'] || $nextStage['statusString'] == 'diproses') {
+                            $currentStage['lineColor'] = 'bg-orange-500';
+                        }
+                        // JIKA TAHAP SELANJUTNYA SUDAH SELESAI JUGA -> HIJAU
+                        elseif ($nextStage['statusString'] == 'disetujui' || $nextStage['statusString'] == 'ditolak') {
+                            $currentStage['lineColor'] = 'bg-teal-500';
+                        }
+                        // DEFAULT JIKA MASIH MENUNGGU JAUH DI DEPAN -> ABU-ABU
+                        else {
+                            $currentStage['lineColor'] = 'bg-gray-200';
+                        }
+                    } elseif ($currentStage['statusString'] == 'ditolak') {
+                        $currentStage['lineColor'] = 'bg-red-500';
+                    } else {
+                        $currentStage['lineColor'] = 'bg-gray-200';
+                    }
+                } else {
+                    $currentStage['lineColor'] = 'bg-transparent';
+                }
             }
-        } elseif ($currentStage['statusString'] == 'ditolak') {
-            $currentStage['lineColor'] = 'bg-red-500';
-        } else {
-            $currentStage['lineColor'] = 'bg-gray-200';
-        }
-    } else {
-        $currentStage['lineColor'] = 'bg-transparent';
-    }
-}
 
             $submission['stageData'] = $stageData;
 

@@ -50,7 +50,7 @@
         </div>
 
         <div class="flex-1 overflow-y-auto h-[calc(100vh-120px)] space-y-2 custom-scroll-container">
-            <div class="bg-white rounded-lg shadow-lg max-w-full mx-auto">
+            <div class="bg-white rounded-l-md shadow-lg max-w-full mx-auto">
                 {{-- Header Profile Section (menggunakan p-8 untuk padding internal) --}}
                 <div style="background-image: linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.1)), url('{{ asset('images/vecteezylight.jpg') }}')" class="bg-cover bg-bottom p-2 rounded-t-lg relative">
                     <img src="{{ asset('images/vacation.png') }}" alt="Overtime" class="absolute right-0 top-0 h-40">
@@ -175,7 +175,7 @@
                 </div>
             </div>
 
-            <div class="bg-white rounded-lg shadow-lg max-w-full mx-auto">
+            <div class="bg-white rounded-l-md shadow-lg max-w-full mx-auto">
                 <div class="mb-4 p-4 shadow-sm" style="background-color: white; border-radius: 12px; border: 1px solid #e5e7eb;">
                     <span class="text-md font-semibold text-blue-700 mb-4"># Section 2: Keterangan Cuti/ Izin</span>
                     <div class="upload-group">
@@ -192,57 +192,23 @@
 
             <!-- === POPUP MODAL REVIEW === -->
             <div id="leaveModal" class="fixed inset-0 bg-black-50 flex items-center justify-center hidden z-50 backdrop-blur-sm">
-                <!-- Konten Modal (Background putih, tidak terpengaruh blur) -->
-                <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg mx-auto">
+                <!-- Konten Modal (Ubah max-w-lg jadi max-w-4xl agar lebih lebar) -->
+                <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-4xl mx-auto">
                     <!-- Modal Header -->
                     <div class="flex justify-between items-center border-b pb-3">
-                        <h2 class="text-sm font-semibold">Data Pengajuan Cuti</h2>
+                        <h2 class="text-sm font-semibold">Surat Pengajuan Cuti/Izin</h2>
                     </div>
-                    <!-- Modal Body (Area Review Data) -->
+
+                    <!-- Modal Body dengan Container Scroll -->
                     <div class="mt-4">
-                        <div class="space-y-4">
-                            <!-- Section 1: Review Header Info -->
-                            <div class="flex items-center p-3 bg-blue-50 rounded-md">
-                                <span class="text-blue-600 mr-3">📄</span>
-                                <div>
-                                    <!-- Target JS: review_jenis_cuti -->
-                                    <p class="font-small" id="review_jenis_cuti">[Jenis Cuti Placeholder]</p>
-                                    <p class="text-sm text-gray-500">Tanggal Pengajuan: {{ now()->format('d M Y') }}</p>
-                                </div>
-                            </div>
-                            <!-- Section 2: Data Cuti Details Grid -->
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <p class="text-sm font-medium text-gray-500">Tanggal Mulai Cuti</p>
-                                    <!-- Target JS: review_tanggal_mulai -->
-                                    <p class="mt-1 font-semibold text-sm" id="review_tanggal_mulai">[Tgl Mulai]</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-500">Tanggal Masuk Kerja</p>
-                                    <!-- Target JS: review_tanggal_selesai -->
-                                    <p class="mt-1 font-semibold text-sm" id="review_tanggal_selesai">[Tgl Selesai]</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-500">Jumlah Cuti yang diambil</p>
-                                    <!-- Target JS: review_jumlah_cuti -->
-                                    <p class="mt-1 font-semibold text-sm" id="review_jumlah_cuti">[Jumlah Hari]</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-500">Sisa Cuti</p>
-                                    <!-- Target JS: review_jatah_periode_hari -->
-                                    <p class="mt-1 font-semibold text-sm" id="review_sisa_cuti">[Sisa Hari]</p>
-                                </div>
-                                    <div class="col-span-2">
-                                    <p class="text-sm font-medium text-gray-500">Keterangan Cuti & izin</p>
-                                    <p class="mt-1 font-semibold" id="review_keterangan">[Keterangan]</p>
-                                </div>
-                            </div>
+                        <div class="custom-scroll-container p-4" style="max-height: 70vh; overflow-y: auto;">
+                            @include('partials.letter_content')
                         </div>
                     </div>
-                    <!-- Modal Footer (Buttons) -->
+
+                    <!-- Modal Footer -->
                     <div class="flex justify-end mt-6 pt-4 border-t">
                         <button type="button" id="cancelButton" class="px-4 py-2 mr-3 text-sm text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">Batal</button>
-                        <!-- TOMBOL KONFIRMASI SUBMIT FORM -->
                         <button id="submitButton" class="px-4 py-2 text-white bg-blue-600 text-sm rounded-lg hover:bg-blue-700">Ya, Ajukan Cuti</button>
                     </div>
                 </div>

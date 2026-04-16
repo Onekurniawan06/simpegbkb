@@ -1,4 +1,4 @@
-{{-- resources/views/partials/letter_content.blade.php --}}
+
 
 <style>
     .form-table { width: 100%; border-collapse: collapse; table-layout: fixed; margin-top: 10pt; background-color: white; border: 1px solid #000; }
@@ -13,39 +13,37 @@
     ul.ketentuan li { margin-bottom: 2px; }
 </style>
 
-@if(isset($is_pdf) && $is_pdf)
+<?php if(isset($is_pdf) && $is_pdf): ?>
 <style>
     @page { margin: 0.5cm; }
     body { font-family: "DejaVu Sans", sans-serif; }
     .content-wrap { padding: 15pt 25pt; }
 </style>
-@endif
+<?php endif; ?>
 
 <div class="content-wrap">
     <!-- HEADER LOGO -->
-    @if(isset($is_pdf) && $is_pdf)
+    <?php if(isset($is_pdf) && $is_pdf): ?>
         <table style="width: 100%; border-collapse: collapse; margin-bottom: 5pt;">
             <tr>
                 <td style="width: 50%; border: none; padding: 0;">
-                    @php
+                    <?php
                         $path = public_path('images/logobkb.png');
                         $base64 = file_exists($path) ? 'data:image/' . pathinfo($path, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($path)) : '';
-                    @endphp
-                    @if($base64) < img src="{{ $base64 }}" style="height: 35px;"> @endif
+                    ?>
+                    <?php if($base64): ?> < img src="<?php echo e($base64); ?>" style="height: 35px;"> <?php endif; ?>
                 </td>
                 <td style="text-align: right; border: none; padding: 0; font-weight: bold; font-size: 9pt;">Perumda BPR Bank Kota Bogor</td>
             </tr>
         </table>
-    @else
+    <?php else: ?>
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-            <img src="{{ asset('images/logobkb.png') }}" style="height: 35px;">
+            <img src="<?php echo e(asset('images/logobkb.png')); ?>" style="height: 35px;">
             <p style="font-weight: bold; font-size: 9pt; margin: 0;">Perumda BPR Bank Kota Bogor</p>
         </div>
-    @endif
+    <?php endif; ?>
 
-    {{-- <div style="text-align: right; font-size: 8.5pt; margin-bottom: 5px;">
-        <p>Bogor, {{ (isset($cuti) && $cuti->created_at) ? $cuti->created_at->format('d/m/Y') : date('d/m/Y') }}</p>
-    </div> --}}
+    
 
     <!-- I. DATA PEGAWAI -->
     <table class="form-table" style="margin-top: 0;">
@@ -53,21 +51,21 @@
             <tr>
                 <th colspan="2" class="bg-gray-form" style="text-align: left; width: 50%;">I. DATA PEGAWAI</th>
                 <th colspan="2" class="bg-gray-form" style="text-align: left; width: 50%;">Nomor Surat : </th>
-                {{-- <th colspan="2" class="bg-gray-form" style="text-align: left; width: 50%;">Nomor : {{ $cuti->nomor_surat ?? '.../SDM-CUTI/IV/2026' }}</th> --}}
+                
             </tr>
         </thead>
         <tbody>
             <tr>
                 <td style="width: 15%;">Nama</td>
-                <td style="width: 35%; font-weight: bold;">{{ $cuti->pegawai->nama ?? (auth()->user()->pegawai->nama ?? '-') }}</td>
+                <td style="width: 35%; font-weight: bold;"><?php echo e($cuti->pegawai->nama ?? (auth()->user()->pegawai->nama ?? '-')); ?></td>
                 <td style="width: 15%;">Jabatan</td>
-                <td style="width: 35%; font-weight: bold;">{{ $cuti->pegawai->pekerjaan->jabatan ?? (auth()->user()->pegawai->pekerjaan->jabatan ?? '-') }}</td>
+                <td style="width: 35%; font-weight: bold;"><?php echo e($cuti->pegawai->pekerjaan->jabatan ?? (auth()->user()->pegawai->pekerjaan->jabatan ?? '-')); ?></td>
             </tr>
             <tr>
                 <td>NUP</td>
-                <td style="font-weight: bold;">{{ $cuti->nomor_urut_pegawai ?? (auth()->user()->nomor_urut_pegawai ?? '-') }}</td>
+                <td style="font-weight: bold;"><?php echo e($cuti->nomor_urut_pegawai ?? (auth()->user()->nomor_urut_pegawai ?? '-')); ?></td>
                 <td>Unit Kerja</td>
-                <td style="font-weight: bold;">{{ $cuti->pegawai->pekerjaan->divisi->nama_divisi ?? (auth()->user()->pegawai->pekerjaan->divisi->nama_divisi ?? '-') }}</td>
+                <td style="font-weight: bold;"><?php echo e($cuti->pegawai->pekerjaan->divisi->nama_divisi ?? (auth()->user()->pegawai->pekerjaan->divisi->nama_divisi ?? '-')); ?></td>
             </tr>
         </tbody>
     </table>
@@ -100,7 +98,7 @@
             </tr>
         </thead>
         <tbody>
-            @php
+            <?php
                 $list = [
                     ['nama' => 'Cuti Tahunan', 'kuota' => '12 Hari'], ['nama' => 'Cuti Besar', 'kuota' => '2 Bulan'],
                     ['nama' => 'Cuti Menikah', 'kuota' => '5 Hari'], ['nama' => 'Cuti Melahirkan', 'kuota' => '3 Bulan'],
@@ -108,38 +106,38 @@
                     ['nama' => 'Cuti Menunaikan Ibadah Keagamaan', 'kuota' => '14 Hari'],
                     ['nama' => 'Cuti Alasan Penting dan Mendesak', 'kuota' => '2 Hari'], ['nama' => 'Izin Tidak Masuk Kerja', 'kuota' => '-'],
                 ];
-            @endphp
-            @foreach($list as $i => $item)
+            ?>
+            <?php $__currentLoopData = $list; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $i => $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
             <tr>
-                <td style="white-space: nowrap;">{{ $i+1 }}. {{ $item['nama'] }}</td>
-                <td class="text-center"><span class="checkmark" id="v_{{ Str::slug($item['nama'], '_') }}">{!! (isset($cuti) && $cuti->jenis_cuti == $item['nama']) ? '&#10003;' : '' !!}</span></td>
-                <td class="text-center">{{ $item['kuota'] }}</td>
-                <td class="text-center" id="review_cuti_diambil_display">{{ ($i == 0 && isset($cuti)) ? $cuti->cuti_diambil : '' }}</td>
-                <td class="text-center" id="review_sisa_cuti_display">{{ ($i == 0 && isset($cuti)) ? $cuti->sisa_cuti : '' }}</td>
-                @if($i == 0)
-                    <td>1. Tgl Pengajuan</td><td>{{ (isset($cuti) && $cuti->created_at) ? $cuti->created_at->format('d/m/Y') : date('d/m/Y') }}</td>
-                @elseif($i == 1)
-                    <td>2. Lama Cuti</td><td><span id="review_jumlah_cuti_display">{{ $cuti->jumlah_cuti ?? '0' }}</span> Hari</td>
-                @elseif($i == 2)
-                    <td>3. TMT Cuti</td><td id="review_tmt_cuti_display" style="font-size: 8pt;">{{ isset($cuti) ? $cuti->tanggal_mulai : '...' }}</td>
-                @elseif($i == 3)
+                <td style="white-space: nowrap;"><?php echo e($i+1); ?>. <?php echo e($item['nama']); ?></td>
+                <td class="text-center"><span class="checkmark" id="v_<?php echo e(Str::slug($item['nama'], '_')); ?>"><?php echo (isset($cuti) && $cuti->jenis_cuti == $item['nama']) ? '&#10003;' : ''; ?></span></td>
+                <td class="text-center"><?php echo e($item['kuota']); ?></td>
+                <td class="text-center" id="review_cuti_diambil_display"><?php echo e(($i == 0 && isset($cuti)) ? $cuti->cuti_diambil : ''); ?></td>
+                <td class="text-center" id="review_sisa_cuti_display"><?php echo e(($i == 0 && isset($cuti)) ? $cuti->sisa_cuti : ''); ?></td>
+                <?php if($i == 0): ?>
+                    <td>1. Tgl Pengajuan</td><td><?php echo e((isset($cuti) && $cuti->created_at) ? $cuti->created_at->format('d/m/Y') : date('d/m/Y')); ?></td>
+                <?php elseif($i == 1): ?>
+                    <td>2. Lama Cuti</td><td><span id="review_jumlah_cuti_display"><?php echo e($cuti->jumlah_cuti ?? '0'); ?></span> Hari</td>
+                <?php elseif($i == 2): ?>
+                    <td>3. TMT Cuti</td><td id="review_tmt_cuti_display" style="font-size: 8pt;"><?php echo e(isset($cuti) ? $cuti->tanggal_mulai : '...'); ?></td>
+                <?php elseif($i == 3): ?>
                     <td colspan="2" class="bg-blue-grey font-bold">IV. ALASAN CUTI</td>
-                @elseif($i == 4)
-                    <td colspan="2" rowspan="2" id="review_alasan_cuti_display" style="height: 35px;">{{ $cuti->keterangan ?? '-' }}</td>
-                @elseif($i == 6)
+                <?php elseif($i == 4): ?>
+                    <td colspan="2" rowspan="2" id="review_alasan_cuti_display" style="height: 35px;"><?php echo e($cuti->keterangan ?? '-'); ?></td>
+                <?php elseif($i == 6): ?>
                     <td colspan="2" class="bg-blue-grey font-bold">V. YANG MENGAJUKAN</td>
-                @elseif($i == 7)
+                <?php elseif($i == 7): ?>
                     <td colspan="2" rowspan="2" class="text-center">
                         <p style="margin: 0;">Hormat Saya,</p><div style="height: 25px;"></div>
-                        <p style="margin: 0; font-weight: bold; text-decoration: underline;">{{ $cuti->pegawai->nama ?? (auth()->user()->pegawai->nama ?? '-') }}</p>
+                        <p style="margin: 0; font-weight: bold; text-decoration: underline;"><?php echo e($cuti->pegawai->nama ?? (auth()->user()->pegawai->nama ?? '-')); ?></p>
                     </td>
-                @endif
+                <?php endif; ?>
             </tr>
-            @endforeach
+            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         </tbody>
     </table>
 
-    {{-- <div class="spacer"></div> --}}
+    
 
     <!-- SECTION VI: PERTIMBANGAN ATASAN LANGSUNG -->
     <div style="height: 15px;"></div>
@@ -161,11 +159,11 @@
         </thead>
         <tbody>
             <tr>
-                {{-- Bagian Catatan (Kiri) --}}
+                
                 <td colspan="4" style="height: 80px; vertical-align: top; padding: 5px;">
                     <p style="margin: 0; font-size: 8pt; text-decoration: underline;">Pertimbangan/Catatan/Rekomendasi:</p>
                 </td>
-                {{-- Bagian TTD (Kanan) --}}
+                
                 <td colspan="4" class="text-center" style="vertical-align: bottom; padding-bottom: 10px; padding-top: 8%;">
                     <p style="margin: 0; font-weight: bold; text-decoration: underline; font-size: 9pt;">NAMA ATASAN LANGSUNG</p>
                     <p style="margin: 0; font-size: 8pt;">Jabatan</p>
@@ -194,11 +192,11 @@
         </thead>
         <tbody>
             <tr>
-                {{-- Bagian Catatan (Kiri) --}}
+                
                 <td colspan="4" style="height: 80px; vertical-align: top; padding: 5px;">
                     <p style="margin: 0; font-size: 8pt; text-decoration: underline;">Pertimbangan/Catatan/Rekomendasi:</p>
                 </td>
-                {{-- Bagian TTD (Kanan) --}}
+                
                 <td colspan="4" class="text-center" style="vertical-align: bottom; padding-bottom: 10px; padding-top: 8%;">
                     <p style="margin: 0; font-weight: bold; text-decoration: underline; font-size: 9pt;">BHIMA IRSI FALIANDRI atau ANJAS ASMARA</p>
                     <p style="margin: 0; font-size: 8pt;">Direktur Operasional atau Direktur Kepatuhan</p>
@@ -238,18 +236,18 @@
         </thead>
         <tbody>
             <tr>
-                {{-- Catatan kaki (Kiri) --}}
+                
                 <td style="height: 100px; font-size: 7.5pt; vertical-align: bottom; padding: 5px;">
                     <p style="margin: 0;">Catatan :</p>
                     <p style="margin: 0;">* Pilih salah satu dengan memberikan tanda centang (v).</p>
                     <p style="margin: 0;">** Pilih salah satu dengan memberikan tanda centang (v) dan alasannya (diisi oleh atasan).</p>
                 </td>
-                {{-- Verifikator 1 --}}
+                
                 <td class="text-center" style="vertical-align: bottom; padding-bottom: 8px; width: 25%;">
                     <p style="margin: 0; font-weight: bold; text-decoration: underline; font-size: 8.5pt;">RIKA DEWI KUMALASARI</p>
                     <p style="margin: 0; font-size: 8pt;">Kepala SKK MR</p>
                 </td>
-                {{-- Verifikator 2 --}}
+                
                 <td class="text-center" style="vertical-align: bottom; padding-bottom: 8px; width: 25%;">
                     <p style="margin: 0; font-weight: bold; text-decoration: underline; font-size: 8.5pt;">AKHIRIANTO SOEDEWO</p>
                     <p style="margin: 0; font-size: 8pt;">Human Resources Officer</p>
@@ -258,3 +256,4 @@
         </tbody>
     </table>
 </div>
+<?php /**PATH C:\xampp\htdocs\simpegbkb\resources\views/partials/letter_content.blade.php ENDPATH**/ ?>

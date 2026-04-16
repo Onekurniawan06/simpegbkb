@@ -1,6 +1,6 @@
-{{-- resources/views/partials/letter_content.blade.php --}}
 
-@if(isset($is_pdf) && $is_pdf)
+
+<?php if(isset($is_pdf) && $is_pdf): ?>
     <style>
         @page { margin: 0cm 0cm 0cm 0cm !important; }
         body {
@@ -39,109 +39,113 @@
         .text-sm { font-size: 10pt; }
         .font-semibold { font-weight: bold; }
     </style>
-@endif
+<?php endif; ?>
 
 <div class="content-wrap">
 
 <!-- Header Section -->
-@if(isset($is_pdf) && $is_pdf)
+<?php if(isset($is_pdf) && $is_pdf): ?>
     <table class="header-table">
         <tr>
             <td style="width: 70%;">
-                @php
+                <?php
                     $path = public_path('images/logobkb.png');
                     $base64 = file_exists($path) ? 'data:image/' . pathinfo($path, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($path)) : '';
-                @endphp
-                @if($base64)
-                    <img src="{{ $base64 }}" alt="Logo Perusahaan" class="logo-img">
-                @endif
+                ?>
+                <?php if($base64): ?>
+                    <img src="<?php echo e($base64); ?>" alt="Logo Perusahaan" class="logo-img">
+                <?php endif; ?>
             </td>
             <td class="perumda-name">Perumda BPR Bank Kota Bogor</td>
         </tr>
     </table>
-@else
+<?php else: ?>
     <div class="flex justify-between items-center mb-3">
         <div class="flex items-center">
-            @php
+            <?php
                 $path = public_path('images/logobkb.png');
                 $base64 = file_exists($path) ? 'data:image/' . pathinfo($path, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($path)) : '';
-            @endphp
-            @if($base64)
-                <img src="{{ $base64 }}" alt="Logo Perusahaan" class="h-11 w-auto">
-            @endif
+            ?>
+            <?php if($base64): ?>
+                <img src="<?php echo e($base64); ?>" alt="Logo Perusahaan" class="h-11 w-auto">
+            <?php endif; ?>
         </div>
         <p class="text-sm font-bold">Perumda BPR Bank Kota Bogor</p>
     </div>
-@endif
+<?php endif; ?>
 
-{{-- Garis Biru Penuh --}}
+
 <div style="background-color: #0000FF; height: 20px; width: 100%; margin-bottom: 10pt;"></div>
 
 <!-- Date Section -->
-<div class="{{ (isset($is_pdf) && $is_pdf) ? 'date-section' : 'text-right text-sm mb-3' }}" style="{{ (isset($is_pdf) && $is_pdf) ? 'text-align: right;' : '' }}">
-    <p>Bogor, {{ isset($lembur) ? \Carbon\Carbon::parse($lembur->created_at)->format('d F Y') : now()->format('d F Y') }}</p>
+<div class="<?php echo e((isset($is_pdf) && $is_pdf) ? 'date-section' : 'text-right text-sm mb-3'); ?>" style="<?php echo e((isset($is_pdf) && $is_pdf) ? 'text-align: right;' : ''); ?>">
+    <p>Bogor, <?php echo e(isset($lembur) ? \Carbon\Carbon::parse($lembur->created_at)->format('d F Y') : now()->format('d F Y')); ?></p>
 </div>
 
 <!-- Salutation -->
-<p class="{{ (isset($is_pdf) && $is_pdf) ? '' : 'mb-4 text-sm' }}">Dengan hormat,</p>
+<p class="<?php echo e((isset($is_pdf) && $is_pdf) ? '' : 'mb-4 text-sm'); ?>">Dengan hormat,</p>
 
-@if(isset($is_pdf) && $is_pdf)
-    {{-- PDF View --}}
+<?php if(isset($is_pdf) && $is_pdf): ?>
+    
     <table class="main-detail-table mb-4">
-        <tr><td class="label-column">NUP Pegawai</td><td class="data-column">{{ $lembur->nomor_urut_pegawai ?? 'N/A'}}</td></tr>
-        <tr><td class="label-column">Nama Pegawai</td><td class="data-column">{{ $lembur->pegawai->nama ?? 'N/A' }}</td></tr>
-        <tr><td class="label-column">Divisi</td><td class="data-column">{{ $lembur->pegawai->pekerjaan?->divisi?->nama_divisi ?? 'N/A' }}</td></tr>
-        <tr><td class="label-column">Jabatan</td><td class="data-column">{{ $lembur->pegawai->pekerjaan?->jabatan ?? 'N/A' }}</td></tr>
+        <tr><td class="label-column">NUP Pegawai</td><td class="data-column"><?php echo e($lembur->nomor_urut_pegawai ?? 'N/A'); ?></td></tr>
+        <tr><td class="label-column">Nama Pegawai</td><td class="data-column"><?php echo e($lembur->pegawai->nama ?? 'N/A'); ?></td></tr>
+        <tr><td class="label-column">Divisi</td><td class="data-column"><?php echo e($lembur->pegawai->pekerjaan?->divisi?->nama_divisi ?? 'N/A'); ?></td></tr>
+        <tr><td class="label-column">Jabatan</td><td class="data-column"><?php echo e($lembur->pegawai->pekerjaan?->jabatan ?? 'N/A'); ?></td></tr>
     </table>
-@else
-    {{-- Tampilan Web / Modal --}}
+<?php else: ?>
+    
     <div class="ml-4">
         <div class="grid grid-cols-[160px_1fr] gap-x-4 gap-y-2 mb-4 text-sm">
             <div class="font-normal">NUP Pegawai</div>
             <div class="font-semibold" id="review_nup">
-                {{ $lembur->nomor_urut_pegawai ?? (auth()->user()->nomor_urut_pegawai ?? '-') }}
+                <?php echo e($lembur->nomor_urut_pegawai ?? (auth()->user()->nomor_urut_pegawai ?? '-')); ?>
+
             </div>
 
             <div class="font-normal">Nama Pegawai</div>
             <div class="font-semibold" id="review_nama_pegawai">
-                {{ $lembur->pegawai->nama ?? (auth()->user()->nama ?? '-') }}
+                <?php echo e($lembur->pegawai->nama ?? (auth()->user()->nama ?? '-')); ?>
+
             </div>
 
             <div class="font-normal">Divisi</div>
             <div class="font-semibold" id="review_divisi">
-                @php
+                <?php
                     // 1. Cek dari $lembur dulu (buat halaman detail)
                     // 2. Kalau kosong, tarik dari relasi Auth User (buat modal input baru)
                     $user = auth()->user();
                     $namaDivisi = $lembur->pegawai->pekerjaan->divisi->nama_divisi
                         ?? ($user->pegawai->pekerjaan->divisi->nama_divisi ?? '-');
-                @endphp
-                {{ $namaDivisi }}
+                ?>
+                <?php echo e($namaDivisi); ?>
+
             </div>
 
             <div class="font-normal">Jabatan</div>
             <div class="font-semibold" id="review_jabatan">
-                @php
+                <?php
                     $namaJabatan = $lembur->pegawai->pekerjaan->jabatan
                         ?? ($user->pegawai->pekerjaan->jabatan ?? '-');
-                @endphp
-                {{ $namaJabatan }}
+                ?>
+                <?php echo e($namaJabatan); ?>
+
             </div>
         </div>
     </div>
-@endif
+<?php endif; ?>
 
-<p class="text-sm {{ (isset($is_pdf) && $is_pdf) ? '' : 'mb-3' }}">untuk melaksanakan kerja lembur pada,</p>
-<p class="text-sm font-semibold {{ (isset($is_pdf) && $is_pdf) ? '' : 'mb-3' }}">Tanggal Lembur : <span id="review_tanggal_lembur">{{ isset($lembur) ? \Carbon\Carbon::parse($lembur->tanggal_lembur)->format('d F Y') : '-' }}</span></p>
+<p class="text-sm <?php echo e((isset($is_pdf) && $is_pdf) ? '' : 'mb-3'); ?>">untuk melaksanakan kerja lembur pada,</p>
+<p class="text-sm font-semibold <?php echo e((isset($is_pdf) && $is_pdf) ? '' : 'mb-3'); ?>">Tanggal Lembur : <span id="review_tanggal_lembur"><?php echo e(isset($lembur) ? \Carbon\Carbon::parse($lembur->tanggal_lembur)->format('d F Y') : '-'); ?></span></p>
 
-{{-- TABLE URAIAN TUGAS --}}
-<table class="w-full border-collapse text-sm {{ (isset($is_pdf) && $is_pdf) ? 'main-detail-table' : 'table-auto mb-8' }}" style="{{ (isset($is_pdf) && $is_pdf) ? 'width: 100%; border-collapse: collapse; font-size: 0.875rem;' : '' }}">
+
+<table class="w-full border-collapse text-sm <?php echo e((isset($is_pdf) && $is_pdf) ? 'main-detail-table' : 'table-auto mb-8'); ?>" style="<?php echo e((isset($is_pdf) && $is_pdf) ? 'width: 100%; border-collapse: collapse; font-size: 0.875rem;' : ''); ?>">
     <thead>
-        <tr class="{{ (isset($is_pdf) && $is_pdf) ? '' : 'bg-gray-100' }}">
+        <tr class="<?php echo e((isset($is_pdf) && $is_pdf) ? '' : 'bg-gray-100'); ?>">
             <th rowspan="2" class="border px-4 py-2 text-center">Uraian Tugas</th>
             <th colspan="3" class="border px-4 py-2 text-center">Perkiraan Waktu Lembur</th>
         </tr>
-        <tr class="{{ (isset($is_pdf) && $is_pdf) ? '' : 'bg-gray-100' }}">
+        <tr class="<?php echo e((isset($is_pdf) && $is_pdf) ? '' : 'bg-gray-100'); ?>">
             <th class="border px-4 py-2 text-center">Jam Mulai</th>
             <th class="border px-4 py-2 text-center">Jam Selesai</th>
             <th class="border px-4 py-2 text-center">Jumlah Jam</th>
@@ -149,86 +153,86 @@
     </thead>
     <tbody>
         <tr>
-            <td class="border px-4 py-2" id="review_uraian_tugas">{{ $lembur->uraian_tugas ?? '-' }}</td>
-            <td class="border px-4 py-2 text-center" id="review_jam_mulai_lembur">{{ $lembur->jam_mulai ?? '-' }}</td>
-            <td class="border px-4 py-2 text-center" id="review_jam_selesai_lembur">{{ $lembur->jam_selesai ?? '-' }}</td>
-            <td class="border px-4 py-2 text-center" id="review_total_lembur">{{ $lembur->total_jam_lembur ?? '-' }}</td>
+            <td class="border px-4 py-2" id="review_uraian_tugas"><?php echo e($lembur->uraian_tugas ?? '-'); ?></td>
+            <td class="border px-4 py-2 text-center" id="review_jam_mulai_lembur"><?php echo e($lembur->jam_mulai ?? '-'); ?></td>
+            <td class="border px-4 py-2 text-center" id="review_jam_selesai_lembur"><?php echo e($lembur->jam_selesai ?? '-'); ?></td>
+            <td class="border px-4 py-2 text-center" id="review_total_lembur"><?php echo e($lembur->total_jam_lembur ?? '-'); ?></td>
         </tr>
     </tbody>
 </table>
-{{-- END: TABLE URAIAN TUGAS DAN WAKTU LEMBUR --}}
+
 
 <!-- Justification Paragraph -->
-<p class="text-sm {{ (isset($is_pdf) && $is_pdf) ? '' : 'italic text-gray-600' }}" style="{{ (isset($is_pdf) && $is_pdf) ? 'font-size: 0.875rem;' : '' }}">
+<p class="text-sm <?php echo e((isset($is_pdf) && $is_pdf) ? '' : 'italic text-gray-600'); ?>" style="<?php echo e((isset($is_pdf) && $is_pdf) ? 'font-size: 0.875rem;' : ''); ?>">
     Berdasarkan validasi atas kegiatan kerja lembur sebagaimana Surat Perintah Kerja Lembur (SPKL) diatas, maka kegiatan kerja lembur pegawai bisa dilaksanakan sesuai rincian waktu yang telah disetujui.
 </p>
 
 <!-- Realisasi Waktu Lembur Line -->
 <p class="text-sm mt-3 mb-6">
     Realisasi Waktu Kerja Lembur :
-    <span class="font-semibold" id="review_realisasi_mulai">{{ $lembur->jam_mulai ?? '-' }}</span> s/d
-    <span class="font-semibold" id="review_realisasi_selesai">{{ $lembur->jam_selesai ?? '-' }}</span>
+    <span class="font-semibold" id="review_realisasi_mulai"><?php echo e($lembur->jam_mulai ?? '-'); ?></span> s/d
+    <span class="font-semibold" id="review_realisasi_selesai"><?php echo e($lembur->jam_selesai ?? '-'); ?></span>
     Total Jam Kerja Lembur :
-    <span class="font-semibold" id="review_realisasi_total">{{ $lembur->total_jam_lembur ?? '-' }}</span>
+    <span class="font-semibold" id="review_realisasi_total"><?php echo e($lembur->total_jam_lembur ?? '-'); ?></span>
 </p>
 
 <!-- Approvals/Signatures Section -->
-@if(isset($lembur) && isset($lembur->logPersetujuanLembur) && count($lembur->logPersetujuanLembur) > 0)
-    {{-- Kode Log Persetujuan (Hanya muncul kalau emang ada data $lembur) --}}
-    @php
+<?php if(isset($lembur) && isset($lembur->logPersetujuanLembur) && count($lembur->logPersetujuanLembur) > 0): ?>
+    
+    <?php
         $hanyaPengajuanAwal = $lembur->logPersetujuanLembur->every(function($log) {
             return $log->tahap_persetujuan === 'Pengajuan Awal' || $log->tahap_persetujuan === 'Pegawai';
         });
-    @endphp
+    ?>
 
-    @if($hanyaPengajuanAwal)
+    <?php if($hanyaPengajuanAwal): ?>
         <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mt-6">
             <p class="text-sm text-blue-700">
                 <strong>Informasi:</strong> Pengajuan lembur telah dibuat dan sedang menunggu proses verifikasi awal.
             </p>
         </div>
-    @else
+    <?php else: ?>
         <p class="text-sm mt-6 mb-2">Dengan beberapa persetujuan yaitu,</p>
-        {{-- Loop tabel persetujuan lu tetap di sini --}}
-        @if(isset($is_pdf) && $is_pdf)
-            {{-- Bagian PDF Table lu yang tadi (Sudah aman karena dipagari isset($lembur)) --}}
+        
+        <?php if(isset($is_pdf) && $is_pdf): ?>
+            
             <table class="main-detail-table">
-                @php $approvalCounter = 1; @endphp
-                @foreach ($lembur->logPersetujuanLembur as $log)
-                    @if ($log->tahap_persetujuan !== 'Pengajuan Awal' && $log->tahap_persetujuan !== 'Pegawai')
+                <?php $approvalCounter = 1; ?>
+                <?php $__currentLoopData = $lembur->logPersetujuanLembur; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $log): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php if($log->tahap_persetujuan !== 'Pengajuan Awal' && $log->tahap_persetujuan !== 'Pegawai'): ?>
                         <tr>
-                            <td class="label-column">{{ $approvalCounter++ }}. Tahap Persetujuan</td>
-                            <td class="data-column">{{ $log->tahap_persetujuan ?? 'N/A' }}</td>
+                            <td class="label-column"><?php echo e($approvalCounter++); ?>. Tahap Persetujuan</td>
+                            <td class="data-column"><?php echo e($log->tahap_persetujuan ?? 'N/A'); ?></td>
                         </tr>
-                        {{-- ... sisa row PDF --}}
-                    @endif
-                @endforeach
+                        
+                    <?php endif; ?>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </table>
-        @else
-            {{-- Tampilan Web --}}
+        <?php else: ?>
+            
             <div class="ml-4">
                 <div class="grid grid-cols-[160px_1fr] gap-x-4 gap-y-2 text-sm">
-                    @php $approvalCounter = 1; @endphp
-                    @foreach ($lembur->logPersetujuanLembur as $log)
-                        @if ($log->tahap_persetujuan !== 'Pengajuan Awal' && $log->tahap_persetujuan !== 'Pegawai')
-                            <div class="font-normal">{{ $approvalCounter++ }}. Tahap Persetujuan</div>
-                            <div class="font-semibold">{{ $log->tahap_persetujuan ?? 'N/A'}}</div>
-                            {{-- ... sisa grid Web --}}
-                        @endif
-                    @endforeach
+                    <?php $approvalCounter = 1; ?>
+                    <?php $__currentLoopData = $lembur->logPersetujuanLembur; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $log): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <?php if($log->tahap_persetujuan !== 'Pengajuan Awal' && $log->tahap_persetujuan !== 'Pegawai'): ?>
+                            <div class="font-normal"><?php echo e($approvalCounter++); ?>. Tahap Persetujuan</div>
+                            <div class="font-semibold"><?php echo e($log->tahap_persetujuan ?? 'N/A'); ?></div>
+                            
+                        <?php endif; ?>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
             </div>
-        @endif
-    @endif
-@else
-    {{-- Saat input baru (Modal Review), bagian ini yang akan muncul --}}
+        <?php endif; ?>
+    <?php endif; ?>
+<?php else: ?>
+    
     <p class="text-sm mt-6 text-gray-500 italic">Data persetujuan akan muncul setelah pengajuan diproses.</p>
-@endif
+<?php endif; ?>
 
 <!-- Paragraf Penutup -->
 <p class="text-sm mt-6 mb-8">Demikian surat perintah kerja lembur ini dibuat untuk dilaksanakan sebagaimana mestinya.</p>
 
-{{-- Bagian Tanda Tangan (Web & PDF View) --}}
+
 <div class="text-left">
     <p class="text-sm mb-4">Hormat saya,</p>
 
@@ -238,18 +242,18 @@
     </div>
 
     <!-- Ambil nama & jabatan dari user yang login -->
-    @php
+    <?php
         $user = auth()->user();
         $namaTtd = $lembur->pegawai->nama ?? ($user->pegawai->nama ?? $user->name);
         $jabatanTtd = $lembur->pegawai->pekerjaan->jabatan ?? ($user->pegawai->pekerjaan->jabatan ?? 'Pegawai');
-    @endphp
+    ?>
 
-    <p class="text-sm font-semibold mt-4" id="review_footer_nama">{{ $namaTtd }}</p>
-    <p class="text-sm font-semibold" id="review_footer_jabatan">{{ $jabatanTtd }}</p>
+    <p class="text-sm font-semibold mt-4" id="review_footer_nama"><?php echo e($namaTtd); ?></p>
+    <p class="text-sm font-semibold" id="review_footer_jabatan"><?php echo e($jabatanTtd); ?></p>
 </div>
 
-{{-- FOOTER KHUSUS WEB --}}
-@if(!isset($is_pdf) || !$is_pdf)
+
+<?php if(!isset($is_pdf) || !$is_pdf): ?>
     <div class="mt-12">
         <table class="w-full h-10 border-collapse">
             <tr>
@@ -263,12 +267,12 @@
             </tr>
         </table>
     </div>
-@endif
+<?php endif; ?>
 
-</div> {{-- Penutup content-wrap --}}
+</div> 
 
-{{-- FOOTER KHUSUS PDF --}}
-@if(isset($is_pdf) && $is_pdf)
+
+<?php if(isset($is_pdf) && $is_pdf): ?>
     <table style="width: 100%; height: 30pt; border-collapse: collapse; position: absolute; bottom: 0; left: 0; right: 0;">
         <tr>
             <td style="background-color: #0000FF; width: 64%; vertical-align: middle; padding: 0 15pt; height: 30pt;">
@@ -280,5 +284,6 @@
             <td style="background-color: #FF0000; width: 10%; height: 30pt;">&nbsp;</td>
         </tr>
     </table>
-@endif
+<?php endif; ?>
 
+<?php /**PATH C:\xampp\htdocs\simpegbkb\resources\views/partials/lembur_letter_content.blade.php ENDPATH**/ ?>

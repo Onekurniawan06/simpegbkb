@@ -97,9 +97,9 @@
 
         @else
             {{-- Container Utama --}}
-            <div class="flex-grow overflow-y-auto custom-scroll-container px-2 space-y-3 pb-4">
+            <div class="flex-grow overflow-y-auto custom-scroll-container mt-2 px-2 space-y-3 pb-4">
                 @foreach ($submissions as $submission)
-                    <div class="group relative flex items-center bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-300">
+                    <div class="group relative flex items-center bg-white p-4 rounded-md border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-300">
 
                         {{-- Aksen Warna di Samping (Indikator Tipe) --}}
                         <div class="absolute left-0 top-4 bottom-4 w-1 rounded-r-full

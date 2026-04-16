@@ -8,6 +8,10 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ChangePasswordController;
 
+// LEVEL AKSES DIREKTUR
+use App\Http\Controllers\Direktur\DirekturDashboard;
+// END LEVEL AKSES DIREKTUR
+
 // LEVEL AKSES ADMINISTRATOR/HRO
 use App\Http\Controllers\Admin\DashboardController;
 // END LEVEL AKSES ADMINISTRATOR/HRO
@@ -149,11 +153,10 @@ Route::middleware(['auth'])->group(function () {
 
 // ==== START LEVEL DIREKTUR ====
 Route::middleware(['auth'])->group(function () {
-    
-    // Route untuk cek frontend Dashboard Direktur (Tanpa Controller)
-    Route::get('/direktur/dashboarddirektur', function () {
-        return view('direktur.dashboarddirektur');
-    })->name('direktur.dashboarddirektur');
+
+    // Arahkan ke Controller, bukan langsung ke View
+    Route::get('/direktur/dashboard', [DirekturDashboard::class, 'index'])
+        ->name('direktur.dashboarddirektur');
 
     // Route lain (Pegawai/Manager) bisa diletakkan di bawah sini...
 });
@@ -324,7 +327,6 @@ Route::get('/cek-pegawai/{nomor}', function ($nomor) {
         ], 500);
     }
 });
-
 
 // Pastikan rute ini dilindungi oleh middleware 'auth' Form cuti Izin
 Route::middleware(['auth'])->group(function () {
