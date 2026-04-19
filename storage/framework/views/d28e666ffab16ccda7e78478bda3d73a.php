@@ -1,6 +1,6 @@
-{{-- resources/views/partials/letter_content.blade.php --}}
 
-@if(isset($is_pdf) && $is_pdf)
+
+<?php if(isset($is_pdf) && $is_pdf): ?>
     <style>
         @page { margin: 0cm 0cm 0cm 0cm !important; }
         body {
@@ -39,62 +39,62 @@
         .text-sm { font-size: 10pt; }
         .font-semibold { font-weight: bold; }
     </style>
-@endif
+<?php endif; ?>
 
 <div class="content-wrap">
 
 <!-- Header Section -->
-@if(isset($is_pdf) && $is_pdf)
+<?php if(isset($is_pdf) && $is_pdf): ?>
     <table class="header-table">
         <tr>
             <td style="width: 70%;">
-                @php
+                <?php
                     $path = public_path('images/logobkb.png');
                     $base64 = file_exists($path) ? 'data:image/' . pathinfo($path, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($path)) : '';
-                @endphp
-                @if($base64)
-                    <img src="{{ $base64 }}" alt="Logo Perusahaan" class="logo-img">
-                @endif
+                ?>
+                <?php if($base64): ?>
+                    <img src="<?php echo e($base64); ?>" alt="Logo Perusahaan" class="logo-img">
+                <?php endif; ?>
             </td>
             <td class="perumda-name">Perumda BPR Bank Kota Bogor</td>
         </tr>
     </table>
-@else
+<?php else: ?>
     <div class="flex justify-between items-center mb-3">
         <div class="flex items-center">
-            @php
+            <?php
                 $path = public_path('images/logobkb.png');
                 $base64 = file_exists($path) ? 'data:image/' . pathinfo($path, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($path)) : '';
-            @endphp
-            @if($base64)
-                <img src="{{ $base64 }}" alt="Logo Perusahaan" class="h-11 w-auto">
-            @endif
+            ?>
+            <?php if($base64): ?>
+                <img src="<?php echo e($base64); ?>" alt="Logo Perusahaan" class="h-11 w-auto">
+            <?php endif; ?>
         </div>
         <p class="text-sm font-bold">Perumda BPR Bank Kota Bogor</p>
     </div>
-@endif
+<?php endif; ?>
 
-{{-- Garis Biru Penuh --}}
+
 <div style="background-color: #0000FF; height: 20px; width: 100%; margin-bottom: 10pt;"></div>
 
 <!-- Date Section -->
-<div class="{{ (isset($is_pdf) && $is_pdf) ? 'date-section' : 'text-right text-sm mb-3' }}" style="{{ (isset($is_pdf) && $is_pdf) ? 'text-align: right;' : '' }}">
-    <p>Bogor, {{ (isset($pangkatgajitunjangan) && $pangkatgajitunjangan->created_at) ? \Carbon\Carbon::parse($pangkatgajitunjangan->created_at)->locale('id')->translatedFormat('d F Y') : \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y') }}</p>
+<div class="<?php echo e((isset($is_pdf) && $is_pdf) ? 'date-section' : 'text-right text-sm mb-3'); ?>" style="<?php echo e((isset($is_pdf) && $is_pdf) ? 'text-align: right;' : ''); ?>">
+    <p>Bogor, <?php echo e((isset($pangkatgajitunjangan) && $pangkatgajitunjangan->created_at) ? \Carbon\Carbon::parse($pangkatgajitunjangan->created_at)->locale('id')->translatedFormat('d F Y') : \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y')); ?></p>
 </div>
 
 <!-- Salutation -->
-<p class="{{ (isset($is_pdf) && $is_pdf) ? '' : 'mb-4 text-sm' }}">Dengan hormat,</p>
+<p class="<?php echo e((isset($is_pdf) && $is_pdf) ? '' : 'mb-4 text-sm'); ?>">Dengan hormat,</p>
 
-{{-- BAGIAN KONTEN SURAT --}}
-{{-- BAGIAN KONTEN SURAT --}}
-@php
+
+
+<?php
     $formatDate = function($date) {
         if (!$date) return '';
         // Set locale ke Indonesia agar nama bulan dalam bahasa Indonesia
         \Carbon\Carbon::setLocale('id');
         return \Carbon\Carbon::parse($date)->translatedFormat('d F Y');
     };
-@endphp
+?>
 
 <div class="text-sm mb-4">
     <p class="mb-2">Saya yang bertanda tangan di bawah ini:</p>
@@ -103,46 +103,46 @@
         <tr>
             <td style="width: 25%; padding: 2px 0;">NUP Pegawai</td>
             <td style="width: 1%; padding: 2px 0;">:</td>
-            <td style="width: 74%; padding: 2px 0;"><strong id="review_nup">{{ $pangkatgajitunjangan->pegawai->nomor_urut_pegawai ?? '' }}</strong></td>
+            <td style="width: 74%; padding: 2px 0;"><strong id="review_nup"><?php echo e($pangkatgajitunjangan->pegawai->nomor_urut_pegawai ?? ''); ?></strong></td>
         </tr>
         <tr>
             <td style="padding: 2px 0;">Nama Pegawai</td>
             <td style="padding: 2px 0;">:</td>
-            <td style="padding: 2px 0;"><strong id="review_nama_pegawai">{{ $pangkatgajitunjangan->pegawai->nama ?? '' }}</strong></td>
+            <td style="padding: 2px 0;"><strong id="review_nama_pegawai"><?php echo e($pangkatgajitunjangan->pegawai->nama ?? ''); ?></strong></td>
         </tr>
         <tr>
             <td style="padding: 2px 0;">Divisi</td>
             <td style="padding: 2px 0;">:</td>
-            <td style="padding: 2px 0;"><strong id="review_unit_kerja">{{ $pangkatgajitunjangan->pegawai->pekerjaan->divisi->nama_divisi ?? '' }}</strong></td>
+            <td style="padding: 2px 0;"><strong id="review_unit_kerja"><?php echo e($pangkatgajitunjangan->pegawai->pekerjaan->divisi->nama_divisi ?? ''); ?></strong></td>
         </tr>
         <tr>
             <td style="padding: 2px 0;">Jabatan</td>
             <td style="padding: 2px 0;">:</td>
-            <td style="padding: 2px 0;"><strong id="review_jabatan">{{ $pangkatgajitunjangan->pegawai->pekerjaan->jabatan ?? '' }}</strong></td>
+            <td style="padding: 2px 0;"><strong id="review_jabatan"><?php echo e($pangkatgajitunjangan->pegawai->pekerjaan->jabatan ?? ''); ?></strong></td>
         </tr>
         <tr>
             <td style="padding: 2px 0;">Pangkat/Grade</td>
             <td style="padding: 2px 0;">:</td>
             <td style="padding: 2px 0;">
-                <strong id="review_pangkat">{{ $pangkatgajitunjangan->pegawai->pekerjaan->pangkat ?? '' }}</strong> /
-                <strong id="review_grade">{{ $pangkatgajitunjangan->pegawai->pekerjaan->grade ?? '' }}</strong>
+                <strong id="review_pangkat"><?php echo e($pangkatgajitunjangan->pegawai->pekerjaan->pangkat ?? ''); ?></strong> /
+                <strong id="review_grade"><?php echo e($pangkatgajitunjangan->pegawai->pekerjaan->grade ?? ''); ?></strong>
             </td>
         </tr>
         <tr>
             <td style="padding: 2px 0;">Status Pegawai</td>
             <td style="padding: 2px 0;">:</td>
-            <td style="padding: 2px 0;"><strong id="review_status_pegawai">{{ $pangkatgajitunjangan->pegawai->pekerjaan->status_pegawai ?? '' }}</strong></td>
+            <td style="padding: 2px 0;"><strong id="review_status_pegawai"><?php echo e($pangkatgajitunjangan->pegawai->pekerjaan->status_pegawai ?? ''); ?></strong></td>
         </tr>
         <tr>
             <td style="padding: 2px 0;">TMT Pegawai</td>
             <td style="padding: 2px 0;">:</td>
-            {{-- FIX: Proteksi agar tidak meledak di Baris 133 --}}
-            <td style="padding: 2px 0;"><strong id="review_tmt_pegawai">{{ isset($pangkatgajitunjangan) ? $formatDate($pangkatgajitunjangan->tmt_pegawai) : '' }}</strong></td>
+            
+            <td style="padding: 2px 0;"><strong id="review_tmt_pegawai"><?php echo e(isset($pangkatgajitunjangan) ? $formatDate($pangkatgajitunjangan->tmt_pegawai) : ''); ?></strong></td>
         </tr>
         <tr>
             <td style="padding: 2px 0;">Lama Bergabung</td>
             <td style="padding: 2px 0;">:</td>
-            <td style="padding: 2px 0;"><strong id="review_masa_kerja">{{ $pangkatgajitunjangan->masa_kerja ?? '' }}</strong></td>
+            <td style="padding: 2px 0;"><strong id="review_masa_kerja"><?php echo e($pangkatgajitunjangan->masa_kerja ?? ''); ?></strong></td>
         </tr>
     </table>
 
@@ -152,24 +152,24 @@
         <tr>
             <td style="width: 25%; padding: 2px 0;">Jenis Pengajuan Kenaikan</td>
             <td style="width: 1%; padding: 2px 0;">:</td>
-            <td style="width: 74%; padding: 2px 0;"><strong id="review_jenis_pengajuan">{{ $pangkatgajitunjangan->jenis_pengajuan ?? '' }}</strong></td>
+            <td style="width: 74%; padding: 2px 0;"><strong id="review_jenis_pengajuan"><?php echo e($pangkatgajitunjangan->jenis_pengajuan ?? ''); ?></strong></td>
         </tr>
         <tr>
             <td style="padding: 2px 0;">Pangkat Tujuan</td>
             <td style="padding: 2px 0;">:</td>
-            <td style="padding: 2px 0;"><strong id="review_pangkat_tujuan">{{ $pangkatgajitunjangan->pangkat_tujuan ?? '' }}</strong></td>
+            <td style="padding: 2px 0;"><strong id="review_pangkat_tujuan"><?php echo e($pangkatgajitunjangan->pangkat_tujuan ?? ''); ?></strong></td>
         </tr>
         <tr>
             <td style="padding: 2px 0;">Grade Tujuan</td>
             <td style="padding: 2px 0;">:</td>
-            <td style="padding: 2px 0;"><strong id="review_grade_tujuan">{{ $pangkatgajitunjangan->grade_tujuan ?? '' }}</strong></td>
+            <td style="padding: 2px 0;"><strong id="review_grade_tujuan"><?php echo e($pangkatgajitunjangan->grade_tujuan ?? ''); ?></strong></td>
         </tr>
     </table>
 
     <p class="mt-4 mb-2">Sebagai bahan pertimbangan atas permohonan tersebut saya lampirkan dokumen persyaratan administratif sebagai berikut:</p>
 </div>
 
-{{-- Tabel Lampiran Dokumen --}}
+
 <div class="mb-4">
     <table style="width: 100%; border-collapse: collapse;" class="text-sm">
         <thead>
@@ -180,140 +180,142 @@
             </tr>
         </thead>
         <tbody>
-            {{-- FIX: Pakai @if(isset) agar tidak error forelse --}}
-            @if(isset($pangkatgajitunjangan) && isset($pangkatgajitunjangan->files) && $pangkatgajitunjangan->files->count() > 0)
-                @foreach($pangkatgajitunjangan->files as $index => $file)
+            
+            <?php if(isset($pangkatgajitunjangan) && isset($pangkatgajitunjangan->files) && $pangkatgajitunjangan->files->count() > 0): ?>
+                <?php $__currentLoopData = $pangkatgajitunjangan->files; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $index => $file): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                     <tr>
-                        <td style="border: 1px solid black; padding: 8px; text-align: center;">{{ $index + 1 }}</td>
-                        <td style="border: 1px solid black; padding: 8px; text-align: left;">{{ $file->tipe_dokumen }}</td>
-                        <td style="border: 1px solid black; padding: 8px;">{{ $file->nama_file_asli }}</td>
+                        <td style="border: 1px solid black; padding: 8px; text-align: center;"><?php echo e($index + 1); ?></td>
+                        <td style="border: 1px solid black; padding: 8px; text-align: left;"><?php echo e($file->tipe_dokumen); ?></td>
+                        <td style="border: 1px solid black; padding: 8px;"><?php echo e($file->nama_file_asli); ?></td>
                     </tr>
-                @endforeach
-            @else
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+            <?php else: ?>
                 <tr>
                     <td style="border: 1px solid black; padding: 8px; text-align: center;" colspan="3">-- Belum ada dokumen yang dilampirkan --</td>
                 </tr>
-            @endif
+            <?php endif; ?>
         </tbody>
     </table>
 </div>
 
-{{-- Paragraf Penutup --}}
-<div class="{{ (isset($is_pdf) && $is_pdf) ? 'text-sm mb-8' : 'text-sm mb-8' }}">
+
+<div class="<?php echo e((isset($is_pdf) && $is_pdf) ? 'text-sm mb-8' : 'text-sm mb-8'); ?>">
     <p>Demikian surat permohonan ini saya buat dengan harapan dapat diproses sebagaimana mestinya. Atas perhatian dan kerja sama Bapak/Ibu, saya ucapkan terima kasih.</p>
 </div>
-{{-- AKHIR BAGIAN KONTEN SURAT --}}
+
 
 <!-- Approvals/Signatures Section -->
-{{-- FIX: Gunakan optional() dan isset() agar tidak Error pas Preview --}}
-@if(isset($pangkatgajitunjangan) && optional($pangkatgajitunjangan->logPersetujuanPangkatgajitunjangan)->count() > 0)
-    @php
+
+<?php if(isset($pangkatgajitunjangan) && optional($pangkatgajitunjangan->logPersetujuanPangkatgajitunjangan)->count() > 0): ?>
+    <?php
         $hanyaPengajuanAwal = $pangkatgajitunjangan->logPersetujuanPangkatgajitunjangan->every(function($log) {
             return $log->tahap_persetujuan === 'Pengajuan Awal' || $log->tahap_persetujuan === 'Pegawai';
         });
-    @endphp
+    ?>
 
-    @if($hanyaPengajuanAwal)
+    <?php if($hanyaPengajuanAwal): ?>
         <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mt-6">
             <p class="text-sm text-blue-700">
                 <strong>Informasi:</strong> Pengajuan Pangkat, Gaji dan Tunjangan telah diterima dan sedang dalam proses verifikasi berkas awal.
             </p>
         </div>
-    @else
+    <?php else: ?>
         <p class="text-sm mt-6 mb-2">Dengan beberapa persetujuan yaitu,</p>
 
-        @if(isset($is_pdf) && $is_pdf)
-            {{-- PDF View --}}
+        <?php if(isset($is_pdf) && $is_pdf): ?>
+            
             <table class="main-detail-table">
-                @php $approvalCounter = 1; @endphp
-                @foreach ($pangkatgajitunjangan->logPersetujuanPangkatgajitunjangan as $log)
-                    @if ($log->tahap_persetujuan !== 'Pengajuan Awal' && $log->tahap_persetujuan !== 'Pegawai')
+                <?php $approvalCounter = 1; ?>
+                <?php $__currentLoopData = $pangkatgajitunjangan->logPersetujuanPangkatgajitunjangan; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $log): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php if($log->tahap_persetujuan !== 'Pengajuan Awal' && $log->tahap_persetujuan !== 'Pegawai'): ?>
                         <tr>
-                            <td class="label-column">{{ $approvalCounter++ }}. Tahap Persetujuan</td>
-                            <td class="data-column">{{ $log->tahap_persetujuan ?? 'N/A' }}</td>
+                            <td class="label-column"><?php echo e($approvalCounter++); ?>. Tahap Persetujuan</td>
+                            <td class="data-column"><?php echo e($log->tahap_persetujuan ?? 'N/A'); ?></td>
                         </tr>
                         <tr>
                             <td class="label-column" style="padding-left: 15pt;"><span style="padding-left: 8pt;">Status Persetujuan</span></td>
                             <td class="data-column">
-                                @if($log->status_pengajuan == 'ditolak')
+                                <?php if($log->status_pengajuan == 'ditolak'): ?>
                                     <span style="color: #FF0000;">Ditolak</span>
-                                @elseif($log->status_pengajuan == 'disetujui')
+                                <?php elseif($log->status_pengajuan == 'disetujui'): ?>
                                     <span style="color: #008000;">Disetujui</span>
-                                @else
+                                <?php else: ?>
                                     <span>Menunggu</span>
-                                @endif
+                                <?php endif; ?>
                             </td>
                         </tr>
                         <tr>
                             <td class="label-column" style="padding-left: 15pt;"><span style="padding-left: 8pt;">Catatan</span></td>
-                            <td>{{ $log->komentar ?? 'N/A' }}</td>
+                            <td><?php echo e($log->komentar ?? 'N/A'); ?></td>
                         </tr>
                         <tr><td colspan="2" style="padding-bottom: 10pt;"></td></tr>
-                    @endif
-                @endforeach
+                    <?php endif; ?>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
             </table>
-        @else
-            {{-- Tampilan Web --}}
+        <?php else: ?>
+            
             <div class="ml-4">
                 <div class="grid grid-cols-[160px_1fr] gap-x-4 gap-y-2 text-sm">
-                    @php $approvalCounter = 1; @endphp
-                    @foreach ($pangkatgajitunjangan->logPersetujuanPangkatgajitunjangan as $log)
-                        @if ($log->tahap_persetujuan !== 'Pengajuan Awal' && $log->tahap_persetujuan !== 'Pegawai')
-                            <div class="font-normal">{{ $approvalCounter++ }}. Tahap Persetujuan</div>
-                            <div class="font-semibold">{{ $log->tahap_persetujuan ?? 'N/A'}}</div>
+                    <?php $approvalCounter = 1; ?>
+                    <?php $__currentLoopData = $pangkatgajitunjangan->logPersetujuanPangkatgajitunjangan; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $log): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <?php if($log->tahap_persetujuan !== 'Pengajuan Awal' && $log->tahap_persetujuan !== 'Pegawai'): ?>
+                            <div class="font-normal"><?php echo e($approvalCounter++); ?>. Tahap Persetujuan</div>
+                            <div class="font-semibold"><?php echo e($log->tahap_persetujuan ?? 'N/A'); ?></div>
 
                             <div class="font-normal pl-4">Status Persetujuan</div>
                             <div class="font-semibold">
-                                @if($log->status_pengajuan == 'ditolak')
+                                <?php if($log->status_pengajuan == 'ditolak'): ?>
                                     <span class="text-red-600">Ditolak</span>
-                                @elseif($log->status_pengajuan == 'disetujui')
+                                <?php elseif($log->status_pengajuan == 'disetujui'): ?>
                                     <span class="text-green-600">Disetujui</span>
-                                @else
+                                <?php else: ?>
                                     <span class="text-gray-600">Menunggu</span>
-                                @endif
+                                <?php endif; ?>
                             </div>
 
                             <div class="font-normal pl-4">Catatan</div>
-                            <div>{{ $log->komentar ?? 'N/A' }}</div>
+                            <div><?php echo e($log->komentar ?? 'N/A'); ?></div>
                             <div style="grid-column: 1 / span 2; padding-top: 10px;"></div>
-                        @endif
-                    @endforeach
+                        <?php endif; ?>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
             </div>
-        @endif
-    @endif
-@else
-    {{-- Tampilan pas Preview (Karena data log belum ada di DB) --}}
+        <?php endif; ?>
+    <?php endif; ?>
+<?php else: ?>
+    
     <p class="text-sm mt-6 italic text-gray-500">Draft Pengajuan: Riwayat persetujuan akan muncul setelah pengajuan diproses.</p>
-@endif
+<?php endif; ?>
 
-{{-- Bagian Tanda Tangan (Web & PDF View) --}}
-{{-- Gunakan div bersih untuk memastikan penempatan yang konsisten --}}
+
+
 <div class="text-left mt-4">
     <p class="text-sm mb-4">Hormat saya,</p>
 
-    {{-- Placeholder QR Code --}}
-    @if(isset($is_pdf) && $is_pdf)
+    
+    <?php if(isset($is_pdf) && $is_pdf): ?>
         <div style="width: 100px; height: 100px; margin-right: 0px;">
             <div style="width: 96px; height: 96px; background-color: #e2e8f0; margin-top: 1rem; margin-bottom: 1rem;"></div>
         </div>
-    @else
+    <?php else: ?>
         <div class="flex justify-start">
              <div class="w-24 h-24 bg-gray-300 my-4"></div>
         </div>
-    @endif
+    <?php endif; ?>
 
-    {{-- ID review_nama_pegawai_footer & review_jabatan_footer agar JS bisa akses --}}
+    
     <p id="review_nama_pegawai_footer" class="text-sm font-semibold mt-4">
-        {{ $pangkatgajitunjangan->pegawai->nama ?? '[Nama Lengkap Anda]' }}
+        <?php echo e($pangkatgajitunjangan->pegawai->nama ?? '[Nama Lengkap Anda]'); ?>
+
     </p>
     <p id="review_jabatan_footer" class="text-sm font-semibold">
-        {{ $pangkatgajitunjangan->pegawai->pekerjaan?->jabatan ?? 'Pegawai' }}
+        <?php echo e($pangkatgajitunjangan->pegawai->pekerjaan?->jabatan ?? 'Pegawai'); ?>
+
     </p>
 </div>
 
-{{-- FOOTER KHUSUS WEB --}}
-@if(!isset($is_pdf) || !$is_pdf)
+
+<?php if(!isset($is_pdf) || !$is_pdf): ?>
     <div class="mt-12">
         <table class="w-full h-10 border-collapse">
             <tr>
@@ -327,12 +329,12 @@
             </tr>
         </table>
     </div>
-@endif
+<?php endif; ?>
 
-</div> {{-- Penutup content-wrap --}}
+</div> 
 
-{{-- FOOTER BAWAH HALAMAN (KHUSUS PDF) --}}
-@if(isset($is_pdf) && $is_pdf)
+
+<?php if(isset($is_pdf) && $is_pdf): ?>
     <table style="width: 100%; height: 30pt; border-collapse: collapse; position: absolute; bottom: 0; left: 0; right: 0;">
         <tr>
             <td style="background-color: #0000FF; width: 64%; vertical-align: middle; padding: 0 15pt; height: 30pt;">
@@ -344,5 +346,6 @@
             <td style="background-color: #FF0000; width: 10%; height: 30pt;">&nbsp;</td>
         </tr>
     </table>
-@endif
+<?php endif; ?>
 
+<?php /**PATH C:\xampp\htdocs\simpegbkb\resources\views/partials/pangkatgajitunjangan_letter_content.blade.php ENDPATH**/ ?>

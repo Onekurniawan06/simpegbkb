@@ -167,6 +167,8 @@
         if (reviewTmtPegawai && document.getElementById('tmt_pegawai')) { reviewTmtPegawai.textContent = document.getElementById('tmt_pegawai').value; }
         if (reviewMasaKerja && document.getElementById('masa_kerja')) { reviewMasaKerja.textContent = document.getElementById('masa_kerja').value; }
         if (reviewTmtPensiun && document.getElementById('tmt_pensiun')) { reviewTmtPensiun.textContent = document.getElementById('tmt_pensiun').value; }
+        if (document.getElementById('review_nama_pegawai_footer')) { document.getElementById('review_nama_pegawai_footer').textContent = document.getElementById('nama_pegawai').value; }
+        if (document.getElementById('review_jabatan_footer')) { document.getElementById('review_jabatan_footer').textContent = document.getElementById('jabatan').value; }
     }
 
     function openReviewModal() {

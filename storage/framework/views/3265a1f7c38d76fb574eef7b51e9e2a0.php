@@ -133,15 +133,7 @@
                     </div>
                     <div class="flex-1">
                         <label for="unit_kerja" class="block text-sm font-medium text-gray-700">Unit Kerja (Divisi)</label>
-                        
-                        <input
-                            name="unit_kerja"
-                            id="unit_kerja"
-                            value="<?php echo e($pekerjaanData->divisi?->nama_divisi ?? 'Data tidak ditemukan'); ?>"
-                            class="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 mt-1 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow read-only:bg-gray-50 read-only:cursor-not-allowed"
-                            placeholder="Unit Kerja"
-                            readonly
-                        />
+                        <input name="unit_kerja" id="unit_kerja" value="<?php echo e($pekerjaanData->divisi?->nama_divisi ?? 'Data tidak ditemukan'); ?>" class="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 mt-1 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow read-only:bg-gray-50 read-only:cursor-not-allowed" placeholder="Unit Kerja" readonly />
                     </div>
                     <div class="flex gap-2">
                         <div class="flex-1">
@@ -167,12 +159,7 @@
                         <div class="flex-1">
                             <label for="tmt_pegawai" class="block text-sm font-medium text-gray-700">TMT Pegawai</label>
                             <div class="relative mt-1">
-                                
-                                <input name="tmt_pegawai" id="tmt_pegawai" value="<?php echo e($tmt_pegawai_formatted ?? ''); ?>" type="text"
-                                
-                                    class="w-full bg-gray-50 placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 pr-10 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow read-only:cursor-not-allowed"
-                                    placeholder="TMT Pegawai" readonly />
-                                <!-- Ikon absolut di kanan dalam input -->
+                                <input name="tmt_pegawai" id="tmt_pegawai" value="<?php echo e($tmt_pegawai_formatted ?? ''); ?>" type="text" class="w-full bg-gray-50 placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 pr-10 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow read-only:cursor-not-allowed" placeholder="TMT Pegawai" readonly />
                                 <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                                     <svg class="h-4 w-4 text-gray-400" xmlns="www.w3.org" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 18h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -188,12 +175,9 @@
                             <label for="tmt_pensiun" class="block text-sm font-medium text-gray-700">TMT Pensiun</label>
                             <!-- Wrapper relatif untuk menempatkan ikon -->
                             <div class="relative mt-1">
-                                
                                 <input name="tmt_pensiun" id="tmt_pensiun" value="<?php echo e($tmt_pensiun_otomatis ?? ''); ?>" type="text"
                                     class="w-full bg-gray-50 placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 pr-10 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow read-only:cursor-not-allowed"
                                     placeholder="TMT Pensiun" readonly />
-                                
-                                <!-- Ikon absolut di kanan dalam input -->
                                 <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                                     <svg class="h-4 w-4 text-gray-400" xmlns="www.w3.org" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                         <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 18h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -209,23 +193,26 @@
         <!-- Section 3: Detail Pengajuan Pensiun -->
         <div class="bg-white rounded-l-md shadow-lg max-w-full">
             <div class="mb-4 p-4 shadow-sm">
-                <span class="text-md font-semibold text-blue-700 mb-4"># Section 3: Detail Pengajuan Pensiun</span>
-                <div class="mb-6">
+                <span class="text-sm font-semibold text-blue-700 mb-4"># Section 3: Detail Pengajuan Pensiun</span>
+                <div class="mb-6 mt-3">
+                    <label for="jenis_pengajuan" class="block text-sm font-medium text-gray-700 mb-2">Pilih Jenis Pengajuan Pensiun</label>
                     <div class="relative">
-                        <select id="jenis_pengajuan" name="jenis_pengajuan" class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md shadow-sm appearance-none">
-                            <option disabled selected>Pilih Jenis Pengajuan Pensiun</option>
-                            <!-- Tambahkan opsi lain di sini jika diperlukan -->
+                        <select id="jenis_pengajuan" name="jenis_pengajuan"
+                            class="block w-full pl-3 pr-10 py-2 text-sm bg-white border-2 border-gray-200 text-slate-700 rounded-lg cursor-pointer transition duration-300 ease-in-out focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 shadow-sm appearance-none hover:border-gray-300">
+                            <option value="" disabled selected>-- Klik untuk memilih jenis pensiun --</option>
                             <option value="Pensiun Normal">Pensiun Normal</option>
                             <option value="Pensiun Dini">Pensiun Dini</option>
                         </select>
-                        <!-- Custom chevron icon for select (Tailwind default behavior) -->
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                            <svg class="h-4 w-4" xmlns="www.w3.org" viewBox="0 0 20 20" fill="currentColor">
-                                <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+
+                        <!-- Ikon Chevron yang lebih elegan -->
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                            <svg class="h-5 w-5 text-blue-600" xmlns="http://w3.org" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
                             </svg>
                         </div>
                     </div>
                 </div>
+
 
                 <!-- START: Modifikasi Upload Dokumen Section -->
                 <div class="mb-4">
@@ -397,85 +384,24 @@
 
             <!-- === POPUP MODAL REVIEW === -->
             <div id="leaveModalpensiun" class="fixed inset-0 bg-black-50 flex items-center justify-center hidden z-50 backdrop-blur-sm">
-                <!-- Konten Modal (Background putih, tidak terpengaruh blur) -->
-                <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg mx-auto">
+                <!-- Konten Modal (Ubah max-w-lg jadi max-w-4xl agar lebih lebar) -->
+                <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-4xl mx-auto">
                     <!-- Modal Header -->
                     <div class="flex justify-between items-center border-b pb-3">
-                        <h2 class="text-sm font-semibold">Data Pengajuan Pensiun</h2>
+                        <h2 class="text-sm font-semibold">Surat Pengajuan Pensiun</h2>
                     </div>
-                    <!-- Modal Body (Area Review Data) -->
+
+                    <!-- Modal Body dengan Container Scroll -->
                     <div class="mt-4">
-                        <div class="space-y-4">
-                            <!-- Section 1: Review Header Info -->
-                            <div class="flex items-center p-3 bg-blue-50 rounded-md">
-                                <span class="text-blue-600 mr-3">📄</span>
-                                <!-- Kontainer untuk nama dan NUP dalam satu baris, dan tanggal di baris berikutnya -->
-                                <div>
-                                    <!-- Gabungkan nama pegawai dan NUP dalam satu <p> tag -->
-                                    <p class="font-small text-gray-800">
-                                        <!-- Target JS: review_nama_pegawai dan review_nup -->
-                                        <span id="review_nama_pegawai">[Nama Pegawai]</span> -
-                                        <span id="review_nup">[Nomor Urut Pegawai]</span>
-                                    </p>
-                                    <p class="text-sm text-gray-500">Tanggal Pengajuan: <?php echo e(now()->format('d M Y')); ?></p>
-                                </div>
-                            </div>
-                            <!-- Section 2: Data Cuti Details Grid -->
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <p class="text-sm font-medium text-gray-500">Jenis Pensiun</p>
-                                    <!-- Target JS: review_tanggal_mulai -->
-                                    <p class="mt-1 font-semibold text-sm" id="review_jenis_pengajuan">[Jenis Pengajuan]</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-500">Unit Kerja</p>
-                                    <!-- Target JS: review_tanggal_mulai -->
-                                    <p class="mt-1 font-semibold text-sm" id="review_unit_kerja">[Unit Kerja]</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-500">Status Pegawai</p>
-                                    <!-- Target JS: review_tanggal_selesai -->
-                                    <p class="mt-1 font-semibold text-sm" id="review_status_pegawai">[Status Pegawai]</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-500">Jabatan Terakhir</p>
-                                    <!-- Target JS: review_jumlah_cuti -->
-                                    <p class="mt-1 font-semibold text-sm" id="review_jabatan">[Jabatan Terakhir]</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-500">Pangkat</p>
-                                    <!-- Target JS: review_jatah_periode_hari -->
-                                    <p class="mt-1 font-semibold text-sm" id="review_pangkat">[Pangkat]</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-500">Grade</p>
-                                    <!-- Target JS: review_jatah_periode_hari -->
-                                    <p class="mt-1 font-semibold text-sm" id="review_grade">[Grade]</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-500">TMT Pegawai</p>
-                                    <!-- Target JS: review_jatah_periode_hari -->
-                                    <p class="mt-1 font-semibold text-sm" id="review_tmt_pegawai">[TMT Pegawai]</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-500">Masa Kerja</p>
-                                    <!-- Target JS: review_jatah_periode_hari -->
-                                    <p class="mt-1 font-semibold text-sm" id="review_masa_kerja">[Masa Kerja]</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-500">TMT Pensiun</p>
-                                    <!-- Target JS: review_jatah_periode_hari -->
-                                    <p class="mt-1 font-semibold text-sm" id="review_tmt_pensiun">[TMT Pensiun]</p>
-                                </div>
-                            </div>
+                        <div class="custom-scroll-container p-4" style="max-height: 70vh; overflow-y: auto;">
+                            <?php echo $__env->make('partials.pensiun_letter_content', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
                         </div>
                     </div>
 
-                    <!-- Modal Footer (Buttons) -->
+                    <!-- Modal Footer -->
                     <div class="flex justify-end mt-6 pt-4 border-t">
                         <button type="button" id="cancelButton" class="px-4 py-2 mr-3 text-sm text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">Batal</button>
-                        <!-- TOMBOL KONFIRMASI SUBMIT FORM -->
-                        <button type="button" id="submitButton" class="px-4 py-2 text-white bg-blue-600 text-sm rounded-lg hover:bg-blue-700">Ya, Ajukan Pensiun</button>
+                        <button id="submitButton" class="px-4 py-2 text-white bg-blue-600 text-sm rounded-lg hover:bg-blue-700">Ya, Ajukan Pensiun</button>
                     </div>
                 </div>
             </div>

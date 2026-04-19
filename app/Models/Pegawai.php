@@ -13,8 +13,9 @@ class Pegawai extends Model
     protected $table = 'pegawai'; // <-- Wajib ditambahkan
     public $timestamps = false;
 
-    // Jika Anda memiliki kolom lain yang bisa diisi (fillable), tambahkan di sini:
-
+    protected $primaryKey = 'nomor_urut_pegawai';
+    public $incrementing = false; // Tambahkan ini kalau nomor urut bukan auto-incrementing integer standar
+    protected $keyType = 'string'; // Tambahkan ini kalau nomor urut isinya ada huruf/karakter (opsional)
     protected $fillable = [
         // Data Pekerjaan (Contoh)
         'nomor_urut_pegawai',

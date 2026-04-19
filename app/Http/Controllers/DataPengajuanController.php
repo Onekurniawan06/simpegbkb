@@ -103,7 +103,6 @@ class DataPengajuanController extends Controller
         ]);
     }
 
-
     private function fetchSubmissions($user, $request): Collection
     {
         // Ambil input filter dari request
@@ -175,89 +174,120 @@ class DataPengajuanController extends Controller
             ]
         );
     }
-    public function downloadLetterPdf ($nup): Response
+    public function downloadLetterPdf($nup)
     {
-        // 1. Eager loading data yang diperlukan
-        $cuti = PengajuanCuti::with(['pegawai.pekerjaan.divisi', 'jenisCuti', 'logs.penyetuju.pekerjaan.divisi'])
-                                ->where('nomor_urut_pegawai', $nup)
-                                ->firstOrFail();
+        try {
+            // 1. Ambil data pengajuan
+            $cuti = PengajuanCuti::with(['pegawai.pekerjaan.divisi', 'pekerjaan.divisi'])
+                                    ->where('nomor_urut_pegawai', $nup)
+                                    ->firstOrFail();
 
-        // 2. Duplikasi Logika Pencarian Manager & Direktur
-        $manager = null;
-        $direktur = null;
+            // 2. LOGIKA MANAGER (Atasan Langsung)
+            $idDivisiPengaju = $cuti->pegawai->pekerjaan->id_divisi ?? null;
+            $managerData = Pekerjaan::where('id_divisi', $idDivisiPengaju)
+                ->where(function($q) {
+                    $q->where('jabatan', 'LIKE', '%Manager%')
+                    ->orWhere('jabatan', 'LIKE', '%Manajer%');
+                })
+                ->with('pegawai')
+                ->first();
 
-        foreach ($cuti->logs as $log) {
-            if ($log->penyetuju && $log->penyetuju->pekerjaan->first()) {
-                $pekerjaanPegawai = $log->penyetuju->pekerjaan->first();
-                $jabatanName = strtolower($pekerjaanPegawai->jabatan);
+            $namaAtasan = $managerData->pegawai->nama ?? '........................';
+            $jabatanAtasan = $managerData->jabatan ?? 'Atasan Langsung';
 
-                if (str_contains($jabatanName, 'manager') && !$manager) {
-                    $manager = $log->penyetuju;
-                } elseif (str_contains($jabatanName, 'direktur operasional') && !$direktur) {
-                    $direktur = $log->penyetuju;
-                }
+            // 3. LOGIKA DIREKSI
+            $dirOps = Pekerjaan::where('jabatan', 'Direktur Operasional')->with('pegawai')->first();
+            $dirKep = Pekerjaan::where('jabatan', 'Direktur Kepatuhan')->with('pegawai')->first();
 
-                if ($manager && $direktur) break;
-            }
-        }
+            $namaDireksi = strtoupper($dirOps->pegawai->nama ?? '............') . ' atau ' . strtoupper($dirKep->pegawai->nama ?? '............');
+            $jabatanDireksi = 'Direktur Operasional atau Direktur Kepatuhan';
 
-        // 3. Kirim SEMUA variabel yang diperlukan ke view
-        $data = compact('cuti', 'manager', 'direktur'); // Tambahkan manager dan direktur di sini
-        $data['is_pdf'] = true; // Menandakan konteksnya adalah PDF
+            // 4. LOGIKA VERIFIKATOR
+            $v1 = Pekerjaan::where('jabatan', 'LIKE', '%Kepala Satker Kepatuhan%')->with('pegawai')->first();
+            $v2 = Pekerjaan::where('jabatan', 'LIKE', '%Human Resources Officer%')->with('pegawai')->first();
 
-        // Menggunakan partial view yang sama untuk konten surat
-        $pdfContent = view(view: 'partials.letter_content', data: $data)->render();
+            $namaVerif1 = strtoupper($v1->pegawai->nama ?? '........................');
+            $jabatanVerif1 = "Kepala Satker Kepatuhan & M.R.";
+            $namaVerif2 = strtoupper($v2->pegawai->nama ?? '........................');
+            $jabatanVerif2 = "Human Resources Officer";
 
-        // ... logika pembuatan PDF selanjutnya ...
-        if (class_exists('Barryvdh\DomPDF\Facade\Pdf')) {
-            $pdf = Pdf::loadHtml(string: $pdfContent);
-            $pdf->setPaper('A4', 'portrait');
+            // 5. Bungkus data (Pastikan KEY-nya sama persis dengan yang dipanggil di Blade)
+            $data = [
+                'cuti'           => $cuti,
+                'is_pdf'         => true,
+                'namaAtasan'     => $namaAtasan,
+                'jabatanAtasan'  => $jabatanAtasan,
+                'namaDireksi'    => $namaDireksi,
+                'jabatanDireksi' => $jabatanDireksi,
+                'namaVerif1'     => $namaVerif1,
+                'jabatanVerif1'  => $jabatanVerif1,
+                'namaVerif2'     => $namaVerif2,
+                'jabatanVerif2'  => $jabatanVerif2,
+            ];
 
-            return $pdf->download(filename: 'Surat_Cuti_' . $nup . '.pdf');
-        } else {
-            return response(content: 'Download functionality requires a PDF library installed in Laravel.', status: 404);
+            // 6. Generate PDF
+            $pdf = Pdf::loadView('partials.letter_content', $data);
+            $pdf->setPaper([0, 0, 609.45, 935.43], 'portrait');
+
+            return $pdf->download('Surat_Cuti_' . $nup . '.pdf');
+
+        } catch (\Exception $e) {
+            // Jika error, tampilkan pesan errornya biar ketahuan salahnya dimana
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
+
     public function getLetterDetailsByNup($nup)
     {
-        // Eager loading relasi yang diperlukan (tanpa relasi jabatan master yang kosong)
+        // 1. Ambil data pengajuan cuti
         $cuti = PengajuanCuti::with([
-            'pegawai.pekerjaan',
+            'pegawai.pekerjaan.divisi',
             'jenisCuti',
-            'logs.penyetuju.pekerjaan',
-            'pekerjaan.divisi'
+            'logs.penyetuju.pekerjaan'
         ])->where('nomor_urut_pegawai', $nup)->firstOrFail();
 
-        $manager = null;
-        $direktur = null;
+        // 2. LOGIKA MENCARI MANAGER (ATASAN LANGSUNG) BERDASARKAN DIVISI PENGAJU
+        $idDivisiPengaju = $cuti->pegawai->pekerjaan->id_divisi ?? null;
+        $managerData = Pekerjaan::where('id_divisi', $idDivisiPengaju)
+            ->where(function($q) {
+                $q->where('jabatan', 'LIKE', '%Manager%')
+                ->orWhere('jabatan', 'LIKE', '%Manajer%');
+            })
+            ->with('pegawai')
+            ->first();
 
-        foreach ($cuti->logs as $log) {
-            // Pastikan objek penyetuju ada
-            if ($log->penyetuju) {
-                // Kita perlu mengambil item PERTAMA dari koleksi 'pekerjaan'
-                $pekerjaanPegawai = $log->penyetuju->pekerjaan->first();
+        $namaAtasan = $managerData->pegawai->nama ?? '........................';
+        $jabatanAtasan = $managerData->jabatan ?? 'Atasan Langsung';
 
-                if ($pekerjaanPegawai) {
-                    // Mengakses langsung kolom 'jabatan' (string/varchar)
-                    $jabatanName = strtolower($pekerjaanPegawai->jabatan);
+        // 3. LOGIKA MENCARI DIREKSI DINAMIS (OPS vs KEPATUHAN)
+        $dirOps = Pekerjaan::where('jabatan', 'Direktur Operasional')->with('pegawai')->first();
+        $dirKep = Pekerjaan::where('jabatan', 'Direktur Kepatuhan')->with('pegawai')->first();
 
-                    // dd("Memproses jabatan:", $jabatanName);
+        $namaDireksi = strtoupper($dirOps->pegawai->nama ?? '............') . ' atau ' . strtoupper($dirKep->pegawai->nama ?? '............');
+        $jabatanDireksi = 'Direktur Operasional atau Direktur Kepatuhan';
 
-                    if (str_contains($jabatanName, 'manager') && !$manager) {
-                        $manager = $log->penyetuju; // Menetapkan objek pegawai manajer
-                    } elseif (str_contains($jabatanName, 'direktur operasional') && !$direktur) {
-                        $direktur = $log->penyetuju; // Menetapkan objek pegawai direktur
-                    }
+        // 4. LOGIKA MENCARI VERIFIKATOR (VERSI SINGKAT)
+        $v1 = Pekerjaan::where('jabatan', 'LIKE', '%Kepala Satker Kepatuhan%')->with('pegawai')->first();
+        $v2 = Pekerjaan::where('jabatan', 'LIKE', '%Human Resources Officer%')->with('pegawai')->first();
 
-                    // Hentikan loop jika keduanya sudah ditemukan
-                    if ($manager && $direktur) break;
-                }
-            }
-        }
+        $namaVerif1 = strtoupper($v1->pegawai->nama ?? '........................');
+        $jabatanVerif1 = "Kepala Satker Kepatuhan & M.R.";
+        $namaVerif2 = strtoupper($v2->pegawai->nama ?? '........................');
+        $jabatanVerif2 = "Human Resources Officer";
 
-        // Kirim objek $cuti, $manager, dan $direktur ke view
-        return view('partials.letter_content', compact('cuti', 'manager', 'direktur'));
+        // 5. Return ke view dengan SEMUA variabel yang diminta Blade
+        return view('partials.letter_content', compact(
+            'cuti',
+            'namaAtasan',
+            'jabatanAtasan',
+            'namaDireksi',
+            'jabatanDireksi',
+            'namaVerif1',
+            'jabatanVerif1',
+            'namaVerif2',
+            'jabatanVerif2'
+        ));
     }
 
     public function getLemburLetterDetailsByNup($nup)

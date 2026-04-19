@@ -45,7 +45,7 @@ class PengajuanLemburController extends Controller
 
         // 3. Logika Navigasi & Label Dinamis
         $dashboardUrl = $user->dashboard_link;
-        $roleLabel = $roleMapping->role_name ?? 'Pegawai';
+        $roleLabel = $roleMapping->role_name ?? ' Pegawai';
 
         $parentRouteName = $isManagerOrKepala ? 'manager.pilihpengajuan' : 'datapengajuan.formDataPengajuan';
         $parentLabel = $isManagerOrKepala ? 'Manajemen Pengajuan ↦ Approval Pengajuan' : 'Data Pengajuan';

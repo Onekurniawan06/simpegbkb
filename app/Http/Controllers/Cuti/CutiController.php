@@ -46,9 +46,64 @@ class CutiController extends Controller
         $subJenisCuti = SubJenisCutiPenting::all();
         $jatahCutiTahunanMaksimal = $jenisCuti->where('nama_cuti', 'Cuti Tahunan')->first()->durasi_hari ?? 0;
 
+        // --- LOGIKA MENCARI ATASAN DINAMIS (MANAGER DIVISI) ---
+        $idDivisiUser = $pekerjaanData->id_divisi ?? null;
+        $managerDivisi = null;
+
+        if ($idDivisiUser) {
+            $managerDivisi = Pekerjaan::where('id_divisi', $idDivisiUser)
+                ->where(function($q) {
+                    $q->where('jabatan', 'LIKE', '%Manager%')
+                    ->orWhere('jabatan', 'LIKE', '%Manajer%');
+                })
+                ->with('pegawai') // Pastikan ada relasi 'pegawai' di model Pekerjaan
+                ->first();
+        }
+
+        $namaAtasan = $managerDivisi->pegawai->nama ?? '........................';
+        $jabatanAtasan = $managerDivisi->jabatan ?? 'Atasan Langsung';
+        // -----------------------------------------------------
+
+        // --- LOGIKA MENCARI DIREKSI DINAMIS (GLOBAL SEMUA DIVISI) ---
+        // Cari Direktur Operasional
+        $dirOps = Pekerjaan::where('jabatan', 'Direktur Operasional')
+            ->with('pegawai')
+            ->first();
+
+        // Cari Direktur Kepatuhan
+        $dirKep = Pekerjaan::where('jabatan', 'Direktur Kepatuhan')
+            ->with('pegawai')
+            ->first();
+
+        // Format Nama: NAMA A atau NAMA B
+        $namaDireksi = strtoupper($dirOps->pegawai->nama ?? '........................') .
+                    ' atau ' .
+                    strtoupper($dirKep->pegawai->nama ?? '........................');
+
+        // Format Jabatan: JABATAN A atau JABATAN B
+        $jabatanDireksi = 'Direktur Operasional atau Direktur Kepatuhan';
+        // ------------------------------------------------------------
+
+        // Cari Kepala SKK & SKKMR
+        $v1 = Pekerjaan::where('jabatan', 'LIKE', '%Kepala Satker Kepatuhan%')
+        ->with('pegawai')
+        ->first();
+
+        $namaVerif1 = strtoupper($v1->pegawai->nama ?? '........................');
+        $jabatanVerif1 = "Kepala Satker Kepatuhan & M.R.";
+
+        // Cari Human Resources Officer
+        $v2 = Pekerjaan::where('jabatan', 'LIKE', '%Human Resources Officer%')
+        ->with('pegawai')
+        ->first();
+
+        $namaVerif2 = strtoupper($v2->pegawai->nama ?? '........................');
+        $jabatanVerif2 = "Human Resources Officer";
+        // --------------------------------------------------
+
         // --- VARIABEL YANG DIKEMBALIKAN ---
         $jenisPengajuan = 'cuti';
-        $submissionsType = 'Cuti'; // Sesuaikan string ini dengan kebutuhan logika view Anda
+        $submissionsType = 'Cuti';
         // ----------------------------------
 
         // 3. Logika Navigasi Dinamis
@@ -76,7 +131,15 @@ class CutiController extends Controller
             'breadcrumbs',
             'parentRouteName',
             'jenisPengajuan',
-            'submissionsType' // Pastikan ini ikut dikirim ke view
+            'submissionsType',
+            'namaAtasan',
+            'jabatanAtasan',
+            'namaDireksi',
+            'jabatanDireksi',
+            'namaVerif1',
+            'jabatanVerif1',
+            'namaVerif2',
+            'jabatanVerif2'
         ));
     }
 
@@ -158,7 +221,7 @@ class CutiController extends Controller
             // --- 4. REDIRECT DINAMIS (DI LUAR TRANSAKSI) ---
             $parentRouteName = $isManagerOrKepala ? 'manager.pilihpengajuan' : 'datapengajuan.formDataPengajuan';
             $targetRoute = $isManagerOrKepala ? 'manager.pilihpengajuan' : 'pegawai.dashboard';
-            
+
             return redirect()->route($targetRoute)->with([
                 'success' => 'Permintaan Cuti/Izin Anda telah tercatat.',
                 'modal_title' => 'Pengajuan Cuti/Izin berhasil dibuat!!!',
@@ -171,7 +234,6 @@ class CutiController extends Controller
             return redirect()->back()->with('error', 'Terjadi kesalahan sistem.')->withInput();
         }
     }
-
 
     public function statuscuti($nip)
     {
@@ -252,6 +314,5 @@ class CutiController extends Controller
             'layout'
         ));
     }
-
 
 }

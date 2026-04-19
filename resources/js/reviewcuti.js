@@ -1,5 +1,6 @@
 /**
  * reviewcuti.js - Full Fixed Version
+ * Menangani preview data pengajuan cuti secara real-time ke modal review
  */
 
 const closeErrorModal = () => {
@@ -12,12 +13,12 @@ const closeErrorModal = () => {
 
 document.addEventListener('DOMContentLoaded', () => {
     const elements = {
-        // Input Fields (Form)
+        // Input Fields (Data dari Form)
         jenisCutiEl: document.getElementById('jenis_cuti'),
         startDateEl: document.getElementById('tanggal_mulai'),
         endDateEl: document.getElementById('tanggal_selesai'),
-        durationEl: document.getElementById('jumlah_cuti'),
-        durationDisplayEl: document.getElementById('sisa_cuti'),
+        durationEl: document.getElementById('jumlah_cuti'),        // Input Lama Cuti
+        durationDisplayEl: document.getElementById('sisa_cuti'),   // Input Sisa Cuti
         keteranganEl: document.getElementById('keterangan'),
 
         // Modals & Buttons
@@ -27,54 +28,54 @@ document.addEventListener('DOMContentLoaded', () => {
         submitButtonEl: document.getElementById('submitButton'),
         loadingModalEl: document.getElementById('loadingModal'),
         successModalEl: document.getElementById('successModal'),
-        errorModalEl: document.getElementById('errorModal'),
     };
 
     const populateModalData = () => {
-        // 1. Ambil data dari input form
+        // 1. Ambil data dari form
         const jenis = elements.jenisCutiEl ? elements.jenisCutiEl.value : '';
         const tglMulai = elements.startDateEl ? elements.startDateEl.value : '';
         const tglSelesai = elements.endDateEl ? elements.endDateEl.value : '';
-        const jumlah = elements.durationEl ? elements.durationEl.value : '0';
-        const sisa = elements.durationDisplayEl ? elements.durationDisplayEl.value : '0';
+        const jumlah = elements.durationEl ? elements.durationEl.value : '';
+        const sisa = elements.durationDisplayEl ? elements.durationDisplayEl.value : '';
         const ket = elements.keteranganEl ? elements.keteranganEl.value : '-';
 
-        // 2. Isi ke tabel review (Bagian Periode & Alasan)
+        // 2. Target element di Modal Review
+        const reviewLamaTabel = document.getElementById('review_cuti_diambil_display');
+        const reviewSisaTabel = document.getElementById('review_sisa_cuti_display');
         const reviewJumlah = document.getElementById('review_jumlah_cuti_display');
         const reviewTmt = document.getElementById('review_tmt_cuti_display');
         const reviewAlasan = document.getElementById('review_alasan_cuti_display');
-        const reviewSisa = document.getElementById('review_sisa_cuti_display');
-        const reviewDiambil = document.getElementById('review_cuti_diambil_display');
 
-        if (reviewJumlah) reviewJumlah.textContent = jumlah;
-        if (reviewAlasan) reviewAlasan.textContent = ket;
-        if (reviewSisa) reviewSisa.textContent = sisa;
-        if (reviewTmt) reviewTmt.textContent = (tglMulai || '...') + ' - ' + (tglSelesai || '...');
-
-        // Logika Hitung Cuti Diambil (Asumsi kuota tahunan 12)
-        if (reviewDiambil && sisa) {
-            reviewDiambil.textContent = 12 - parseInt(sisa);
+        // --- SISIPAN LOGIKA SATUAN HARI ---
+        if (reviewLamaTabel) {
+            reviewLamaTabel.textContent = (jumlah && jumlah !== '0') ? `${jumlah} Hari` : '';
+        }
+        if (reviewSisaTabel) {
+            reviewSisaTabel.textContent = (sisa !== '' && sisa !== null) ? `${sisa} Hari` : '';
+        }
+        if (reviewJumlah) {
+            reviewJumlah.textContent = jumlah || '0';
+        }
+        if (reviewTmt) {
+            reviewTmt.textContent = (tglMulai && tglSelesai) ? `${tglMulai} s/d ${tglSelesai}` : '... s/d ...';
+        }
+        if (reviewAlasan) {
+            reviewAlasan.textContent = ket;
         }
 
         // 3. Logika Centang (✔)
-        // Reset semua centang lama dulu
         const allCheckboxes = document.querySelectorAll('[id^="v_"]');
         allCheckboxes.forEach(el => el.innerHTML = '');
 
-        // Buat ID target (misal: "Cuti Tahunan" jadi "v_cuti_tahunan")
         if (jenis) {
-            const slug = jenis.toLowerCase()
-                .trim()
-                .replace(/\s+/g, '_')
-                .replace(/[^\w-]+/g, '');
-
-            const targetId = 'v_' + slug;
-            const targetEl = document.getElementById(targetId);
+            const slug = jenis.toLowerCase().trim().replace(/\s+/g, '_').replace(/[^\w-]+/g, '');
+            const targetEl = document.getElementById(`v_${slug}`);
             if (targetEl) {
                 targetEl.innerHTML = '<span class="checkmark">&#10003;</span>';
             }
         }
     };
+
 
     const openModal = () => {
         populateModalData();
@@ -92,21 +93,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // Event Listeners
     if (elements.openModalButtonEl) elements.openModalButtonEl.addEventListener('click', openModal);
     if (elements.cancelButtonEl) elements.cancelButtonEl.addEventListener('click', closeModal);
 
-    // Tombol Success/Error
-    const closeErrorBtn = document.getElementById('closeErrorModalButton');
-    if (closeErrorBtn) closeErrorBtn.addEventListener('click', closeErrorModal);
-
-    const closeSuccessBtn = document.getElementById('closeSuccessModalButton');
-    if (closeSuccessBtn) {
-        closeSuccessBtn.addEventListener('click', () => {
-            elements.successModalEl.classList.add('hidden');
-            elements.successModalEl.classList.remove('flex');
-        });
-    }
-
+    // Submission Logic
     if (elements.submitButtonEl) {
         elements.submitButtonEl.addEventListener('click', function(e) {
             e.preventDefault();
