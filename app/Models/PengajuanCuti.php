@@ -14,11 +14,12 @@ use App\Models\LogPersetujuanCuti;
 class PengajuanCuti extends Model
 {
     protected $table = 'pengajuan_cuti';
-    protected $primaryKey = 'nomor_urut_pegawai';
-    protected $keyType = 'string';
-    public $incrementing = false;
+    protected $primaryKey = 'id_cuti'; // Ganti dari id ke id_cuti
+    public $incrementing = true;
+    protected $keyType = 'int';
 
     protected $fillable = [
+        'id_cuti', // Masukkan id_cuti ke fillable jika ingin diisi manual, tapi biasanya otomatis
         'nomor_urut_pegawai',
         'jenis_cuti',
         'tanggal_mulai',
@@ -26,10 +27,8 @@ class PengajuanCuti extends Model
         'jumlah_cuti',
         'jatah_periode_hari',
         'sisa_cuti',
-        'keterangan',
-        'jalur_dokumen_pendukung',
+        'keterangan'
     ];
-
     // Tambahkan mutator di sini
     protected function jatahPeriodeHari(): Attribute
     {
@@ -50,9 +49,8 @@ class PengajuanCuti extends Model
         return $this->belongsTo(JenisCuti::class, 'jenis_cuti', 'nama_cuti');
     }
 
-    public function logs(): HasMany
-    {
-        return $this->hasMany(LogPersetujuanCuti::class, 'nomor_urut_pegawai', 'nomor_urut_pegawai')
+    public function logs(): HasMany {
+        return $this->hasMany(LogPersetujuanCuti::class, 'id_cuti', 'id_cuti')
                     ->orderByDesc('updated_at');
     }
 

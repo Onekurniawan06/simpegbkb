@@ -86,7 +86,6 @@
 <p class="{{ (isset($is_pdf) && $is_pdf) ? '' : 'mb-4 text-sm' }}">Dengan hormat,</p>
 
 {{-- BAGIAN KONTEN SURAT --}}
-{{-- BAGIAN KONTEN SURAT --}}
 @php
     $formatDate = function($date) {
         if (!$date) return '';
@@ -235,9 +234,9 @@
                         <tr>
                             <td class="label-column" style="padding-left: 15pt;"><span style="padding-left: 8pt;">Status Persetujuan</span></td>
                             <td class="data-column">
-                                @if($log->status_pengajuan == 'ditolak')
+                                @if($log->status_persetujuan == 'ditolak')
                                     <span style="color: #FF0000;">Ditolak</span>
-                                @elseif($log->status_pengajuan == 'disetujui')
+                                @elseif($log->status_persetujuan == 'disetujui')
                                     <span style="color: #008000;">Disetujui</span>
                                 @else
                                     <span>Menunggu</span>
@@ -264,9 +263,9 @@
 
                             <div class="font-normal pl-4">Status Persetujuan</div>
                             <div class="font-semibold">
-                                @if($log->status_pengajuan == 'ditolak')
+                                @if($log->status_persetujuan == 'ditolak')
                                     <span class="text-red-600">Ditolak</span>
-                                @elseif($log->status_pengajuan == 'disetujui')
+                                @elseif($log->status_persetujuan == 'disetujui')
                                     <span class="text-green-600">Disetujui</span>
                                 @else
                                     <span class="text-gray-600">Menunggu</span>

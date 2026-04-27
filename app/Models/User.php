@@ -15,6 +15,7 @@ use App\Models\PengajuanCuti;
 use App\Models\PengajuanLembur;
 use App\Models\PengajuanPensiun;
 use App\Models\PengajuanPangkatgajitunjangan;
+use App\Models\DetailPribadi;
 
 class User extends Authenticatable
 {
@@ -171,37 +172,55 @@ class User extends Authenticatable
 
     public function getDashboardLinkAttribute()
     {
-        // Ambil rute dari mapping (Contoh: pegawai.dashboard atau manager.dashboardmanager)
+        // 1. Ambil rute dari mapping tabel roles_mapping
         $mapping = \DB::table('roles_mapping')
             ->where('level_id', $this->level_id)
+            ->where('jabatan_id', $this->jabatan_id)
             ->first();
 
         $routeName = $mapping->route_name ?? 'pegawai.dashboard';
 
-        // Jika Level 2 (Manager/Kepala/SKAI/Kantor Kas), tambahkan parameter divisi
-        if ($this->level_id == 2) {
+        // 2. Normalisasi string rute untuk pengecekan
+        $routeNameLower = strtolower($routeName);
+
+        // KONDISI 1: Untuk Manager (yang rutenya membutuhkan parameter divisi)
+        if (str_contains($routeNameLower, 'manager') && !str_contains($routeNameLower, 'dashboardskkmr')) {
             $slug = Str::slug($this->divisi->nama_divisi ?? 'dashboard');
             return route($routeName, ['divisi' => $slug]);
         }
 
-        // Jika Level 1 (Pegawai), langsung panggil rute tanpa parameter
+        // KONDISI 2: Untuk SKKMR, HRO, atau Pegawai Biasa (langsung panggil rute tanpa parameter)
         return route($routeName);
     }
 
     public function getLayoutFileAttribute()
     {
-        // 1. Logika untuk SKKMR (Gunakan id_divisi sesuai database Anda, misal: 6)
-        // Tanpa mengetik teks "Kepala SKKMR"
-        if ($this->id_divisi == 6) {
+        // 1. Ambil rute dasbor dinamis dari roles_mapping
+        $mapping = \DB::table('roles_mapping')
+            ->where('level_id', $this->level_id)
+            ->where('jabatan_id', $this->jabatan_id)
+            ->first();
+
+        $routeName = strtolower($mapping->route_name ?? '');
+
+        // 2. Logika untuk SKKMR
+        if (str_contains($routeName, 'skkmr')) {
             return 'layouts.app-skkmr';
         }
 
-        // 2. Logika untuk Manager & Kepala (Level 2)
+        // 3. Logika untuk HRO (Tambahkan ini agar tidak melompat ke bawah)
+        if (str_contains($routeName, 'hro')) {
+            return 'layouts.app-hro';
+        }
+
+        // 4. Logika untuk Manager (Level 2)
         if ($this->level_id == 2) {
             return 'layouts.app-manager';
         }
 
-        // 3. Default untuk Pegawai (Level 1 atau lainnya)
+        // 5. Default untuk Pegawai Biasa
         return 'layouts.app-pegawai';
     }
+
+
 }

@@ -13,24 +13,29 @@ class DirekturDashboard extends Controller
     {
         $user = auth()->user();
 
-        // 1. Identifikasi Jabatan Direktur (Utama / Operasional / Kepatuhan)
+        // 1. Ambil data role yang SANGAT SPESIFIK sesuai level dan jabatan user
         $role = DB::table('roles_mapping')
-            ->where('jabatan_id', $user->jabatan_id)
             ->where('level_id', $user->level_id)
+            ->where('jabatan_id', $user->jabatan_id)
             ->first();
 
-        $jabatanLogin = $role->role_name ?? 'Direktur';
+        // Jika tidak ketemu di mapping, ambil default dari tabel jabatan
+        if (!$role) {
+            $dataJabatan = DB::table('jabatan')->where('jabatan_id', $user->jabatan_id)->first();
+            $jabatanAsli = $dataJabatan->nama_jabatan ?? 'Direktur';
+        } else {
+            $jabatanAsli = $role->role_name; // Ini akan mengambil "Direktur Operasional" dari tabel Anda
+        }
 
-        // *** NORMALISASI NAMA TAHAP DIREKTUR ***
-        // Ini supaya sinkron sama kolom 'tahap_persetujuan' di database log
-        if (str_contains(strtolower($jabatanLogin), 'utama')) {
+        // 2. NORMALISASI (Agar sinkron dengan teks di tabel Log)
+        if (stripos($jabatanAsli, 'utama') !== false) {
             $jabatanLogin = 'Direktur Utama';
-        } elseif (str_contains(strtolower($jabatanLogin), 'operasional')) {
+        } elseif (stripos($jabatanAsli, 'operasional') !== false) {
             $jabatanLogin = 'Direktur Operasional';
-        } elseif (str_contains(strtolower($jabatanLogin), 'kepatuhan')) {
+        } elseif (stripos($jabatanAsli, 'kepatuhan') !== false) {
             $jabatanLogin = 'Direktur Kepatuhan';
         } else {
-            $jabatanLogin = 'Direktur';
+            $jabatanLogin = $jabatanAsli; // Gunakan nama asli jika tidak cocok dengan 3 di atas
         }
 
         $totalMenunggu = 0;

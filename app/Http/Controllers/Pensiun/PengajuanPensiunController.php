@@ -7,14 +7,14 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use App\Models\Pekerjaan;
-use Carbon\Carbon; // Tambahkan ini
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\RedirectResponse;
 use App\Services\SubmissionProcessorService; // PENTING: Import service class
 use App\Models\PengajuanPensiun;
 use App\Models\LogPersetujuanPensiun;
 use App\Models\FilePersyaratanPensiun;
-use App\Enums\StatusPersetujuan; // Jika Anda menggunakan Enum
+use App\Enums\StatusPersetujuan;
 // use App\Models\Divisi;
 
 class PengajuanPensiunController extends Controller
@@ -133,11 +133,11 @@ class PengajuanPensiunController extends Controller
         try {
             // 3. Simpan Tabel Utama
             $pensiunBaru = PengajuanPensiun::create($validatedData);
-            $idPengajuanBaru = $pensiunBaru->id_pengajuan;
+            $idPensiunBaru = $pensiunBaru->id_pensiun; 
 
             // 4. Simpan Log (Gunakan \Carbon\Carbon agar tidak error)
             LogPersetujuanPensiun::create([
-                'id_pengajuan'       => $idPengajuanBaru,
+                'id_pensiun'         => $idPensiunBaru,
                 'nomor_urut_pegawai' => $nomor_urut_pegawai,
                 'tahap_persetujuan'  => 'Pengajuan Awal',
                 'status_persetujuan' => StatusPersetujuan::DIPROSES,
@@ -164,7 +164,7 @@ class PengajuanPensiunController extends Controller
                         $path = $file->storeAs($uploadPath, $fileNameFormatted, 'local');
 
                         FilePersyaratanPensiun::create([
-                            'pengajuan_pensiun_id' => $idPengajuanBaru,
+                            'id_pensiun'           => $idPensiunBaru,
                             'nomor_urut_pegawai'   => $nomor_urut_pegawai,
                             'nama_file_asli'       => $originalName,
                             'path_file_server'     => $path,

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\KepalaSKKMR;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Berita;
+use Illuminate\Support\Facades\DB;
 
 class SkkmrDashboard extends Controller
 {
@@ -18,7 +19,11 @@ class SkkmrDashboard extends Controller
         $detailDisetujui = [];
         $detailDitolak = [];
 
-        if (auth()->user()->level_akses === 'kepala skkmr') {
+        $user = auth()->user();
+        $namaJabatan = DB::table('jabatan')->where('jabatan_id', $user->jabatan_id)->value('nama_jabatan') ?? '';
+        $isSKK = str_contains(strtolower($namaJabatan), 'skk') || str_contains(strtolower($namaJabatan), 'kepatuhan');
+
+        if ($isSKK) {
 
             $tables = [
                 ['name' => 'log_persetujuan_lembur', 'col' => 'status_persetujuan', 'label' => 'Lembur'],
@@ -28,26 +33,26 @@ class SkkmrDashboard extends Controller
             ];
 
             foreach ($tables as $table) {
-                // Base query dengan filter level_akses: pegawai DAN manager
-                $baseQuery = \DB::table($table['name'])
-                    ->join('users', $table['name'] . '.nomor_urut_pegawai', '=', 'users.nomor_urut_pegawai')
-                    ->whereIn('users.level_akses', ['pegawai', 'manager']); // Mengambil data dari kedua role
+                // Base query TANPA join tabel users yang mengikat level_akses statis
+                $baseQuery = DB::table($table['name'] . ' as log')
+                    ->join('pegawai as p', 'log.nomor_urut_pegawai', '=', 'p.nomor_urut_pegawai')
+                    ->join('pekerjaan as pek', 'p.nomor_urut_pegawai', '=', 'pek.nomor_urut_pegawai');
 
-                // 1. Menunggu (Filter Level + Status Diproses)
+                // 1. Menunggu (Status Diproses)
                 $countWait = (clone $baseQuery)
-                    ->where($table['col'], 'diproses')
+                    ->where('log.' . $table['col'], 'diproses')
                     ->count();
 
-                // 2. Disetujui (Filter Level + Status Disetujui + Bukan Pengajuan Awal)
+                // 2. Disetujui (Status Disetujui + Bukan Pengajuan Awal)
                 $countApprove = (clone $baseQuery)
-                    ->where($table['col'], 'disetujui')
-                    ->where('tahap_persetujuan', '!=', 'Pengajuan Awal')
+                    ->where('log.' . $table['col'], 'disetujui')
+                    ->where('log.tahap_persetujuan', '!=', 'Pengajuan Awal')
                     ->count();
 
-                // 3. Ditolak (Filter Level + Status Ditolak + Bukan Pengajuan Awal)
+                // 3. Ditolak (Status Ditolak + Bukan Pengajuan Awal)
                 $countReject = (clone $baseQuery)
-                    ->where($table['col'], 'ditolak')
-                    ->where('tahap_persetujuan', '!=', 'Pengajuan Awal')
+                    ->where('log.' . $table['col'], 'ditolak')
+                    ->where('log.tahap_persetujuan', '!=', 'Pengajuan Awal')
                     ->count();
 
                 // Akumulasi total
@@ -79,6 +84,4 @@ class SkkmrDashboard extends Controller
             'total_belum_dibaca'
         ));
     }
-
-
 }

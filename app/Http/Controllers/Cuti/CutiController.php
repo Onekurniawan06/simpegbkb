@@ -109,12 +109,29 @@ class CutiController extends Controller
         // 3. Logika Navigasi Dinamis
         $dashboardUrl = $user->dashboard_link;
         $roleLabel = $roleMapping->role_name ?? 'Pegawai';
+        $namaJabatanLower = strtolower($roleLabel);
 
-        $parentRouteName = $isManagerOrKepala ? 'manager.pilihpengajuan' : 'datapengajuan.formDataPengajuan';
-        $parentLabel = $isManagerOrKepala ? 'Manajemen Pengajuan ↦ Approval Pengajuan' : 'Data Pengajuan';
+        // DEFAULT UNTUK PEGAWAI BIASA
+        $parentRouteName = 'datapengajuan.formDataPengajuan';
+        $parentLabel = 'Data Pengajuan';
+
+        // DETEKSI ROLE SECARA SPESIFIK
+        if (str_contains($namaJabatanLower, 'manager') || str_contains($namaJabatanLower, 'manajer')) {
+            $parentRouteName = 'manager.pilihpengajuan';
+            $parentLabel = 'Manajemen Pengajuan ↦ Approval Pengajuan Manager';
+
+        } elseif (str_contains($namaJabatanLower, 'skk') || str_contains($namaJabatanLower, 'kepatuhan')) {
+            $parentRouteName = 'skkmr.dashboardskkmr'; // Rute dashboard SKKMR yang baru saja dibuat
+            $parentLabel = 'Dashboard Kepala SKK & SKKMR';
+
+        } elseif (str_contains($namaJabatanLower, 'hro') || str_contains($namaJabatanLower, 'human resource')) {
+            $parentRouteName = 'hro.dashboardhro'; // Sesuaikan jika Anda punya route name khusus dashboard HRO
+            $parentLabel = 'Dashboard Human Resources';
+        }
+
         $pageTitle = 'Pengajuan Cuti dan Izin ' . $roleLabel;
 
-        // 4. Breadcrumbs
+        // 4. Breadcrumbs (Menggunakan rute dinamis di atas)
         $breadcrumbs = [
             'Beranda' => $dashboardUrl,
             $parentLabel => route($parentRouteName),
@@ -209,6 +226,7 @@ class CutiController extends Controller
 
             $submission = PengajuanCuti::create($dataToSave);
             $submission->logs()->create([
+                'id_cuti' => $submission->id_cuti,
                 'nomor_urut_pegawai' => $submission->nomor_urut_pegawai,
                 'tahap_persetujuan' => 'Pengajuan Awal',
                 'status_pengajuan' => 'diproses',
@@ -231,34 +249,35 @@ class CutiController extends Controller
         } catch (\Throwable $e) {
             DB::rollBack();
             \Log::error('Gagal simpan cuti: ' . $e->getMessage());
-            return redirect()->back()->with('error', 'Terjadi kesalahan sistem.')->withInput();
+            \Log::error($e->getTraceAsString()); // Ini akan menunjukkan di baris mana errornya
+            return dd($e->getMessage());
+            // return redirect()->back()->with('error', 'Terjadi kesalahan sistem.')->withInput();
         }
     }
 
-    public function statuscuti($nip)
+    public function statuscuti($id_cuti)
     {
         $user = auth()->user();
 
-        // 1. Logika Role Dinamis (Menghapus hardcode level_id == 2)
+        // 1. Logika Role Dinamis - TETAP UTUH
         $roleMapping = \DB::table('roles_mapping')
             ->where('jabatan_id', $user->jabatan_id)
             ->where('level_id', $user->level_id)
             ->first();
 
-        // Cek apakah atasan (Manager) berdasarkan route_name di database
         $isAtasan = $roleMapping && str_contains($roleMapping->route_name, 'manager');
 
-        // 2. Ambil Data Pengajuan (Existing)
-        $pekerjaanData = Pekerjaan::where('nomor_urut_pegawai', $nip)->first();
-
+        // 2. Ambil Data Pengajuan - SEKARANG DI ATAS agar NIP bisa diambil
         $pengajuancuti = PengajuanCuti::with(['jenisCuti', 'logs' => function ($query) {
-            $query->orderByDesc('updated_at')->orderByDesc('id');
+            $query->orderByDesc('updated_at')->orderByDesc('id_cuti');
         }])
-        ->where('nomor_urut_pegawai', $nip)
-        ->orderBy('created_at', 'desc')
+        ->where('id_cuti', $id_cuti)
         ->firstOrFail();
 
-        // 3. Siapkan data untuk Processor (Existing)
+        // UPDATE: Ambil Pekerjaan menggunakan NIP dari $pengajuancuti (bukan lagi $id_cuti)
+        $pekerjaanData = Pekerjaan::where('nomor_urut_pegawai', $pengajuancuti->nomor_urut_pegawai)->first();
+
+        // 3. Siapkan data untuk Processor - TETAP UTUH
         $submissionRaw = [
             'type' => 'Cuti',
             'logs' => $pengajuancuti->logs ? $pengajuancuti->logs->toArray() : [],
@@ -277,20 +296,15 @@ class CutiController extends Controller
 
         $submission = $this->submissionProcessor->processSubmissions(collect([$submissionRaw]))->first();
 
-        // 4. Logika Tampilan & Variabel Penting
+        // 4. Logika Tampilan & Variabel Penting - TETAP UTUH
         $latestLog = $pengajuancuti->logs->first();
         $komentarStatus = $latestLog ? $latestLog->komentar : 'Menunggu keputusan';
-        $submissionType = 'Cuti'; // Variabel tetap dipertahankan
+        $submissionType = 'Cuti';
         $pageTitle = 'Lacak Pengajuan ' . $submissionRaw['type'];
 
-        // 5. BREADCRUMBS & ROUTE OTOMATIS
+        // 5. BREADCRUMBS & ROUTE OTOMATIS - TETAP UTUH
         $roleName = $roleMapping->role_name ?? 'Pegawai';
-
-        // Jika Atasan, label akan menjadi "Approval Pengajuan [Nama Jabatan]"
-        $parentLabel = $isAtasan
-            ? "Manajemen Pengajuan ↦ Approval Pengajuan $roleName"
-            : 'Data Pengajuan';
-
+        $parentLabel = $isAtasan ? "Manajemen Pengajuan ↦ Approval Pengajuan $roleName" : 'Data Pengajuan';
         $parentRouteName = $isAtasan ? 'manager.pilihpengajuan' : 'datapengajuan.formDataPengajuan';
 
         $breadcrumbs = [
@@ -299,8 +313,8 @@ class CutiController extends Controller
             $pageTitle => null
         ];
 
-        // 6. LAYOUT OTOMATIS
-        $layout = $user->layout_file; // Menggunakan Accessor otomatis
+        // 6. LAYOUT OTOMATIS - TETAP UTUH
+        $layout = $user->layout_file;
 
         return view('datapengajuan.lacakpengajuan', compact(
             'pengajuancuti',
@@ -314,5 +328,6 @@ class CutiController extends Controller
             'layout'
         ));
     }
+
 
 }

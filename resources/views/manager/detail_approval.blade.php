@@ -168,11 +168,11 @@
                     <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Jenis Pengajuan</label>
                     <p class="text-sm text-indigo-600 font-medium italic">
                         @if($sumber == 'cuti')
-                            {{ $data->Jenis_cuti }}
+                            {{-- Gunakan alias baru: jenis_cuti_nama --}}
+                            {{ $data->jenis_cuti_nama ?? $data->jenis_cuti }}
                         @elseif($sumber == 'lembur')
                             Lembur Kerja
                         @else
-                            {{-- Mengambil kolom jenis_pengajuan dari tabel pensiun atau pangkatgaji --}}
                             {{ $data->jenis_pengajuan ?? ucfirst($sumber) }}
                         @endif
                     </p>
@@ -189,7 +189,7 @@
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pl-4"> <!-- Tambah padding left agar tidak menempel garis -->
 
                         <!-- Blok Tanggal -->
-                        <div class="flex items-center space-x-6">
+                        <div class="flex items-center space-x-4">
                             <!-- Mulai -->
                             <div class="flex items-center gap-4">
                                 <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
@@ -234,7 +234,7 @@
                     <hr class="my-3 border-slate-100 ml-3">
 
                     <!-- Blok Alasan -->
-                    <div class="ml-4 bg-slate-50/50 p-5 rounded-2xl border border-slate-100">
+                    <div class="ml-4 bg-slate-50/50 p-3 rounded-2xl border border-slate-100">
                         <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Alasan Pengajuan</label>
                         <p class="text-sm text-slate-600 leading-relaxed italic">
                             "{{ $data->keterangan ?? '-' }}"
@@ -347,11 +347,13 @@
 
                     {{-- LOGIKA KHUSUS CUTI --}}
                     @elseif($sumber === 'cuti')
-                        <div class="space-y-3">
-                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest">Catatan Penyetuju Lembur</label>
-                            <textarea name="catatan" rows="6"
+                        <div class="space-y-1">
+                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest">Catatan Penyetuju Cuti</label>
+                            <textarea name="catatan" rows="5"
                                 class="w-full p-5 text-sm bg-white border border-slate-200 rounded-3xl text-slate-700 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none transition resize-none placeholder-slate-400 shadow-sm"
-                                placeholder="Wajib memberikan alasan atau catatan...">{{ $data->uraian_tugas ?? '' }}</textarea>
+                                placeholder="Wajib memberikan alasan atau catatan..."
+                                {{-- Tambahkan @disabled jika statusnya sudah disetujui/ditolak agar catatan tidak bisa diedit lagi --}}
+                                @disabled($data->status !== 'diproses')>{{ $data->komentar ?? '' }}</textarea>
                         </div>
                     @endif
 

@@ -14,12 +14,12 @@ class FilePersyaratanpangkatgajitunjangan extends Model
     public $timestamps = false;
 
     protected $fillable = [
-        'pengajuan_pangkatgajitunjangan_id',
+        'id_kenaikan', // 1. Diubah dari pengajuan_pangkatgajitunjangan_id
         'nomor_urut_pegawai',
         'nama_file_asli',
         'path_file_server',
         'tipe_dokumen',
-        'created_at', // Tambahkan created_at ke fillable
+        'created_at',
     ];
 
     // Menggunakan event boot untuk mengisi created_at secara otomatis
@@ -35,6 +35,7 @@ class FilePersyaratanpangkatgajitunjangan extends Model
 
     public function pengajuan(): BelongsTo
     {
-        return $this->belongsTo(PengajuanPangkatgajitunjangan::class, 'pengajuan_pangkatgajitunjangan_id', 'id_pengajuan');
+        // 2. Sesuaikan foreign key dan owner key-nya
+        return $this->belongsTo(PengajuanPangkatgajitunjangan::class, 'id_kenaikan', 'id_kenaikan');
     }
 }

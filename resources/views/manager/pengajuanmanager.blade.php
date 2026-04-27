@@ -148,7 +148,6 @@
 
         </div>
 
-
     {{-- SECTION RIWAYAT --}}
     <div class="bg-white shadow-sm rounded-l-lg overflow-hidden border border-gray-100 mt-2 h-full flex flex-col">
         <div class="px-4 py-4 border-b border-gray-100 flex justify-between items-center shrink-0">

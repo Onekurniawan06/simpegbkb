@@ -10,25 +10,25 @@ use App\Models\Pegawai;
 class LogPersetujuanCuti extends Model
 {
     protected $table = 'log_persetujuan_cuti';
-    // Gunakan 'id' default sebagai PK utama tabel log ini
-
-    // Menonaktifkan manajemen otomatis created_at dan updated_at
+    protected $primaryKey = 'id';
+    public $incrementing = true;
     public $timestamps = false;
-
     protected $fillable = [
+        'id_cuti',
         'nomor_urut_pegawai',
         'tahap_persetujuan',
         'nomor_urut_pegawai_penyetuju',
         'status_pengajuan',
         'komentar',
-        'update_at'
+        'updated_at'
     ];
 
     // Relasi untuk mengetahui siapa pemilik pengajuan cuti
     public function pengajuan(): BelongsTo
     {
-        return $this->belongsTo(PengajuanCuti::class, 'nomor_urut_pegawai', 'nomor_urut_pegawai');
+        return $this->belongsTo(PengajuanCuti::class, 'id_cuti', 'id_cuti');
     }
+
 
     /**
      * Relasi Kunci: Untuk mengetahui detail (nama, level) dari INDIVIDU PENYETUJU.

@@ -197,7 +197,8 @@
                         <div class="flex items-center gap-2 pl-6 shrink-0">
                             @if(isset($submission['blade_route']))
                                 {{-- Tombol Detail - Sky Blue --}}
-                                <a href="{{ route($submission['blade_route'], $submission['nomor_urut_pegawai'] ?? $submission['id'] ?? '') }}"
+                                {{-- UPDATE: Jika tipe Cuti, ambil 'id' (id_cuti) duluan agar sesuai rute baru --}}
+                                <a href="{{ route($submission['blade_route'], ($submission['type'] === 'Cuti') ? ($submission['id'] ?? $submission['nomor_urut_pegawai']) : ($submission['nomor_urut_pegawai'] ?? $submission['id'])) }}"
                                 class="px-5 py-1.5 bg-sky-100 hover:bg-sky-200 text-sky-700 text-[10px] font-bold uppercase tracking-widest rounded-full transition-all border border-sky-200">
                                 Detail
                                 </a>

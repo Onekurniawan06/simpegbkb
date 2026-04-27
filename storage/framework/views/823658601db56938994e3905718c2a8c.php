@@ -6,22 +6,22 @@
 
 <div class="flex-1 overflow-y-auto h-[calc(100vh-120px)] space-y-2 custom-scroll-container">
     <div class="bg-white rounded-lg shadow-lg max-w-full mx-auto">
-        
+
         <div style="background-image: linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.1)), url('<?php echo e(asset('images/vecteezylight.jpg')); ?>')" class="bg-cover bg-bottom p-2 rounded-t-lg relative">
                     <img src="<?php echo e(asset('images/businesspromotion.png')); ?>" alt="Overtime" class="absolute right-0 top-0 h-40">
-                    
-                    
-                    
+
+
+
                     <div class="flex items-center mt-2 ml-2 mb-2">
-                        
+
                         <div class="h-28 w-28 rounded-full overflow-hidden flex items-center justify-center">
                             <?php if(Auth::user()->detailPribadi && Auth::user()->detailPribadi->photo_selfie): ?>
-                                
+
                                 <img src="<?php echo e(asset('storage/' . Auth::user()->detailPribadi->photo_selfie)); ?>?v=<?php echo e(time()); ?>"
                                     class="h-32 w-32 rounded-full object-cover border border-gray-200 group-hover:border-green-500 transition-all duration-300"
                                     alt="Foto Selfie Pegawai">
                             <?php else: ?>
-                                
+
                                 <div class="h-28 w-28 rounded-full bg-gray-100 flex items-center justify-center border-4 border-gray-200 group-hover:border-yellow-500 transition-all duration-300">
                                     <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
@@ -349,7 +349,7 @@
     <div class="bg-white rounded-lg shadow-lg max-w-full mx-auto">
         <div class="mb-2 p-4 shadow-sm">
             <span class="text-md font-semibold mb-4 text-blue-700"># Section 2: Data Pegawai</span>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-2">
                 <div class="flex-1">
                     <label for="nama_pegawai" class="block text-sm font-medium text-gray-700">Nama Pegawai</label>
@@ -361,7 +361,7 @@
                 </div>
                 <div class="flex-1">
                     <label for="unit_kerja" class="block text-sm font-medium text-gray-700">Unit Kerja (Divisi)</label>
-                    
+
                     <input
                         name="unit_kerja"
                         id="unit_kerja"
@@ -395,9 +395,9 @@
                     <div class="flex-1">
                         <label for="tmt_pegawai" class="block text-sm font-medium text-gray-700">TMT Pegawai</label>
                         <div class="relative mt-1">
-                            
+
                             <input name="tmt_pegawai" id="tmt_pegawai" value="<?php echo e($tmt_pegawai_formatted ?? ''); ?>" type="text"
-                            
+
                                 class="w-full bg-gray-50 placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 pr-10 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow read-only:cursor-not-allowed"
                                 placeholder="TMT Pegawai" readonly />
                             <!-- Ikon absolut di kanan dalam input -->
@@ -462,7 +462,6 @@
                     Buat Pengajuan Kenaikan Pangkat, Gaji dan Tunjangan
                 </button>
             </div>
-
             <!-- Modal Viewer -->
             <div id="document-viewer-modal" style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);" class="flex items-center justify-center">
                 <div class="relative bg-white rounded-xl shadow-2xl w-11/12 max-w-4xl h-5/6 flex flex-col overflow-hidden">
@@ -515,7 +514,7 @@
         </div>
     </div>
 
-    
+
 
     <!-- Modal Notifikasi Validasi File -->
     <div id="fileValidationErrorModal" class="fixed inset-0 bg-black/50 items-center justify-center hidden z-[100] backdrop-blur-sm">

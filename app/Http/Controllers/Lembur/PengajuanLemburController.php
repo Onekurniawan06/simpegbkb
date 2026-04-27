@@ -127,12 +127,12 @@ class PengajuanLemburController extends Controller
             ]);
 
             LogPersetujuanLembur::create([
-                'lembur_id' => $pengajuan->id_lembur,
+                'id_lembur' => $pengajuan->id_lembur,
                 'nomor_urut_pegawai' => $nomor_urut_pegawai,
                 'tahap_persetujuan' => 'Pengajuan Awal',
                 'status_persetujuan' => StatusPersetujuan::DIPROSES,
                 'komentar' => 'Menunggu Verifikasi.',
-                'update_at' => Carbon::now(),
+                // 'update_at' => Carbon::now(),
             ]);
 
             DB::commit();
