@@ -174,22 +174,21 @@ class User extends Authenticatable
     {
         // 1. Ambil rute dari mapping tabel roles_mapping
         $mapping = \DB::table('roles_mapping')
-            ->where('level_id', $this->level_id)
-            ->where('jabatan_id', $this->jabatan_id)
-            ->first();
+        ->where('level_id', $this->level_id)
+        ->where(function($query) {
+            $query->where('jabatan_id', $this->jabatan_id)
+                ->orWhereNull('jabatan_id');
+        })
+        ->orderBy('priority', 'asc')
+        ->first();
 
         $routeName = $mapping->route_name ?? 'pegawai.dashboard';
-
-        // 2. Normalisasi string rute untuk pengecekan
         $routeNameLower = strtolower($routeName);
 
-        // KONDISI 1: Untuk Manager (yang rutenya membutuhkan parameter divisi)
         if (str_contains($routeNameLower, 'manager') && !str_contains($routeNameLower, 'dashboardskkmr')) {
             $slug = Str::slug($this->divisi->nama_divisi ?? 'dashboard');
             return route($routeName, ['divisi' => $slug]);
         }
-
-        // KONDISI 2: Untuk SKKMR, HRO, atau Pegawai Biasa (langsung panggil rute tanpa parameter)
         return route($routeName);
     }
 

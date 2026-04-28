@@ -181,7 +181,8 @@ class DirekturApproval extends Controller
                 ->leftJoin('pekerjaan as pek', 'p.nomor_urut_pegawai', '=', 'pek.nomor_urut_pegawai')
                 ->leftJoin('divisi as div', 'pek.id_divisi', '=', 'div.id_divisi')
                 ->leftJoin('jenis_cuti as jc', 'pc.jenis_cuti', '=', 'jc.id')
-                ->where('log.id_cuti', $id_log);
+                ->where('log.id_cuti', $id_log)
+                ->where('log.tahap_persetujuan', 'LIKE', '%Direktur Operasional%');
 
             $data = $query->select(
                 'p.nama', 'p.nomor_urut_pegawai', 'pek.jabatan', 'div.nama_divisi',

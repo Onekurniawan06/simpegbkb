@@ -79,90 +79,93 @@
     <!-- Menghapus overflow-hidden dari app-container -->
     <div id="app-container" class="flex h-screen">
         <!-- Sidebar Container -->
-        <aside id="sidebar" class="w-68 bg-[#0f172a] text-white flex flex-col shadow-2xl transition-all duration-300 ease-in-out rounded-r-md">
-
-            <!-- Header Logo -->
-            <div class="p-4 flex items-center justify-between h-20 shadow-md shadow-white-50">
-                <div class="p-8 flex justify-center items-center">
-                    <img src="{{ asset('images/logoputih.png') }}" alt="Logo Bank Kota Bogor" class="h-11 w-auto">
+        <aside id="sidebar" class="w-72 bg-gradient-to-b from-[#06101e] to-[#0b1523] text-white flex flex-col mt-2 ml-2 mr-2 transition-all duration-300 ease-in-out">
+            <!-- Header Logo (Floating Card Style) -->
+            <div class="p-5">
+                <div class="flex justify-center items-center">
+                    <img src="{{ asset('images/logoputih.png') }}" alt="Logo Bank Kota Bogor" class="h-10 w-auto filter drop-shadow-[0_4px_12px_rgba(59,130,246,0.3)]">
                 </div>
             </div>
 
-            <nav id="sidebar-content" class="flex-1 px-2 py-4 space-y-2">
-                <!-- Judul Navigasi Dinamis Berdasarkan Jabatan (Struktur PHP Tetap) -->
+            <!-- Konten Navigasi -->
+            <nav id="sidebar-content" class="flex-1 space-y-1.5 overflow-y-auto mt-3">
                 @php
-                    // Langsung ambil nama asli dari tabel jabatan (Direktur Kepatuhan / Operasional / Utama)
-                    $namaJabatan = auth()->user()->jabatan->nama_jabatan ?? 'Direktur';
+                    $namaJabatan = auth()->user()->jabatan->nama_jabatan ?? '-';
                 @endphp
 
-                <div class="flex flex-col px-3 pt-2 pb-4">
-                    <span class="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-500">
-                        Akses Level
-                    </span>
-                    <span class="text-xs font-black uppercase tracking-wider text-slate-100 mt-1 break-words leading-tight">
-                        {{ $namaJabatan }}
-                    </span>
+                <!-- Informasi Akses Level (Clean & Subtle) -->
+                <div class="px-2 mb-2">
+                    <span class="text-[9px] font-extrabold uppercase tracking-[0.3em] text-blue-400">Akses Level</span>
+                    <div class="flex items-center mt-1 space-x-2">
+                        <div class="h-2 w-2 ml-2 rounded-full bg-emerald-400 animate-pulse"></div>
+                        <span class="text-xs font-semibold text-white/90 truncate">{{ $namaJabatan }}</span>
+                    </div>
                 </div>
 
-                <!-- Garis Pemisah Bold -->
-                <div class="h-[2px] w-full bg-gradient-to-r from-amber-500/50 via-transparent to-transparent mb-4"></div>
+                <!-- 1. Garis Pembatas Akses Level & Dashboard -->
+                <div class="h-[1px] w-full bg-white/10 my-2 mt-2"></div>
 
-                <!-- Menu Dashboard Utama -->
+                <!-- Menu Dashboard Utama (Standar / No Highlight) -->
                 <a href="{{ Auth::user()->dashboard_link }}"
-                    class="flex items-center justify-between p-3 text-[11px] font-bold rounded-xl transition-all duration-200 hover:bg-amber-600 hover:text-white hover:shadow-lg hover:shadow-amber-900/20 group">
+                    class="flex items-center justify-between p-3.5 text-xs font-semibold rounded-xl transition-all duration-300 text-white/70 hover:bg-white/5 hover:text-white border-l-4 border-transparent hover:border-white/10 group">
                     <span class="flex items-center">
-                        <svg xmlns="http://www.w3.org" class="h-5 w-5 mr-3 text-amber-500 group-hover:text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                        <svg xmlns="http://www.w3.org" class="h-5 w-5 mr-3 text-white/40 group-hover:text-blue-400 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2-2m0 0l7-7 7 7M19 10v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                         </svg>
-                        <span class="sidebar-text whitespace-nowrap">Dashboard</span>
+                        <span class="sidebar-text tracking-wider text-md">Beranda</span>
                     </span>
                 </a>
 
-                <!-- Menu Manajemen Pengajuan -->
+                <!-- Menu Manajemen Pengajuan (Hover Glow Effect) -->
                 <div class="relative group">
-                    <a href="#" class="flex items-center justify-between p-3 text-[11px] font-bold rounded-xl transition-all duration-200 hover:bg-amber-600 hover:text-white group">
+                    <a href="#" class="flex items-center justify-between p-3.5 text-xs font-semibold rounded-xl transition-all duration-300 text-white/70 hover:bg-white/5 hover:text-white border-l-4 border-transparent hover:border-white/10 group">
                         <span class="flex items-center">
-                            <svg xmlns="http://www.w3.org" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="h-5 w-5 mr-3 text-amber-500 group-hover:text-white">
+                            <svg xmlns="http://www.w3.org" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 mr-3 text-white/40 group-hover:text-blue-400 transition-colors">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6.429 9.75 2.25 12l4.179 2.25m0-4.5 5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0 4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0-5.571 3-5.571-3" />
                             </svg>
-                            <span class="sidebar-text whitespace-nowrap text-ellipsis overflow-hidden">Manajemen Pengajuan</span>
+                            <span class="sidebar-text truncate text-md tracking-wider">Manajemen Pengajuan Pegawai</span>
                         </span>
-                        <svg xmlns="http://www.w3.org" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-3 w-3 opacity-50 group-hover:text-white transition-all">
+                        <svg xmlns="http://www.w3.org" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="h-3 w-3 opacity-30 group-hover:opacity-100 group-hover:text-blue-400 group-hover:rotate-90 transition-all duration-300">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                         </svg>
                     </a>
 
-                    <!-- Flyout Submenu -->
-                    <div class="absolute left-full top-0 ml-4 w-64 bg-[#1e293b] shadow-2xl rounded-xl border border-white/10 invisible group-hover:visible opacity-0 group-hover:opacity-100 translate-x-3 group-hover:translate-x-0 transition-all duration-300 z-50 overflow-hidden">
-                        <a href="{{ url('/direktur/manajemenpengajuan') }}" class="block p-4 text-[11px] font-bold hover:bg-amber-600 hover:text-white transition-colors">Approval Pengajuan Pegawai / Staff</a>
+                    <!-- Submenu -->
+                    <div class="max-h-0 overflow-hidden group-hover:max-h-20 transition-all duration-500 ease-in-out bg-white/[0.02] rounded-xl mx-2 mt-1">
+                        <a href="{{ url('/direktur/manajemenpengajuan') }}" class="block py-3 pl-10 pr-4 text-[11px] font-medium text-white/60 hover:text-blue-400 transition-colors">
+                            Persetujuan Pengajuan
+                        </a>
                     </div>
                 </div>
 
                 <!-- MENU DATA PEGAWAI -->
                 <div class="relative group">
-                    <a href="#" class="flex items-center justify-between p-3 text-[11px] font-bold rounded-xl transition-all duration-200 hover:bg-amber-600 hover:text-white group">
+                    <a href="#" class="flex items-center justify-between p-3.5 text-xs font-semibold rounded-xl transition-all duration-300 text-white/70 hover:bg-white/5 hover:text-white border-l-4 border-transparent hover:border-white/10 group">
                         <span class="flex items-center">
-                            <svg xmlns="http://www.w3.org" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="h-5 w-5 mr-3 text-amber-500 group-hover:text-white shrink-0">
+                            <svg xmlns="http://www.w3.org" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 mr-3 text-white/40 group-hover:text-blue-400 transition-colors shrink-0">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 0 1-2.25 2.25M16.5 7.5V18a2.25 2.25 0 0 0 2.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 0 0 2.25 2.25h13.5M6 7.5h3v3H6v-3Z" />
                             </svg>
-                            <span class="sidebar-text whitespace-nowrap overflow-hidden text-ellipsis">Data Pegawai</span>
+                            <span class="sidebar-text truncate text-md tracking-wider">Data Pegawai</span>
                         </span>
-                        <svg xmlns="http://www.w3.org" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-3 w-3 shrink-0 opacity-50 group-hover:text-white">
+                        <svg xmlns="http://www.w3.org" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="h-3 w-3 shrink-0 opacity-30 group-hover:opacity-100 group-hover:text-blue-400 transition-all">
                             <path stroke-linecap="round" stroke-linejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
                         </svg>
                     </a>
                 </div>
 
-                <!-- Bagian Laporan -->
-                <div class="text-[10px] font-black uppercase tracking-[0.3em] text-slate-500 pt-6 px-3 pb-2 sidebar-text">Laporan</div>
+                <!-- 2. Garis Pembatas Atas Laporan -->
+                <div class="h-[1px] w-full bg-white/10 mt-5 my-2"></div>
+
+                <!-- Bagian Laporan (Teks di-highlight biru) -->
+                <div class="text-[9px] font-extrabold uppercase tracking-[0.3em] text-blue-400 pt-1 px-2 pb-2">Laporan</div>
 
                 <div class="relative group">
-                    <a href="{{ route('laporan.index') }}" class="flex items-center justify-between p-3 text-[11px] font-bold rounded-xl transition-all duration-200 hover:bg-amber-600 hover:text-white group">
+                    <a href="{{ route('laporan.index') }}" class="flex items-center justify-between p-3.5 text-xs font-semibold rounded-xl transition-all duration-300 text-white/70 hover:bg-white/5 hover:text-white border-l-4 border-transparent hover:border-white/10 group">
                         <span class="flex items-center">
-                            <svg xmlns="http://www.w3.org" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="h-5 w-5 mr-3 text-amber-500 group-hover:text-white">
+                            <svg xmlns="http://www.w3.org" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 mr-3 text-white/40 group-hover:text-blue-400 transition-colors">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25M9 16.5v.75m3-3v3M15 12v5.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                             </svg>
-                            <span class="sidebar-text truncate">Pengajuan Pegawai</span>
+                            <span class="sidebar-text truncate text-md tracking-wider">Pengajuan Pegawai</span>
                         </span>
                     </a>
                 </div>
@@ -173,166 +176,136 @@
         <!-- Konten Utama -->
         <!-- Menghapus overflow-hidden dari kontainer konten utama -->
         <div class="flex-1 flex flex-col">
-            <header class="bg-white rounded-l-md shadow-md ml-2">
-                <!-- Konten Atas: Profil & Notifikasi -->
-                <!-- Garis pembatas (border-b) sekarang ada di sini, membentang penuh -->
-                <div class="flex justify-between items-center py-3 border-b border-gray-200">
-                    <h1 class="text-sm font-semibold text-gray-800 px-4">
-                        <div id="tanggal-statis">
+            <header class="bg-white/80 backdrop-blur-md rounded-l-md border border-gray-100 shadow-lg mt-2 sticky top-2 z-50">
+                <!-- BARIS ATAS: Navigasi Utama, Jam & Profil (Lebih Tipis) -->
+                <div class="flex justify-between items-center py-1.5 px-4">
+                    <!-- Bagian Tanggal dan Jam -->
+                    <h1 class="text-xs font-semibold text-gray-700">
+                        <div id="tanggal-statis" class="flex items-center">
+                            <svg xmlns="http://w3.org" class="h-4 w-4 text-blue-500 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                            </svg>
                             <?php
-                                // Tetapkan zona waktu ke Jakarta (WIB)
                                 date_default_timezone_set('Asia/Jakarta');
-
                                 $hari = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
                                 $bulan = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni','Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
-
                                 $dayOfWeek = date('w');
                                 $dayOfMonth = date('d');
                                 $monthOfYear = date('n') - 1;
                                 $year = date('Y');
-
                                 $formattedDate = $hari[$dayOfWeek] . ', ' . $dayOfMonth . ' ' . $bulan[$monthOfYear] . ' ' . $year;
-
                                 echo $formattedDate;
-                            ?>
-                            / <span id="jam-dinamis"></span> WIB
+                            ?> / <span id="jam-dinamis" class="text-blue-600 font-bold ml-0.5"></span>&nbsp;WIB
                         </div>
                     </h1>
-                    <div class="flex items-center space-x-4 px-4">
+
+                    <div class="flex items-center space-x-3">
                         <!-- Notifikasi -->
                         <div class="relative" x-data="{ openNotify: false }">
-                            <button @click="openNotify = ! openNotify" class="relative p-2 rounded-full bg-blue-50 hover:bg-blue-100 text-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                <!-- Icon Bell -->
-                                <x-heroicon-c-bell-alert class="h-6 w-6 text-blue-400" />
+                            <button @click="openNotify = ! openNotify" class="relative p-1.5 rounded-lg bg-gray-50 hover:bg-gray-100 text-gray-500 focus:outline-none">
+                                <x-heroicon-c-bell-alert class="h-4.5 w-4.5 text-blue-500" />
+                                <span class="absolute top-1 right-1 h-1.5 w-1.5 bg-red-500 rounded-full"></span>
                             </button>
                         </div>
 
-                        <!-- Divider Vertikal -->
-                        <div class="border-l border-gray-200 h-10"></div>
-                        <!-- Profil & Dropdown Container (pastikan ini memiliki 'relative') -->
-                        <div class="relative">
+                        <div class="border-l border-gray-200 h-5"></div>
 
-                            <!-- Checkbox Tersembunyi -->
-                            <input type="checkbox" id="dropdown-toggle" class="hidden">
-
-                            <!-- Label membungkus area profil, berfungsi sebagai tombol klik untuk checkbox -->
-                            <label for="dropdown-toggle" class="flex items-center space-x-2 cursor-pointer p-2">
-                                {{-- Container untuk Foto Profil atau Placeholder --}}
-                                <div class="h-10 w-10 bg-gray-100 rounded-full overflow-hidden flex items-center justify-center">
-
+                        <!-- Profil & Dropdown -->
+                        <div class="relative group py-1">
+                            <div class="flex items-center space-x-2 cursor-pointer p-1 hover:bg-gray-50 rounded-lg transition-colors">
+                                <div class="flex flex-col text-xs text-right">
+                                    <span class="font-semibold text-gray-800 leading-none">{{ Auth::user()->name ?? 'User' }}</span>
+                                    <span class="text-[10px] text-emerald-600 font-bold mt-0.5">Aktif</span>
+                                </div>
+                                <div class="h-8 w-8 bg-gray-100 rounded-full overflow-hidden flex items-center justify-center border border-gray-200">
                                     @if(Auth::user()->detailPribadi && Auth::user()->detailPribadi->photo_selfie)
-                                        <img src="{{ asset('storage/' . Auth::user()->detailPribadi->photo_selfie) }}?v={{ time() }}"
-                                            class="h-full w-full object-cover"
-                                            alt="Foto Profil">
+                                        <img src="{{ asset('storage/' . Auth::user()->detailPribadi->photo_selfie) }}?v={{ time() }}" class="h-full w-full object-cover" alt="Foto Profil">
                                     @else
-                                        <x-heroicon-x-person-profile class="h-8 w-8 text-gray-400 group-hover:text-yellow-500" />
+                                        <x-heroicon-x-person-profile class="h-5 w-5 text-gray-400 group-hover:text-yellow-500" />
                                     @endif
-
                                 </div>
-                                <div class="flex flex-col text-sm">
-                                    <span class="font-small text-gray-800">{{ Auth::user()->name ?? 'User' }}</span>
-                                    <span class="text-xs text-blue-600">Aktif</span>
-                                </div>
-                                <!-- Icon Dropdown -->
-                                <svg xmlns="www.w3.org" class="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                <svg xmlns="http://w3.org" class="h-3.5 w-3.5 text-gray-400 group-hover:rotate-180 transition-transform duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
                                 </svg>
-                            </label>
+                            </div>
 
-                            <!-- Menu Dropdown (Harus menjadi sibling dari checkbox dan label) -->
-                            <!-- Menu ini awalnya disembunyikan dengan kelas 'hidden' dari Tailwind -->
-                            <div id="dropdown-menu" class="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-20 hidden">
-
-                                <!-- Bagian Pengaturan Akun -->
-                                <div class="p-2">
-                                    <p class="text-xs font-semibold text-gray-500 uppercase px-4 py-2">Pengaturan Akun</p>
-
+                            <!-- Dropdown Menu -->
+                            <div class="absolute right-0 top-full mt-0 w-60 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-20 invisible opacity-0 group-hover:visible group-hover:opacity-100 translate-y-1 group-hover:translate-y-0 transition-all duration-300 ease-in-out">
+                                <div class="p-1.5">
+                                    <p class="text-[9px] font-bold text-gray-400 uppercase px-3 py-1.5 tracking-wider">Pengaturan Akun</p>
                                     @php
                                         $userAuth = Auth::user();
                                         $isDataIncomplete = empty($userAuth->nomor_urut_pegawai) || empty($userAuth->email);
                                     @endphp
 
-                                    <!-- Tautan Data Diri dengan Validasi -->
                                     @if($isDataIncomplete)
-                                        <!-- Tampilan Notifikasi Warning Jika Data Belum Lengkap -->
-                                        <div class="mx-2 mb-2 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded-md shadow-sm">
+                                        <div class="mx-1.5 mb-1.5 p-2 bg-yellow-50 border-l-4 border-yellow-400 rounded-md shadow-sm">
                                             <div class="flex">
                                                 <div class="shrink-0">
-                                                    <!-- Menggunakan Heroicon untuk indikasi peringatan -->
-                                                    <x-heroicon-s-exclamation-triangle class="h-5 w-5 text-yellow-500" />
+                                                    <x-heroicon-s-exclamation-triangle class="h-4 w-4 text-yellow-500" />
                                                 </div>
-                                                <div class="ml-3">
-                                                    <p class="text-xs text-yellow-700 leading-relaxed">
-                                                        <strong>Perhatian:</strong> Nomor pegawai atau email belum terdaftar.
-                                                        Silakan lengkapi profil Anda.
-                                                        <br>
-                                                        <a href="{{ route('profile.edit', ['form_type' => 'new']) }}" class="text-xs text-blue-700 hover:text-green-600 font-bold underline decoration-2 underline-offset-2">
-                                                            Isi Data Diri Sekarang
+                                                <div class="ml-2">
+                                                    <p class="text-[11px] text-yellow-700 leading-tight">
+                                                        <strong>Perhatian:</strong> Lengkapi profil Anda. <br>
+                                                        <a href="{{ route('profile.edit', ['form_type' => 'new']) }}" class="text-blue-700 hover:text-green-600 font-bold underline">
+                                                            Isi Sekarang
                                                         </a>
                                                     </p>
                                                 </div>
                                             </div>
                                         </div>
-
-                                        <!-- Menu Data Diri (Status: Belum Diisi / Mode New) -->
-                                        <a href="{{ route('profile.edit', ['form_type' => 'new']) }}" class="flex items-center px-4 py-2 text-sm text-gray-400 hover:bg-gray-100 rounded-md group">
-                                            <x-heroicon-o-identification class="h-5 w-5 mr-3 text-gray-400 group-hover:text-yellow-500" />
+                                        <a href="{{ route('profile.edit', ['form_type' => 'new']) }}" class="flex items-center px-3 py-1.5 text-xs text-gray-500 hover:bg-gray-50 rounded-md group">
+                                            <x-heroicon-o-identification class="h-4.5 w-4.5 mr-2 text-gray-400 group-hover:text-yellow-500" />
                                             <span class="flex-1">Data Diri</span>
-                                            <span class="text-[10px] bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded font-medium">Lengkapi</span>
+                                            <span class="text-[9px] bg-yellow-100 text-yellow-700 px-1.5 py-0.5 rounded font-medium">Lengkapi</span>
                                         </a>
                                     @else
-                                        <!-- Tampilan Menu Normal Saat Data Sudah Lengkap (Mode Edit) -->
-                                        <a href="{{ route('profile.edit', ['form_type' => 'edit']) }}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md group">
-                                            <x-heroicon-o-identification class="h-5 w-5 mr-3 text-blue-400 group-hover:text-blue-600" />
+                                        <a href="{{ route('profile.edit', ['form_type' => 'edit']) }}" class="flex items-center px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 rounded-md group">
+                                            <x-heroicon-o-identification class="h-4.5 w-4.5 mr-2 text-blue-500 group-hover:text-blue-600" />
                                             Data Diri
-                                            <x-heroicon-s-arrow-small-right class="h-5 w-4 ml-auto text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                            <x-heroicon-s-arrow-small-right class="h-4 w-4 ml-auto text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                                         </a>
                                     @endif
 
-                                    <!-- Tautan Ubah Password (Tetap Tersedia) -->
-                                    <a href="{{ url('/change-password') }}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md group">
-                                        <x-heroicon-o-lock-closed class="h-5 w-5 mr-3 text-blue-400 group-hover:text-blue-600" />
+                                    <a href="{{ url('/change-password') }}" class="flex items-center px-3 py-1.5 text-xs text-gray-700 hover:bg-gray-50 rounded-md group">
+                                        <x-heroicon-o-lock-closed class="h-4.5 w-4.5 mr-2 text-blue-500 group-hover:text-blue-600" />
                                         Ubah Kata Sandi
-                                        <x-heroicon-s-arrow-small-right class="h-5 w-4 ml-auto text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+                                        <x-heroicon-s-arrow-small-right class="h-4 w-4 ml-auto text-blue-500 opacity-0 group-hover:opacity-100 transition-opacity" />
                                     </a>
                                 </div>
 
-                                <!-- Tautan Logout -->
-                                <div class="p-2 border-t border-gray-200">
-                                    <a href="{{ url('/logout') }}" class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md w-full text-left group">
-                                        <x-heroicon-o-x-circle class="h-5 w-5 mr-3 text-red-600 group-hover:scale-110 transition-transform" />
+                                <div class="p-1.5 border-t border-gray-100">
+                                    <a href="{{ url('/logout') }}" class="flex items-center px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 rounded-md w-full text-left group">
+                                        <x-heroicon-o-x-circle class="h-4.5 w-4.5 mr-2 text-red-600 group-hover:scale-105 transition-transform" />
                                         Logout
                                     </a>
                                 </div>
-
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-b-lg">
+
+                <!-- BARIS BAWAH: Breadcrumb Terintegrasi (Lebih Tipis) -->
+                <div class="flex items-center px-4 py-1.5 text-xs font-medium text-gray-600 bg-gray-50/50 border-t border-gray-100 rounded-bl-md">
                     <nav class="flex" aria-label="Breadcrumb">
                         <ol class="inline-flex items-center">
                             @if(isset($breadcrumbs) && count($breadcrumbs) > 0)
                                 @foreach ($breadcrumbs as $title => $url)
                                     <li class="inline-flex items-center">
-                                        {{-- Tambahkan separator jika bukan item pertama --}}
                                         @if(!$loop->first)
-                                            <span class="mx-2 text-gray-400">/</span>
+                                            <span class="mx-1.5 text-gray-400">/</span>
                                         @endif
-
                                         @if($url)
-                                            {{-- Jika ada URL, render sebagai link --}}
-                                            <a href="{{ $url }}" class="text-gray-700 hover:text-blue-600 flex items-center text-sm font-medium">
+                                            <a href="{{ $url }}" class="text-gray-600 hover:text-blue-600 flex items-center text-xs font-medium transition-colors">
                                                 @if($loop->first)
-                                                    <x-heroicon-m-home class="h-5 w-5 mr-3" />
+                                                    <x-heroicon-m-home class="h-4 w-4 mr-1.5 text-gray-400" />
                                                 @endif
                                                 {{ $title }}
                                             </a>
                                         @else
-                                            {{-- Jika URL null (halaman saat ini), render sebagai teks aktif --}}
-                                            <span class="text-gray-700 font-semibold-medium flex items-center text-sm">
+                                            <span class="text-gray-800 font-semibold flex items-center text-xs">
                                                 @if($loop->first)
-                                                    <x-heroicon-m-home class="h-5 w-5 mr-3" />
+                                                    <x-heroicon-m-home class="h-4 w-4 mr-1.5 text-gray-400" />
                                                 @endif
                                                 {{ $title }}
                                             </span>
@@ -340,10 +313,9 @@
                                     </li>
                                 @endforeach
                             @else
-                                {{-- DEFAULT: Tampilkan breadcrumb default jika $breadcrumbs tidak disetel di controller --}}
                                 <li class="inline-flex items-center">
-                                    <span class="text-gray-700 font-semibold-medium flex items-center text-sm">
-                                        <x-heroicon-m-home class="h-5 w-5 mr-3" />
+                                    <span class="text-gray-800 font-semibold flex items-center text-xs">
+                                        <x-heroicon-m-home class="h-4 w-4 mr-1.5 text-gray-400" />
                                         Beranda
                                     </span>
                                 </li>
@@ -353,8 +325,9 @@
                 </div>
             </header>
 
+
             <!-- Page Content -->
-            <main id="mainContent" class="flex-1 pt-2 pl-2 flex flex-col h-screen overflow-hidden">
+            <main id="mainContent" class="flex-1 pt-2 flex flex-col h-screen overflow-hidden">
                 @yield('content')
             </main>
 
@@ -367,5 +340,22 @@
 
 {{-- Tautan JavaScript yang benar --}}
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script>
+    function updateJam() {
+        const waktu = new Date();
+        const jam = String(waktu.getHours()).padStart(2, '0');
+        const menit = String(waktu.getMinutes()).padStart(2, '0');
+        const detik = String(waktu.getSeconds()).padStart(2, '0');
+
+        document.getElementById('jam-dinamis').innerText = `${jam}:${menit}:${detik}`;
+    }
+
+    // Jalankan fungsi setiap detik
+    setInterval(updateJam, 1000);
+
+    // Panggil langsung saat halaman dimuat
+    updateJam();
+</script>
+
 </body>
 </html>

@@ -1,15 +1,11 @@
-{{-- resources/views/dashboard.blade.php (Hanya HTML/Blade, tanpa JS inline) --}}
-@extends('layouts.app-direktur')
-
-{{-- Konten Utama Halaman Dashboard Admin --}}
-
-@section('content')
-@if(session('success'))
+<?php $__env->startSection('content'); ?>
+<?php if(session('success')): ?>
     <div class="mb-4 p-4 bg-green-100 border-l-4 border-green-500 text-green-700 text-xs font-bold rounded shadow-sm flex items-center">
         <i class="fas fa-check-circle mr-2"></i>
-        {{ session('success') }}
+        <?php echo e(session('success')); ?>
+
     </div>
-@endif
+<?php endif; ?>
 
 <div class="rounded-l-md text-white relative group transition-all duration-300">
     <!-- Ornamen Lingkaran 1 (Kanan Atas) -->
@@ -23,7 +19,7 @@
         <!-- Bagian Atas -->
         <div class="flex justify-between items-center mb-2">
             <div class="flex items-center gap-3">
-                <span class="text-3xl font-black text-white">{{ $totalMenunggu }}</span>
+                <span class="text-3xl font-black text-white"><?php echo e($totalMenunggu); ?></span>
                 <div class="flex flex-col">
                     <span class="text-[9px] font-bold uppercase tracking-wider text-amber-100/80 leading-none">Pengajuan Masuk</span>
                     <span class="text-[11px] font-bold text-white uppercase mt-0.5 leading-none">Menunggu Persetujuan</span>
@@ -40,58 +36,58 @@
 
         <!-- List Badge Dinamis (Dibuat Lebih Tipis) -->
         <div class="flex flex-wrap gap-2 pt-2 border-t border-white/10">
-            @if(isset($detailMenunggu))
-                @foreach($detailMenunggu as $detail)
-                    @if($detail['jumlah'] > 0)
+            <?php if(isset($detailMenunggu)): ?>
+                <?php $__currentLoopData = $detailMenunggu; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $detail): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php if($detail['jumlah'] > 0): ?>
                     <div class="bg-white/10 backdrop-blur-sm border border-white/15 px-2.5 py-1 rounded-lg flex items-center gap-1.5 hover:bg-white/20 transition-colors cursor-default">
-                        <span class="text-[9px] font-bold text-amber-50 uppercase leading-none">{{ $detail['label'] }}</span>
+                        <span class="text-[9px] font-bold text-amber-50 uppercase leading-none"><?php echo e($detail['label']); ?></span>
                         <div class="flex items-baseline gap-0.5 leading-none">
-                            <span class="text-xs font-extrabold text-white">{{ $detail['jumlah'] }}</span>
+                            <span class="text-xs font-extrabold text-white"><?php echo e($detail['jumlah']); ?></span>
                             <span class="text-[8px] font-medium text-amber-100">Data</span>
                         </div>
                     </div>
-                    @endif
-                @endforeach
-            @endif
+                    <?php endif; ?>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+            <?php endif; ?>
         </div>
     </div>
 </div>
 
 
-{{-- section data approval pegawai --}}
+
 <div class="bg-gray-100 rounded-tl-md shadow-lg max-w-full mt-2 h-screen flex flex-col overflow-hidden">
     <div class="p-3 shadow-sm flex flex-col h-full">
         <span class="text-sm font-semibold text-blue-700">#Section Data Pengajuan Pegawai</span>
         <hr class="border-b border-gray-200 mt-2">
 
-        <form action="{{ url()->current() }}" method="GET"> {{-- Otomatis mengikuti route direktur yang aktif --}}
+        <form action="<?php echo e(url()->current()); ?>" method="GET"> 
             <div class="bg-teal-50 p-4 rounded-t-lg border border-gray-300 border-b-0 mt-2">
                 <div class="flex flex-wrap items-end gap-3">
                     <!-- Cari Pegawai -->
                     <div class="flex-1 min-w-[200px]">
                         <label class="text-[11px] font-bold text-gray-500 uppercase block mb-1">Cari Pegawai</label>
-                        <input type="text" name="search" value="{{ request('search') }}" placeholder="Nama / Nomor Urut Pegawai..." class="w-full px-3 py-2 border border-gray-300 rounded text-xs outline-none focus:ring-1 focus:ring-blue-500">
+                        <input type="text" name="search" value="<?php echo e(request('search')); ?>" placeholder="Nama / Nomor Urut Pegawai..." class="w-full px-3 py-2 border border-gray-300 rounded text-xs outline-none focus:ring-1 focus:ring-blue-500">
                     </div>
 
                     <!-- Filter Tanggal -->
                     <div class="w-40">
                         <label class="text-[11px] font-bold text-gray-500 uppercase block mb-1">Dari Tanggal</label>
-                        <input type="date" name="start_date" value="{{ request('start_date') }}" class="w-full px-2 py-2 border border-gray-300 rounded text-xs outline-none bg-white">
+                        <input type="date" name="start_date" value="<?php echo e(request('start_date')); ?>" class="w-full px-2 py-2 border border-gray-300 rounded text-xs outline-none bg-white">
                     </div>
                     <div class="w-40">
                         <label class="text-[11px] font-bold text-gray-500 uppercase block mb-1">Sampai Tanggal</label>
-                        <input type="date" name="end_date" value="{{ request('end_date') }}" class="w-full px-2 py-2 border border-gray-300 rounded text-xs outline-none bg-white">
+                        <input type="date" name="end_date" value="<?php echo e(request('end_date')); ?>" class="w-full px-2 py-2 border border-gray-300 rounded text-xs outline-none bg-white">
                     </div>
 
                     <!-- Filter Jenis Pengajuan (Sudah Ditambahkan Pensiun & Kenaikan) -->
-                    <div class="w-48"> {{-- Lebar sedikit ditambah agar teks tidak terpotong --}}
+                    <div class="w-48"> 
                         <label class="text-[11px] font-bold text-gray-500 uppercase block mb-1">Jenis Pengajuan</label>
                         <select name="jenis" class="w-full px-3 py-2 border border-gray-300 rounded text-xs outline-none bg-white">
                             <option value="">Semua Jenis</option>
-                            <option value="Lembur" {{ request('jenis') == 'Lembur' ? 'selected' : '' }}>Lembur</option>
-                            <option value="Cuti" {{ request('jenis') == 'Cuti' ? 'selected' : '' }}>Cuti</option>
-                            <option value="Pensiun" {{ request('jenis') == 'Pensiun' ? 'selected' : '' }}>Pensiun</option>
-                            <option value="Kenaikan" {{ request('jenis') == 'Kenaikan' ? 'selected' : '' }}>Kenaikan Pangkat/Gaji</option>
+                            <option value="Lembur" <?php echo e(request('jenis') == 'Lembur' ? 'selected' : ''); ?>>Lembur</option>
+                            <option value="Cuti" <?php echo e(request('jenis') == 'Cuti' ? 'selected' : ''); ?>>Cuti</option>
+                            <option value="Pensiun" <?php echo e(request('jenis') == 'Pensiun' ? 'selected' : ''); ?>>Pensiun</option>
+                            <option value="Kenaikan" <?php echo e(request('jenis') == 'Kenaikan' ? 'selected' : ''); ?>>Kenaikan Pangkat/Gaji</option>
                         </select>
                     </div>
 
@@ -103,8 +99,8 @@
                             </svg>
                         </button>
 
-                        {{-- Reset Filter --}}
-                        <a href="{{ url()->current() }}" class="bg-gray-200 hover:bg-gray-300 text-gray-700 p-2.5 rounded shadow-sm transition-all active:scale-95" title="Reset">
+                        
+                        <a href="<?php echo e(url()->current()); ?>" class="bg-gray-200 hover:bg-gray-300 text-gray-700 p-2.5 rounded shadow-sm transition-all active:scale-95" title="Reset">
                             <svg xmlns="http://w3.org" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-4 h-4">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0 3.181 3.183a8.25 8.25 0 0 0 13.803-3.7M4.031 9.865a8.25 8.25 0 0 1 13.803-3.7l3.181 3.182m0-4.991v4.99" />
                             </svg>
@@ -129,22 +125,26 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($dataPengajuan as $item)
+                        <?php $__empty_1 = true; $__currentLoopData = $dataPengajuan; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); $__empty_1 = false; ?>
                             <tr class="bg-white hover:bg-blue-50/50 transition-colors duration-150 h-px">
                                 <td class="px-2 py-1.5 border-b border-r border-gray-200 text-center text-[11px] font-medium text-gray-600">
-                                    {{ \Carbon\Carbon::parse($item->tanggal)->format('d-m-Y') }}
+                                    <?php echo e(\Carbon\Carbon::parse($item->tanggal)->format('d-m-Y')); ?>
+
                                 </td>
                                 <td class="px-2 py-1.5 border-b border-r border-gray-200 text-center text-[11px] font-semibold text-gray-700">
-                                    {{ $item->nup }}
+                                    <?php echo e($item->nup); ?>
+
                                 </td>
                                 <td class="px-3 py-1.5 border-b border-r border-gray-200 text-center text-[11px] font-bold text-gray-800 uppercase leading-tight truncate">
-                                    {{ $item->nama }}
+                                    <?php echo e($item->nama); ?>
+
                                 </td>
                                 <td class="px-2 py-1.5 border-b border-r border-gray-200 text-center text-[11px] font-bold text-blue-600">
-                                    {{ $item->jenis }}
+                                    <?php echo e($item->jenis); ?>
+
                                 </td>
                                 <td class="px-2 py-1.5 border-b border-r border-gray-200 text-center">
-                                    @php
+                                    <?php
                                     $statusClasses = [
                                         'diproses' => 'bg-yellow-100 text-yellow-800 border-yellow-200',
                                         'disetujui' => 'bg-green-100 text-green-800 border-green-200',
@@ -152,35 +152,36 @@
                                     ];
                                     $statusLabel = $item->status;
                                     $class = $statusClasses[$statusLabel] ?? 'bg-gray-50 text-gray-500 border-gray-200';
-                                    @endphp
-                                    <span class="{{ $class }} px-2 py-0.5 rounded border text-[9px] font-extrabold uppercase tracking-tighter inline-block min-w-[65px] shadow-sm">
-                                        {{ $statusLabel == 'diproses' ? 'DIPROSES' : ($statusLabel == 'disetujui' ? 'SETUJU' : 'DITOLAK') }}
+                                    ?>
+                                    <span class="<?php echo e($class); ?> px-2 py-0.5 rounded border text-[9px] font-extrabold uppercase tracking-tighter inline-block min-w-[65px] shadow-sm">
+                                        <?php echo e($statusLabel == 'diproses' ? 'DIPROSES' : ($statusLabel == 'disetujui' ? 'SETUJU' : 'DITOLAK')); ?>
+
                                     </span>
                                 </td>
                                 <td class="px-2 py-1.5 border-b border-gray-200 text-center">
                                     <div class="flex flex-row justify-center items-center gap-1.5 whitespace-nowrap">
 
                                         <!-- SESUAIKAN ROUTE DI SINI -->
-                                        <a href="{{ route('direktur.detailApproval', ['sumber' => $item->sumber, 'id_log' => $item->id_transaksi]) }}"
+                                        <a href="<?php echo e(route('direktur.detailApproval', ['sumber' => $item->sumber, 'id_log' => $item->id_transaksi])); ?>"
                                         class="bg-[#001f3f] hover:bg-black text-white py-1 px-2 rounded text-[8px] font-bold tracking-tighter transition shadow-sm">
                                         DETAIL
                                         </a>
 
-                                        @if($item->status == 'disetujui')
+                                        <?php if($item->status == 'disetujui'): ?>
                                             <a href="#" class="bg-green-600 hover:bg-green-700 text-white py-1 px-2 rounded text-[9px] font-bold tracking-tighter transition shadow-sm">
                                                 DOWNLOAD
                                             </a>
-                                        @else
+                                        <?php else: ?>
                                             <button class="bg-[#aab2bd] text-white py-1 px-2 rounded text-[9px] font-bold tracking-tighter opacity-70 cursor-not-allowed">
                                                 DOWNLOAD
                                             </button>
-                                        @endif
+                                        <?php endif; ?>
                                     </div>
                                 </td>
                             </tr>
-                        @empty
+                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); if ($__empty_1): ?>
                             <tr><td colspan="6" class="py-10 border-b border-gray-200 text-center text-[11px] text-gray-400 italic bg-gray-50 border-r">Belum ada data pengajuan.</td></tr>
-                        @endforelse
+                        <?php endif; ?>
 
                         <!-- BARIS SPACER -->
                         <tr class="h-full">
@@ -197,19 +198,19 @@
 
             <!-- 3. NAVIGASI PAGINATION -->
             <div class="px-4 py-2 bg-gray-50 border-t border-gray-300 flex items-center justify-between shrink-0">
-                <div class="text-[11px] text-gray-500 font-medium">Showing <b>{{ $dataPengajuan->firstItem() }}</b> to <b>{{ $dataPengajuan->lastItem() }}</b> of <b>{{ $dataPengajuan->total() }}</b></div>
+                <div class="text-[11px] text-gray-500 font-medium">Showing <b><?php echo e($dataPengajuan->firstItem()); ?></b> to <b><?php echo e($dataPengajuan->lastItem()); ?></b> of <b><?php echo e($dataPengajuan->total()); ?></b></div>
                 <div class="flex items-center shadow-sm rounded-md border border-gray-300 overflow-hidden bg-white">
-                    @if ($dataPengajuan->onFirstPage())
+                    <?php if($dataPengajuan->onFirstPage()): ?>
                         <span class="px-2 py-1 bg-gray-50 text-gray-400 text-[11px] border-r border-gray-300 cursor-not-allowed"> &lt; </span>
-                    @else
-                        <a href="{{ $dataPengajuan->previousPageUrl() . '&' . http_build_query(request()->except('page')) }}" class="px-2 py-1 bg-white hover:bg-gray-100 text-gray-600 text-[10px] border-r border-gray-300 transition"> &lt; </a>
-                    @endif
-                    <span class="px-3 py-1 bg-blue-50 text-blue-700 text-[11px] font-bold border-r border-gray-300">{{ $dataPengajuan->currentPage() }}</span>
-                    @if ($dataPengajuan->hasMorePages())
-                        <a href="{{ $dataPengajuan->nextPageUrl() . '&' . http_build_query(request()->except('page')) }}" class="px-2 py-1 bg-white hover:bg-gray-100 text-gray-600 text-[10px] transition"> &gt; </a>
-                    @else
+                    <?php else: ?>
+                        <a href="<?php echo e($dataPengajuan->previousPageUrl() . '&' . http_build_query(request()->except('page'))); ?>" class="px-2 py-1 bg-white hover:bg-gray-100 text-gray-600 text-[10px] border-r border-gray-300 transition"> &lt; </a>
+                    <?php endif; ?>
+                    <span class="px-3 py-1 bg-blue-50 text-blue-700 text-[11px] font-bold border-r border-gray-300"><?php echo e($dataPengajuan->currentPage()); ?></span>
+                    <?php if($dataPengajuan->hasMorePages()): ?>
+                        <a href="<?php echo e($dataPengajuan->nextPageUrl() . '&' . http_build_query(request()->except('page'))); ?>" class="px-2 py-1 bg-white hover:bg-gray-100 text-gray-600 text-[10px] transition"> &gt; </a>
+                    <?php else: ?>
                         <span class="px-2 py-1 bg-gray-50 text-gray-400 text-[11px] cursor-not-allowed"> &gt; </span>
-                    @endif
+                    <?php endif; ?>
                 </div>
             </div>
         </div>
@@ -218,11 +219,30 @@
 
 <!-- TOMBOL BACK TO TOP (Ditempatkan di sini, akan melayang di atas mainContent) -->
 <button id="backToTop" style="display: none;" class="fixed bottom-10 right-10 bg-blue-300 text-white p-3 rounded-full shadow-2xl hover:bg-blue-600 transition-all duration-300 z-50 flex items-center justify-center" title="Kembali ke atas">
-    <x-heroicon-o-chevron-up id="arrowIcon" class="h-6 w-6 " />
+    <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
+<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('heroicon-o-chevron-up'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['id' => 'arrowIcon','class' => 'h-6 w-6 ']); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
 </button>
 
-{{-- Skrip JavaScript yang menargetkan #mainContent --}}
-@push('scripts')
+
+<?php $__env->startPush('scripts'); ?>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const backToTopButton = document.getElementById('backToTop');
@@ -255,8 +275,10 @@
         toggleBackToTop();
     });
 </script>
-@endpush
+<?php $__env->stopPush(); ?>
 
-@endsection
+<?php $__env->stopSection(); ?>
 
 
+
+<?php echo $__env->make('layouts.app-direktur', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?><?php /**PATH C:\xampp\htdocs\simpegbkb\resources\views/direktur/manajemenpengajuan.blade.php ENDPATH**/ ?>
