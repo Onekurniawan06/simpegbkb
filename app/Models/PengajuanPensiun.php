@@ -16,7 +16,7 @@ class PengajuanPensiun extends Model
     protected $table = 'pengajuan_pensiun';
 
     // Primary key untuk tabel ini
-    protected $primaryKey = 'id_pengajuan';
+    protected $primaryKey = 'id_pensiun';
 
     // Nonaktifkan timestamps karena skema tabel di gambar tidak memiliki 'created_at' dan 'updated_at'
     public $timestamps = true;
@@ -51,16 +51,16 @@ class PengajuanPensiun extends Model
         $this->attributes['tmt_pensiun'] = Carbon::createFromFormat('d-m-Y', $value)->format('Y-m-d');
     }
 
-    public function logPersetujuanPensiun(): HasMany // Bisa juga tanpa ': HasMany'
+    public function logPersetujuanPensiun(): HasMany
     {
-        // Sesuaikan 'id_pengajuan' dengan nama foreign key di tabel log_persetujuan_pensiun
-        return $this->hasMany(LogPersetujuanPensiun::class, 'id_pengajuan', 'id_pengajuan');
+        // 🔄 Keduanya diganti menjadi id_pensiun
+        return $this->hasMany(LogPersetujuanPensiun::class, 'id_pensiun', 'id_pensiun');
     }
 
     public function files(): HasMany
     {
-        // Spasi ekstra sudah dihapus dari sini:
-        return $this->hasMany(FilePersyaratanPensiun::class, 'pengajuan_pensiun_id', 'id_pengajuan');
+        // 🔄 Keduanya diganti menjadi id_pensiun
+        return $this->hasMany(FilePersyaratanPensiun::class, 'id_pensiun', 'id_pensiun');
     }
 
     public function pekerjaan(): BelongsTo
@@ -80,19 +80,15 @@ class PengajuanPensiun extends Model
 
     public static function isPengajuanExistInDivisi($idDivisi, $ignoreId = null)
     {
-        // Mencari record pengajuan pensiun yang terkait dengan id_divisi yang diberikan
         $query = self::whereHas('pegawai.pekerjaan', function ($q) use ($idDivisi) {
                 $q->where('id_divisi', $idDivisi);
             });
-            // Semua logika tanggal/jam lembur telah dihapus di sini.
 
-        // Abaikan ID pengajuan saat ini jika sedang melakukan update
         if ($ignoreId) {
-            // Menggunakan 'id_pengajuan' sesuai kolom di gambar Anda
-            $query->where('id_pengajuan', '!=', $ignoreId);
+            // 🔄 Diubah menjadi id_pensiun
+            $query->where('id_pensiun', '!=', $ignoreId);
         }
 
-        // Mengembalikan TRUE jika ditemukan setidaknya satu record dalam divisi tersebut
         return $query->exists();
     }
 }

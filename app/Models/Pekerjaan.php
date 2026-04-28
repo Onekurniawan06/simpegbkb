@@ -26,17 +26,9 @@ class Pekerjaan extends Model
         'no_rekening',
     ];
 
-    /**
-     * Jika Anda ingin mencegah mass assignment pada kolom tertentu, gunakan $guarded.
-     * protected $guarded = []; // Mengizinkan semua kolom diisi (hati-hati)
-     */
-
     public function pegawai(): BelongsTo
     {
-        // Parameter pertama: Model tujuan relasi (Pegawai::class)
-        // Parameter kedua: Kunci asing (foreign key) di tabel 'pekerjaan' ('nomor_urut_pegawai')
-        // Parameter ketiga: Kunci lokal (local key) di tabel 'pegawai' (asumsi juga 'nomor_urut_pegawai')
-        return $this->belongsTo(Pegawai::class, 'nomor_urut_pegawai');
+        return $this->belongsTo(Pegawai::class, 'nomor_urut_pegawai', 'nomor_urut_pegawai');
     }
 
     public function divisi()

@@ -96,9 +96,9 @@
 
         <?php else: ?>
             
-            <div class="flex-grow overflow-y-auto custom-scroll-container px-2 space-y-3 pb-4">
+            <div class="flex-grow overflow-y-auto custom-scroll-container mt-2 px-2 space-y-3 pb-4">
                 <?php $__currentLoopData = $submissions; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $submission): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                    <div class="group relative flex items-center bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-300">
+                    <div class="group relative flex items-center bg-white p-4 rounded-md border border-gray-100 shadow-sm hover:shadow-md hover:border-blue-200 transition-all duration-300">
 
                         
                         <div class="absolute left-0 top-4 bottom-4 w-1 rounded-r-full
@@ -199,7 +199,8 @@
                         <div class="flex items-center gap-2 pl-6 shrink-0">
                             <?php if(isset($submission['blade_route'])): ?>
                                 
-                                <a href="<?php echo e(route($submission['blade_route'], $submission['nomor_urut_pegawai'] ?? $submission['id'] ?? '')); ?>"
+                                
+                                <a href="<?php echo e(route($submission['blade_route'], ($submission['type'] === 'Cuti') ? ($submission['id'] ?? $submission['nomor_urut_pegawai']) : ($submission['nomor_urut_pegawai'] ?? $submission['id']))); ?>"
                                 class="px-5 py-1.5 bg-sky-100 hover:bg-sky-200 text-sky-700 text-[10px] font-bold uppercase tracking-widest rounded-full transition-all border border-sky-200">
                                 Detail
                                 </a>

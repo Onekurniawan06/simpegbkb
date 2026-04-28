@@ -13,45 +13,45 @@
     <!-- Tab Content Container -->
         <!-- Content for 'Data Pengajuan' (Visible by default) -->
 
-            <!-- Card Statistik: Pengajuan Menunggu Persetujuan -->
-<div class="bg-amber-600 rounded-l-md p-3 text-white shadow-xl relative overflow-hidden group hover:shadow-2xl transition-all duration-300">
-    <!-- Ornamen Background (Lingkaran Dekoratif) -->
-    <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full group-hover:scale-110 transition-transform duration-500"></div>
-    <div class="absolute -right-5 -bottom-5 w-24 h-24 bg-white/5 rounded-full group-hover:scale-125 transition-transform duration-700"></div>
+    <!-- Card Statistik: Pengajuan Menunggu Persetujuan -->
+    <div class="bg-amber-600 rounded-l-md p-3 text-white shadow-xl relative overflow-hidden group hover:shadow-2xl transition-all duration-300">
+        <!-- Ornamen Background (Lingkaran Dekoratif) -->
+        <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full group-hover:scale-110 transition-transform duration-500"></div>
+        <div class="absolute -right-5 -bottom-5 w-24 h-24 bg-white/5 rounded-full group-hover:scale-125 transition-transform duration-700"></div>
 
-    <div class="relative z-10">
-        <div class="flex justify-between items-start">
-            <div>
-                <h2 class="text-sm font-bold uppercase tracking-[0.15em] text-indigo-100 opacity-90 mb-1">Pengajuan Menunggu Persetujuan</h2>
-                <div class="flex items-baseline gap-2 mb-5">
-                    <span class="text-4xl font-black"><?php echo e($totalMenunggu); ?></span>
-                    <span class="text-xs font-medium text-indigo-200 uppercase tracking-widest">Data Pengajuan</span>
-                </div>
-            </div>
-            
-            <!-- Icon Kanan yang sudah dirapikan -->
-            <div class="bg-white/20 p-3 rounded-xl backdrop-blur-md border border-white/30 shadow-inner">
-                <svg xmlns="http://www.w3.org" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-            </div>
-        </div>
-
-        <!-- List Badge Dinamis -->
-        <div class="flex flex-wrap gap-3">
-            <?php $__currentLoopData = $detailMenunggu; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $detail): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                <?php if($detail['jumlah'] > 0): ?>
-                <div class="bg-white/10 backdrop-blur-sm border border-white/20 px-4 py-2 rounded-xl flex items-center gap-3 hover:bg-white/20 transition-colors cursor-default">
-                    <div class="flex flex-col">
-                        <span class="text-[9px] font-black text-indigo-100 uppercase tracking-tighter leading-none mb-1"><?php echo e($detail['label']); ?></span>
-                        <span class="text-lg font-bold leading-none"><?php echo e($detail['jumlah']); ?></span>
+        <div class="relative z-10">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h2 class="text-sm font-bold uppercase tracking-[0.15em] text-indigo-100 opacity-90 mb-1">Pengajuan Menunggu Persetujuan</h2>
+                    <div class="flex items-baseline gap-2 mb-5">
+                        <span class="text-4xl font-black"><?php echo e($totalMenunggu); ?></span>
+                        <span class="text-xs font-medium text-indigo-200 uppercase tracking-widest">Data Pengajuan</span>
                     </div>
                 </div>
-                <?php endif; ?>
-            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+
+                <!-- Icon Kanan yang sudah dirapikan -->
+                <div class="bg-white/20 p-3 rounded-xl backdrop-blur-md border border-white/30 shadow-inner">
+                    <svg xmlns="http://www.w3.org" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                </div>
+            </div>
+
+            <!-- List Badge Dinamis -->
+            <div class="flex flex-wrap gap-3">
+                <?php $__currentLoopData = $detailMenunggu; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $detail): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <?php if($detail['jumlah'] > 0): ?>
+                    <div class="bg-white/10 backdrop-blur-sm border border-white/20 px-4 py-2 rounded-xl flex items-center gap-3 hover:bg-white/20 transition-colors cursor-default">
+                        <div class="flex flex-col">
+                            <span class="text-[9px] font-black text-indigo-100 uppercase tracking-tighter leading-none mb-1"><?php echo e($detail['label']); ?></span>
+                            <span class="text-lg font-bold leading-none"><?php echo e($detail['jumlah']); ?></span>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+            </div>
         </div>
     </div>
-</div>
 
     <!-- TOMBOL BACK TO TOP (Ditempatkan di sini, akan melayang di atas mainContent) -->
     

@@ -168,12 +168,12 @@
                     <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Jenis Pengajuan</label>
                     <p class="text-sm text-indigo-600 font-medium italic">
                         <?php if($sumber == 'cuti'): ?>
-                            <?php echo e($data->Jenis_cuti); ?>
+                            
+                            <?php echo e($data->jenis_cuti_nama ?? $data->jenis_cuti); ?>
 
                         <?php elseif($sumber == 'lembur'): ?>
                             Lembur Kerja
                         <?php else: ?>
-                            
                             <?php echo e($data->jenis_pengajuan ?? ucfirst($sumber)); ?>
 
                         <?php endif; ?>
@@ -191,7 +191,7 @@
                     <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pl-4"> <!-- Tambah padding left agar tidak menempel garis -->
 
                         <!-- Blok Tanggal -->
-                        <div class="flex items-center space-x-6">
+                        <div class="flex items-center space-x-4">
                             <!-- Mulai -->
                             <div class="flex items-center gap-4">
                                 <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
@@ -236,57 +236,210 @@
                     <hr class="my-3 border-slate-100 ml-3">
 
                     <!-- Blok Alasan -->
-                    <div class="ml-4 bg-slate-50/50 p-5 rounded-2xl border border-slate-100">
+                    <div class="ml-4 bg-slate-50/50 p-3 rounded-2xl border border-slate-100">
                         <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Alasan Pengajuan</label>
                         <p class="text-sm text-slate-600 leading-relaxed italic">
                             "<?php echo e($data->keterangan ?? '-'); ?>"
                         </p>
                     </div>
                 <?php else: ?>
-                    <!-- Blok Deskripsi Lembur -->
-                    <div class="ml-4 bg-blue-50/50 p-5 rounded-2xl border border-blue-100">
-                        <label class="block text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-3">Deskripsi Pengajuan Lembur</label>
-                        <p class="text-sm text-slate-600 leading-relaxed italic">
-                            "<?php echo e($data->uraian_tugas ?? 'Tidak ada deskripsi'); ?>"
-                        </p>
+                    <!-- Blok Deskripsi & Detail Waktu Lembur -->
+                    <div class="ml-4 bg-blue-50/50 p-6 rounded-2xl border border-blue-100 space-y-5">
+                        <!-- 1. Uraian Tugas -->
+                        <div>
+                            <label class="block text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-2">Deskripsi Pengajuan Lembur</label>
+                            <p class="text-sm text-slate-700 leading-relaxed italic">
+                                "<?php echo e($data->uraian_tugas ?? 'Tidak ada deskripsi'); ?>"
+                            </p>
+                        </div>
+
+                        <!-- 2. Grid Detail Waktu (Sesuai Gambar Lu) -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-blue-100/50">
+                            <!-- Tanggal -->
+                            <div class="flex flex-col">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Tanggal Lembur</span>
+                                <span class="text-sm font-semibold text-slate-700 mt-1">
+                                    <?php echo e(\Carbon\Carbon::parse($data->tanggal_lembur)->translatedFormat('d F Y') ?? '-'); ?>
+
+                                </span>
+                            </div>
+
+                            <!-- Jam Mulai -->
+                            <div class="flex flex-col">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Jam Mulai</span>
+                                <span class="text-sm font-semibold text-emerald-600 mt-1">
+                                    <?php echo e($data->jam_mulai ? date('H:i', strtotime($data->jam_mulai)) : '-'); ?> WIB
+                                </span>
+                            </div>
+
+                            <!-- Jam Selesai -->
+                            <div class="flex flex-col">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Jam Selesai</span>
+                                <span class="text-sm font-semibold text-rose-600 mt-1">
+                                    <?php echo e($data->jam_selesai ? date('H:i', strtotime($data->jam_selesai)) : '-'); ?> WIB
+                                </span>
+                            </div>
+
+                            <!-- Total Jam -->
+                            <div class="flex flex-col bg-blue-600/5 p-2 rounded-xl border border-blue-200/50">
+                                <span class="text-[9px] font-bold text-blue-500 uppercase tracking-wider">Total Lembur</span>
+                                <span class="text-sm font-bold text-blue-700 mt-1">
+                                    <?php echo e($data->total_jam_lembur ?? '0 jam 0 menit'); ?>
+
+                                </span>
+                            </div>
+                        </div>
                     </div>
                 <?php endif; ?>
             </div>
         </div>
 
-        <!-- Kolom Kanan: Action (Light Slate Theme) -->
-        <div class="lg:col-span-1 flex flex-col bg-slate-50 p-4">
-            <h3 class="text-xs font-bold text-indigo-600 uppercase tracking-[0.2em] mb-3">
-                Keputusan <?php echo e(str_replace('Verifikasi ', '', $tahapTeks)); ?>
+        <!-- KOLOM KANAN: Action (Scroll Mandiri) -->
+        <div class="lg:col-span-1 flex flex-col bg-slate-50 overflow-hidden border-l border-slate-100 h-full">
 
-            </h3>
+            <!-- 1. TITLE KEPUTUSAN (Wajib Ada di Sini agar Sticky/Tetap Muncul) -->
+            <div class="p-5 bg-white border-b border-slate-200 flex-none shadow-sm">
+                <h3 class="text-[12px] font-bold text-indigo-600 uppercase tracking-[0.2em]">
+                    Keputusan <?php echo e(str_replace('Verifikasi ', '', $tahapTeks)); ?>
 
-            <form id="formApproval" action="<?php echo e(route('manager.updateStatus', [$sumber, $id_log])); ?>" method="POST" class="flex flex-col h-full">
-                <?php echo csrf_field(); ?>
-                <?php echo method_field('PUT'); ?>
+                </h3>
+            </div>
 
-                <textarea name="catatan" rows="4"
-                    class="w-full p-4 text-sm bg-white border border-slate-300 rounded-lg text-slate-700 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 outline-none transition resize-none placeholder-slate-400 shadow-lg"
-                    placeholder="Wajib memberikan alasan atau catatan..."></textarea>
+            <!-- 2. AREA FORM (Scroll Mandiri) -->
+            <!-- pb-10 saja biar margin bawah nggak terlalu jauh -->
+            <div class="flex-1 overflow-y-auto custom-scroll-container p-3 pb-5">
+                <form id="formApproval" action="<?php echo e(route('manager.updateStatus', [$sumber, $id_log])); ?>" method="POST" class="flex flex-col">
+                    <?php echo csrf_field(); ?>
+                    <?php echo method_field('PUT'); ?>
 
-                <input type="hidden" name="status" id="status_input">
+                    
+                    <?php if($sumber === 'lembur'): ?>
+                        <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm space-y-3">
+                            <div class="flex justify-between items-center">
+                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest">Verifikasi Waktu Lembur</label>
+                                <!-- Button Ubah / Batal -->
+                                <button type="button" id="btnEditTime" onclick="toggleEditTime()"
+                                    class="text-[11px] font-extrabold text-indigo-600 hover:text-indigo-800 uppercase tracking-widest bg-indigo-50 px-3 py-1.5 rounded-lg transition-all active:scale-95">
+                                    Ubah
+                                </button>
+                            </div>
 
-                <div class="mt-3 space-y-3">
-                    <button type="button" onclick="handleApproval('disetujui')" <?php if($data->status !== 'diproses'): echo 'disabled'; endif; ?>
-                        class="w-full py-3 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 disabled:text-slate-400 text-white text-sm font-bold rounded-lg transition-all shadow-md active:scale-[0.98]">
-                        Disetujui
-                    </button>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="space-y-2">
+                                    <span class="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Jam Mulai</span>
+                                    <input type="time" name="jam_mulai" id="input_jam_mulai"
+                                        value="<?php echo e(isset($data->jam_mulai) ? date('H:i', strtotime($data->jam_mulai)) : '00:00'); ?>"
+                                        disabled
+                                        class="w-full p-3 text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none bg-slate-50 font-medium text-slate-500 disabled:opacity-70 transition-all">
+                                </div>
+                                <div class="space-y-2">
+                                    <span class="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Jam Selesai</span>
+                                    <input type="time" name="jam_selesai" id="input_jam_selesai"
+                                        value="<?php echo e(isset($data->jam_selesai) ? date('H:i', strtotime($data->jam_selesai)) : '00:00'); ?>"
+                                        disabled
+                                        class="w-full p-3 text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none bg-slate-50 font-medium text-slate-500 disabled:opacity-70 transition-all">
+                                </div>
+                            </div>
 
-                    <button type="button" onclick="handleApproval('ditolak')" <?php if($data->status !== 'diproses'): echo 'disabled'; endif; ?>
-                        class="w-full py-3 bg-white border border-rose-300 text-rose-600 hover:bg-rose-50 disabled:border-slate-200 disabled:text-slate-300 text-sm font-bold rounded-lg transition-all shadow-sm">
-                        Ditolak
-                    </button>
-                </div>
-            </form>
+                            <div class="pt-2">
+                                <span class="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Total Jam Lembur</span>
+                                <!-- PENTING: Gunakan readonly agar tetap terkirim ke server (tidak disabled) -->
+                                <input type="text" name="total_jam_lembur" id="input_total_jam"
+                                    value="<?php echo e($data->total_jam_lembur ?? '0 jam 0 menit'); ?>" readonly
+                                    class="w-full mt-2 p-4 text-sm bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-400 outline-none transition-all">
+                            </div>
+                        </div>
+
+                    
+                    <?php elseif($sumber === 'cuti'): ?>
+                        <div class="space-y-1">
+                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest">Catatan Penyetuju Cuti</label>
+                            <textarea name="catatan" rows="5"
+                                class="w-full p-5 text-sm bg-white border border-slate-200 rounded-3xl text-slate-700 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none transition resize-none placeholder-slate-400 shadow-sm"
+                                placeholder="Wajib memberikan alasan atau catatan..."
+                                
+                                <?php if($data->status !== 'diproses'): echo 'disabled'; endif; ?>><?php echo e($data->komentar ?? ''); ?></textarea>
+                        </div>
+                    <?php endif; ?>
+
+                    <input type="hidden" name="status" id="status_input">
+
+                    <!-- 3. ACTION BUTTONS -->
+                    <div class="grid grid-cols-1 gap-3 pt-4">
+                        <button type="button" onclick="handleApproval('disetujui')" <?php if($data->status !== 'diproses'): echo 'disabled'; endif; ?>
+                            class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 disabled:text-slate-400 text-white text-xs font-semibold rounded-xl transition-all shadow-lg shadow-indigo-200 uppercase">
+                            Setujui Pengajuan
+                        </button>
+
+                        <button type="button" onclick="handleApproval('ditolak')" <?php if($data->status !== 'diproses'): echo 'disabled'; endif; ?>
+                            class="w-full py-4 bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 disabled:border-slate-100 disabled:text-slate-300 text-xs font-semibold rounded-xl transition-all shadow-sm uppercase">
+                            Tolak Pengajuan
+                        </button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
 
+<script>
+    const jamMulai = document.getElementById('input_jam_mulai');
+    const jamSelesai = document.getElementById('input_jam_selesai');
+    const totalJam = document.getElementById('input_total_jam');
+    const btnEdit = document.getElementById('btnEditTime');
+
+    // 1. Logika Toggle Edit
+    function toggleEditTime() {
+        const isLocked = jamMulai.disabled;
+
+        if (isLocked) {
+            // UNLOCK (Buka Gembok)
+            jamMulai.disabled = false;
+            jamSelesai.disabled = false;
+            // Ubah gaya visual saat aktif
+            [jamMulai, jamSelesai].forEach(el => {
+                el.classList.remove('bg-slate-50', 'text-slate-500');
+                el.classList.add('bg-white', 'text-slate-700');
+            });
+            totalJam.classList.add('text-indigo-600', 'bg-indigo-50/50', 'border-indigo-100');
+            btnEdit.innerText = 'Batal';
+            btnEdit.classList.replace('bg-indigo-50', 'bg-rose-50');
+            btnEdit.classList.replace('text-indigo-600', 'text-rose-600');
+        } else {
+            // LOCK (Kunci Lagi & Reset)
+            jamMulai.disabled = true;
+            jamSelesai.disabled = true;
+            [jamMulai, jamSelesai].forEach(el => {
+                el.classList.add('bg-slate-50', 'text-slate-500');
+                el.classList.remove('bg-white', 'text-slate-700');
+            });
+            totalJam.classList.remove('text-indigo-600', 'bg-indigo-50/50', 'border-indigo-100');
+            btnEdit.innerText = 'Ubah';
+            btnEdit.classList.replace('bg-rose-50', 'bg-indigo-50');
+            btnEdit.classList.replace('text-rose-600', 'text-indigo-600');
+        }
+    }
+
+    // 2. Logika Hitung (Sama seperti sebelumnya)
+    function calculateLembur() {
+        if (!jamMulai.value || !jamSelesai.value) return;
+        const [hStart, mStart] = jamMulai.value.split(':').map(Number);
+        const [hEnd, mEnd] = jamSelesai.value.split(':').map(Number);
+        let totalMinutesStart = (hStart * 60) + mStart;
+        let totalMinutesEnd = (hEnd * 60) + mEnd;
+        if (totalMinutesEnd < totalMinutesStart) totalMinutesEnd += 24 * 60;
+        const diffMinutes = totalMinutesEnd - totalMinutesStart;
+        const hours = Math.floor(diffMinutes / 60);
+        const minutes = diffMinutes % 60;
+        totalJam.value = hours + " jam " + minutes + " menit";
+    }
+
+    if(jamMulai && jamSelesai) {
+        jamMulai.addEventListener('input', calculateLembur);
+        jamSelesai.addEventListener('input', calculateLembur);
+        calculateLembur();
+    }
+</script>
 
 <?php $__env->stopSection(); ?>
 

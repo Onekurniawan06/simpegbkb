@@ -79,7 +79,7 @@
 
 <!-- Date Section -->
 <div class="{{ (isset($is_pdf) && $is_pdf) ? 'date-section' : 'text-right text-sm mb-3' }}" style="{{ (isset($is_pdf) && $is_pdf) ? 'text-align: right;' : '' }}">
-    <p>Bogor, {{\Carbon\Carbon::parse($pangkatgajitunjangan->created_at)->format('d F Y') }}</p>
+    <p>Bogor, {{ (isset($pangkatgajitunjangan) && $pangkatgajitunjangan->created_at) ? \Carbon\Carbon::parse($pangkatgajitunjangan->created_at)->locale('id')->translatedFormat('d F Y') : \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y') }}</p>
 </div>
 
 <!-- Salutation -->
@@ -88,87 +88,87 @@
 {{-- BAGIAN KONTEN SURAT --}}
 @php
     $formatDate = function($date) {
-        return $date ? \Carbon\Carbon::parse($date)->format('d F Y') : '[Tanggal Data Kosong]';
+        if (!$date) return '';
+        // Set locale ke Indonesia agar nama bulan dalam bahasa Indonesia
+        \Carbon\Carbon::setLocale('id');
+        return \Carbon\Carbon::parse($date)->translatedFormat('d F Y');
     };
 @endphp
 
-<div class="{{ (isset($is_pdf) && $is_pdf) ? 'text-sm mb-4' : 'text-sm mb-4' }}">
+<div class="text-sm mb-4">
     <p class="mb-2">Saya yang bertanda tangan di bawah ini:</p>
 
-    {{-- Menggunakan tabel HTML untuk meratakan data pegawai --}}
     <table style="width: 100%; border-collapse: collapse; margin-left: 15px;">
         <tr>
             <td style="width: 25%; padding: 2px 0;">NUP Pegawai</td>
             <td style="width: 1%; padding: 2px 0;">:</td>
-            <td style="width: 74%; padding: 2px 0;"><strong>{{ $pangkatgajitunjangan->pegawai->nomor_urut_pegawai ?? '[Nomor Induk Pegawai Anda]' }}</strong></td>
+            <td style="width: 74%; padding: 2px 0;"><strong id="review_nup">{{ $pangkatgajitunjangan->pegawai->nomor_urut_pegawai ?? '' }}</strong></td>
         </tr>
         <tr>
             <td style="padding: 2px 0;">Nama Pegawai</td>
             <td style="padding: 2px 0;">:</td>
-            <td style="padding: 2px 0;"><strong>{{ $pangkatgajitunjangan->pegawai->nama ?? '[Nama Lengkap Anda]' }}</strong></td>
+            <td style="padding: 2px 0;"><strong id="review_nama_pegawai">{{ $pangkatgajitunjangan->pegawai->nama ?? '' }}</strong></td>
         </tr>
         <tr>
             <td style="padding: 2px 0;">Divisi</td>
             <td style="padding: 2px 0;">:</td>
-            <td style="padding: 2px 0;"><strong>{{ $pangkatgajitunjangan->pegawai->pekerjaan->divisi->nama_divisi ?? '[Divisi Pegawai]' }}</strong></td>
+            <td style="padding: 2px 0;"><strong id="review_unit_kerja">{{ $pangkatgajitunjangan->pegawai->pekerjaan->divisi->nama_divisi ?? '' }}</strong></td>
         </tr>
         <tr>
             <td style="padding: 2px 0;">Jabatan</td>
             <td style="padding: 2px 0;">:</td>
-            <td style="padding: 2px 0;"><strong>{{ $pangkatgajitunjangan->pegawai->pekerjaan->jabatan ?? '[Jabatan Anda]' }}</strong></td>
+            <td style="padding: 2px 0;"><strong id="review_jabatan">{{ $pangkatgajitunjangan->pegawai->pekerjaan->jabatan ?? '' }}</strong></td>
         </tr>
         <tr>
             <td style="padding: 2px 0;">Pangkat/Grade</td>
             <td style="padding: 2px 0;">:</td>
-            <td style="padding: 2px 0;"><strong>{{ $pangkatgajitunjangan->pegawai->pekerjaan->pangkat ?? '[Pangkat Anda]' }} / {{ $pangkatgajitunjangan->pegawai->pekerjaan->grade ?? '[Grade Anda]' }}</strong></td>
+            <td style="padding: 2px 0;">
+                <strong id="review_pangkat">{{ $pangkatgajitunjangan->pegawai->pekerjaan->pangkat ?? '' }}</strong> /
+                <strong id="review_grade">{{ $pangkatgajitunjangan->pegawai->pekerjaan->grade ?? '' }}</strong>
+            </td>
         </tr>
         <tr>
             <td style="padding: 2px 0;">Status Pegawai</td>
             <td style="padding: 2px 0;">:</td>
-            <td style="padding: 2px 0;"><strong>{{ $pangkatgajitunjangan->pegawai->pekerjaan->status_pegawai ?? '[Pangkat Anda]' }}</strong></td>
+            <td style="padding: 2px 0;"><strong id="review_status_pegawai">{{ $pangkatgajitunjangan->pegawai->pekerjaan->status_pegawai ?? '' }}</strong></td>
         </tr>
         <tr>
             <td style="padding: 2px 0;">TMT Pegawai</td>
             <td style="padding: 2px 0;">:</td>
-            <td style="padding: 2px 0;"><strong>{{ $formatDate($pangkatgajitunjangan->tmt_pegawai) }}</strong></td>
+            {{-- FIX: Proteksi agar tidak meledak di Baris 133 --}}
+            <td style="padding: 2px 0;"><strong id="review_tmt_pegawai">{{ isset($pangkatgajitunjangan) ? $formatDate($pangkatgajitunjangan->tmt_pegawai) : '' }}</strong></td>
         </tr>
         <tr>
             <td style="padding: 2px 0;">Lama Bergabung</td>
             <td style="padding: 2px 0;">:</td>
-            <td style="padding: 2px 0;"><strong>{{ $pangkatgajitunjangan->masa_kerja ?? '[Lama Bergabung Pegawai]' }}</strong></td>
+            <td style="padding: 2px 0;"><strong id="review_masa_kerja">{{ $pangkatgajitunjangan->masa_kerja ?? '' }}</strong></td>
         </tr>
     </table>
-    {{-- Akhir dari tabel detail pegawai --}}
 
-    {{-- Paragraf Isi Surat --}}
-    <p class="mt-4">
-        Mengajukan permohonan Kenaikan sebagai berikut,
-    </p>
+    <p class="mt-4">Mengajukan permohonan Kenaikan sebagai berikut,</p>
 
-    {{-- Detail Pengajuan Kenaikan --}}
     <table style="width: 100%; border-collapse: collapse; margin-left: 15px;">
         <tr>
             <td style="width: 25%; padding: 2px 0;">Jenis Pengajuan Kenaikan</td>
             <td style="width: 1%; padding: 2px 0;">:</td>
-            <td style="width: 74%; padding: 2px 0;"><strong>{{ $pangkatgajitunjangan->jenis_pengajuan ?? '[Jenis Pengajuan Kenaikan yang diambil]' }}</strong></td>
+            <td style="width: 74%; padding: 2px 0;"><strong id="review_jenis_pengajuan">{{ $pangkatgajitunjangan->jenis_pengajuan ?? '' }}</strong></td>
         </tr>
         <tr>
             <td style="padding: 2px 0;">Pangkat Tujuan</td>
             <td style="padding: 2px 0;">:</td>
-            <td style="padding: 2px 0;"><strong>{{ $pangkatgajitunjangan->pangkat_tujuan ?? '[Pangkat Tujuan]' }}</strong></td>
+            <td style="padding: 2px 0;"><strong id="review_pangkat_tujuan">{{ $pangkatgajitunjangan->pangkat_tujuan ?? '' }}</strong></td>
         </tr>
         <tr>
             <td style="padding: 2px 0;">Grade Tujuan</td>
             <td style="padding: 2px 0;">:</td>
-            <td style="padding: 2px 0;"><strong>{{ $pangkatgajitunjangan->grade_tujuan ?? '[Grade Tujuan]' }}</strong></td>
+            <td style="padding: 2px 0;"><strong id="review_grade_tujuan">{{ $pangkatgajitunjangan->grade_tujuan ?? '' }}</strong></td>
         </tr>
     </table>
-    {{-- Akhir Detail Pengajuan Kenaikan --}}
 
     <p class="mt-4 mb-2">Sebagai bahan pertimbangan atas permohonan tersebut saya lampirkan dokumen persyaratan administratif sebagai berikut:</p>
 </div>
 
-{{-- Tabel Lampiran Dokumen DINAMIS --}}
+{{-- Tabel Lampiran Dokumen --}}
 <div class="mb-4">
     <table style="width: 100%; border-collapse: collapse;" class="text-sm">
         <thead>
@@ -179,18 +179,20 @@
             </tr>
         </thead>
         <tbody>
-            {{-- Loop melalui file yang diunggah untuk pengajuan pangkatgajitunjangan ini --}}
-            @forelse($pangkatgajitunjangan->files as $index => $file)
+            {{-- FIX: Pakai @if(isset) agar tidak error forelse --}}
+            @if(isset($pangkatgajitunjangan) && isset($pangkatgajitunjangan->files) && $pangkatgajitunjangan->files->count() > 0)
+                @foreach($pangkatgajitunjangan->files as $index => $file)
+                    <tr>
+                        <td style="border: 1px solid black; padding: 8px; text-align: center;">{{ $index + 1 }}</td>
+                        <td style="border: 1px solid black; padding: 8px; text-align: left;">{{ $file->tipe_dokumen }}</td>
+                        <td style="border: 1px solid black; padding: 8px;">{{ $file->nama_file_asli }}</td>
+                    </tr>
+                @endforeach
+            @else
                 <tr>
-                    <td style="border: 1px solid black; padding: 8px; text-align: center;">{{ $index + 1 }}</td>
-                    <td style="border: 1px solid black; padding: 8px; text-align: left;">{{ $file->tipe_dokumen }}</td>
-                    <td style="border: 1px solid black; padding: 8px;">{{ $file->nama_file_asli }}</td>
+                    <td style="border: 1px solid black; padding: 8px; text-align: center;" colspan="3">-- Belum ada dokumen yang dilampirkan --</td>
                 </tr>
-            @empty
-                <tr>
-                    <td style="border: 1px solid black; padding: 8px;" colspan="3">Tidak ada dokumen yang diunggah.</td>
-                </tr>
-            @endforelse
+            @endif
         </tbody>
     </table>
 </div>
@@ -202,8 +204,8 @@
 {{-- AKHIR BAGIAN KONTEN SURAT --}}
 
 <!-- Approvals/Signatures Section -->
-@if(isset($pangkatgajitunjangan->logPersetujuanPangkatgajitunjangan) && count($pangkatgajitunjangan->logPersetujuanPangkatgajitunjangan) > 0)
-    {{-- Cek apakah hanya ada tahap Pengajuan Awal/Pegawai --}}
+{{-- FIX: Gunakan optional() dan isset() agar tidak Error pas Preview --}}
+@if(isset($pangkatgajitunjangan) && optional($pangkatgajitunjangan->logPersetujuanPangkatgajitunjangan)->count() > 0)
     @php
         $hanyaPengajuanAwal = $pangkatgajitunjangan->logPersetujuanPangkatgajitunjangan->every(function($log) {
             return $log->tahap_persetujuan === 'Pengajuan Awal' || $log->tahap_persetujuan === 'Pegawai';
@@ -211,7 +213,6 @@
     @endphp
 
     @if($hanyaPengajuanAwal)
-        {{-- Pesan khusus jika masih di tahap awal --}}
         <div class="bg-blue-50 border-l-4 border-blue-400 p-4 mt-6">
             <p class="text-sm text-blue-700">
                 <strong>Informasi:</strong> Pengajuan Pangkat, Gaji dan Tunjangan telah diterima dan sedang dalam proses verifikasi berkas awal.
@@ -221,7 +222,7 @@
         <p class="text-sm mt-6 mb-2">Dengan beberapa persetujuan yaitu,</p>
 
         @if(isset($is_pdf) && $is_pdf)
-            {{-- PDF View: Struktur Tabel --}}
+            {{-- PDF View --}}
             <table class="main-detail-table">
                 @php $approvalCounter = 1; @endphp
                 @foreach ($pangkatgajitunjangan->logPersetujuanPangkatgajitunjangan as $log)
@@ -233,9 +234,9 @@
                         <tr>
                             <td class="label-column" style="padding-left: 15pt;"><span style="padding-left: 8pt;">Status Persetujuan</span></td>
                             <td class="data-column">
-                                @if($log->status_pengajuan == 'ditolak')
+                                @if($log->status_persetujuan == 'ditolak')
                                     <span style="color: #FF0000;">Ditolak</span>
-                                @elseif($log->status_pengajuan == 'disetujui')
+                                @elseif($log->status_persetujuan == 'disetujui')
                                     <span style="color: #008000;">Disetujui</span>
                                 @else
                                     <span>Menunggu</span>
@@ -251,7 +252,7 @@
                 @endforeach
             </table>
         @else
-            {{-- Tampilan Web: Struktur Grid --}}
+            {{-- Tampilan Web --}}
             <div class="ml-4">
                 <div class="grid grid-cols-[160px_1fr] gap-x-4 gap-y-2 text-sm">
                     @php $approvalCounter = 1; @endphp
@@ -262,9 +263,9 @@
 
                             <div class="font-normal pl-4">Status Persetujuan</div>
                             <div class="font-semibold">
-                                @if($log->status_pengajuan == 'ditolak')
+                                @if($log->status_persetujuan == 'ditolak')
                                     <span class="text-red-600">Ditolak</span>
-                                @elseif($log->status_pengajuan == 'disetujui')
+                                @elseif($log->status_persetujuan == 'disetujui')
                                     <span class="text-green-600">Disetujui</span>
                                 @else
                                     <span class="text-gray-600">Menunggu</span>
@@ -281,7 +282,8 @@
         @endif
     @endif
 @else
-    <p class="text-sm mt-6 italic text-gray-500">Belum ada riwayat persetujuan Pangkat, Gaji dan Tunjangan yang tersedia.</p>
+    {{-- Tampilan pas Preview (Karena data log belum ada di DB) --}}
+    <p class="text-sm mt-6 italic text-gray-500">Draft Pengajuan: Riwayat persetujuan akan muncul setelah pengajuan diproses.</p>
 @endif
 
 {{-- Bagian Tanda Tangan (Web & PDF View) --}}
@@ -291,24 +293,25 @@
 
     {{-- Placeholder QR Code --}}
     @if(isset($is_pdf) && $is_pdf)
-        {{-- Di PDF, lebih baik menggunakan margin-right langsung --}}
         <div style="width: 100px; height: 100px; margin-right: 0px;">
-            {{-- Logika render QR Code Anda di sini (Misal: {!! QrCode::size(100)->generate('...') !!}) --}}
             <div style="width: 96px; height: 96px; background-color: #e2e8f0; margin-top: 1rem; margin-bottom: 1rem;"></div>
         </div>
     @else
-        {{-- Di Web, gunakan kelas Tailwind --}}
         <div class="flex justify-start">
-            {{-- Logika render QR Code Anda di sini --}}
              <div class="w-24 h-24 bg-gray-300 my-4"></div>
         </div>
     @endif
 
-    <p class="text-sm font-semibold mt-4">{{ $pangkatgajitunjangan->pegawai->nama ?? '[Nama Lengkap Anda]' }}</p>
-    <p class="text-sm font-semibold">{{ $pangkatgajitunjangan->pegawai->pekerjaan?->jabatan ?? 'Pegawai' }}</p>
+    {{-- ID review_nama_pegawai_footer & review_jabatan_footer agar JS bisa akses --}}
+    <p id="review_nama_pegawai_footer" class="text-sm font-semibold mt-4">
+        {{ $pangkatgajitunjangan->pegawai->nama ?? '[Nama Lengkap Anda]' }}
+    </p>
+    <p id="review_jabatan_footer" class="text-sm font-semibold">
+        {{ $pangkatgajitunjangan->pegawai->pekerjaan?->jabatan ?? 'Pegawai' }}
+    </p>
 </div>
 
-{{-- FOOTER KHUSUS WEB (DIPINDAHKAN KE DALAM content-wrap) --}}
+{{-- FOOTER KHUSUS WEB --}}
 @if(!isset($is_pdf) || !$is_pdf)
     <div class="mt-12">
         <table class="w-full h-10 border-collapse">
@@ -327,7 +330,7 @@
 
 </div> {{-- Penutup content-wrap --}}
 
-{{-- FOOTER BAWAH HALAMAN (Menempel di tepi kertas UNTUK PDF SAJA) --}}
+{{-- FOOTER BAWAH HALAMAN (KHUSUS PDF) --}}
 @if(isset($is_pdf) && $is_pdf)
     <table style="width: 100%; height: 30pt; border-collapse: collapse; position: absolute; bottom: 0; left: 0; right: 0;">
         <tr>
@@ -341,3 +344,4 @@
         </tr>
     </table>
 @endif
+

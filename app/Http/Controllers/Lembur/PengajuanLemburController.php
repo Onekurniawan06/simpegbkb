@@ -45,7 +45,7 @@ class PengajuanLemburController extends Controller
 
         // 3. Logika Navigasi & Label Dinamis
         $dashboardUrl = $user->dashboard_link;
-        $roleLabel = $roleMapping->role_name ?? 'Pegawai';
+        $roleLabel = $roleMapping->role_name ?? ' Pegawai';
 
         $parentRouteName = $isManagerOrKepala ? 'manager.pilihpengajuan' : 'datapengajuan.formDataPengajuan';
         $parentLabel = $isManagerOrKepala ? 'Manajemen Pengajuan ↦ Approval Pengajuan' : 'Data Pengajuan';
@@ -127,12 +127,12 @@ class PengajuanLemburController extends Controller
             ]);
 
             LogPersetujuanLembur::create([
-                'lembur_id' => $pengajuan->id_lembur,
+                'id_lembur' => $pengajuan->id_lembur,
                 'nomor_urut_pegawai' => $nomor_urut_pegawai,
                 'tahap_persetujuan' => 'Pengajuan Awal',
                 'status_persetujuan' => StatusPersetujuan::DIPROSES,
                 'komentar' => 'Menunggu Verifikasi.',
-                'update_at' => Carbon::now(),
+                // 'update_at' => Carbon::now(),
             ]);
 
             DB::commit();

@@ -12,34 +12,36 @@ class LogPersetujuanLembur extends Model
 
     protected $table = 'log_persetujuan_lembur';
 
-    // Tetap aktifkan timestamps
     public $timestamps = true;
 
-    // Beritahu Laravel bahwa kolom created_at tidak digunakan/tidak ada di DB
+    // Sesuai gambar Anda, hanya ada updated_at
     const CREATED_AT = null;
 
-    // Menentukan kolom yang dapat diisi (fillable)
     protected $fillable = [
-        'lembur_id',
+        'id_lembur', // 🔄 Diubah dari lembur_id
         'nomor_urut_pegawai',
         'tahap_persetujuan',
         'nomor_urut_pegawai_penyetuju',
         'status_persetujuan',
         'komentar',
-        'updated_at',
+        // 🗑️ updated_at dihapus dari sini karena diisi otomatis
     ];
 
-    // Menentukan tipe data untuk enum status persetujuan (Laravel 11+ feature)
     protected $casts = [
-        'status_persetujuan' => \App\Enums\StatusPersetujuan::class, // Membutuhkan Enum kustom
+        'status_persetujuan' => \App\Enums\StatusPersetujuan::class,
     ];
+
+    // ➕ Tambahkan relasi ke tabel pengajuan lembur
+    public function pengajuanLembur(): BelongsTo
+    {
+        return $this->belongsTo(PengajuanLembur::class, 'id_lembur', 'id_lembur');
+    }
 
     public function pemohon(): BelongsTo
     {
         return $this->belongsTo(Pegawai::class, 'nomor_urut_pegawai', 'nomor_urut_pegawai');
     }
 
-    // Relasi Many-to-One ke Pegawai (Penyetuju)
     public function penyetuju(): BelongsTo
     {
         return $this->belongsTo(Pegawai::class, 'nomor_urut_pegawai_penyetuju', 'nomor_urut_pegawai');
@@ -47,8 +49,6 @@ class LogPersetujuanLembur extends Model
 
     public function user(): BelongsTo
     {
-        // Fungsi ini memberi tahu Laravel bahwa setiap log dimiliki oleh satu User.
         return $this->belongsTo(User::class, 'user_id', 'id');
     }
-
 }

@@ -403,11 +403,12 @@
         <div class="mb-2 p-4 shadow-sm">
             <span class="text-md font-semibold mb-4 text-blue-700"># Section 3: Pilih Pengajuan Kenaikan Pangkat, Gaji dan Tunjangan</span>
             <!-- Dropdown Jenis Pengajuan -->
-            <div class="mb-4 mt-2">
+            <div class="mb-6 mt-3">
+                <label for="jenis_pengajuan" class="block text-sm font-medium text-gray-700 mb-2">Pilih Jenis Pengajuan Kenaikan</label>
                 <div class="relative">
-                    <!-- Tambahkan kelas appearance-none agar ikon default OS hilang -->
-                    <select id="jenis_pengajuan" name="jenis_pengajuan" class="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md shadow-sm appearance-none">
-                        <option disabled selected>Pilih Jenis Pengajuan Kenaikan Pangkat, Gaji dan Tunjangan</option>
+                    <select id="jenis_pengajuan" name="jenis_pengajuan"
+                        class="block w-full pl-3 pr-10 py-2 text-sm bg-white border-2 border-gray-200 text-slate-700 rounded-lg cursor-pointer transition duration-300 ease-in-out focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 shadow-sm appearance-none hover:border-gray-300">
+                        <option value="" disabled selected>-- Klik untuk memilih jenis kenaikan/tunjangan --</option>
                         <option value="Kenaikan Pangkat Reguler">Kenaikan Pangkat Reguler</option>
                         <option value="Kenaikan Pangkat Penyesuaian">Kenaikan Pangkat Penyesuaian</option>
                         <option value="Kenaikan Pangkat Istimewa">Kenaikan Pangkat Istimewa</option>
@@ -416,10 +417,10 @@
                         <option value="Tunjangan Keluarga (Anak)">Tunjangan Keluarga (Anak)</option>
                     </select>
 
-                    <!-- Custom chevron icon for select -->
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
-                        <svg class="h-4 w-4" xmlns="http://www.w3.org" viewBox="0 0 20 20" fill="currentColor">
-                            <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
+                    <!-- Ikon Chevron Biru agar lebih 'standout' -->
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                        <svg class="h-5 w-5 text-blue-600" xmlns="http://w3.org" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clip-rule="evenodd" />
                         </svg>
                     </div>
                 </div>
@@ -442,7 +443,7 @@
                     Buat Pengajuan Kenaikan Pangkat, Gaji dan Tunjangan
                 </button>
             </div>
-
+kinek
             <!-- Modal Viewer -->
             <div id="document-viewer-modal" style="display: none; position: fixed; z-index: 9999; left: 0; top: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);" class="flex items-center justify-center">
                 <div class="relative bg-white rounded-xl shadow-2xl w-11/12 max-w-4xl h-5/6 flex flex-col overflow-hidden">
@@ -461,84 +462,27 @@
 
         <!-- === POPUP MODAL REVIEW === -->
         <div id="leaveModalPangkatGajiTunjangan" class="fixed inset-0 bg-black-50 flex items-center justify-center hidden z-50 backdrop-blur-sm">
-            <!-- Konten Modal (Background putih, tidak terpengaruh blur) -->
-            <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg mx-auto">
+            <!-- Konten Modal (Ubah max-w-lg jadi max-w-4xl agar lebih lebar) -->
+            <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-4xl mx-auto">
                 <!-- Modal Header -->
                 <div class="flex justify-between items-center border-b pb-3">
-                    <h2 class="text-sm font-semibold">Data Pengajuan Kenaikan Pangkat, Gaji dan Tunjangan</h2>
+                    <h2 class="text-sm font-semibold">Surat Pengajuan Pensiun</h2>
                 </div>
-                <!-- Modal Body (Area Review Data) -->
+
+                <!-- Modal Body dengan Container Scroll -->
                 <div class="mt-4">
-                    <div class="space-y-4">
-                        <!-- Section 1: Review Header Info -->
-                        <div class="flex items-center p-3 bg-blue-50 rounded-md">
-                            <span class="text-blue-600 mr-3">📄</span>
-                            <!-- Kontainer untuk nama dan NUP dalam satu baris, dan tanggal di baris berikutnya -->
-                            <div>
-                                <!-- Gabungkan nama pegawai dan NUP dalam satu <p> tag -->
-                                <p class="font-small text-gray-800">
-                                    <!-- Target JS: review_nama_pegawai dan review_nup -->
-                                    <span id="review_nama_pegawai">[Nama Pegawai]</span> -
-                                    <span id="review_nup">[Nomor Urut Pegawai]</span>
-                                </p>
-                                <p class="text-sm text-gray-500">Tanggal Pengajuan: {{ now()->format('d M Y') }}</p>
-                            </div>
-                        </div>
-                        <!-- Section 2: Data Cuti Details Grid -->
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <p class="text-sm font-medium text-gray-500">Jenis Pensiun</p>
-                                <!-- Target JS: review_tanggal_mulai -->
-                                <p class="mt-1 font-semibold text-sm" id="review_jenis_pengajuan">[Jenis Pengajuan]</p>
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium text-gray-500">Unit Kerja</p>
-                                <!-- Target JS: review_tanggal_mulai -->
-                                <p class="mt-1 font-semibold text-sm" id="review_unit_kerja">[Unit Kerja]</p>
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium text-gray-500">Status Pegawai</p>
-                                <!-- Target JS: review_tanggal_selesai -->
-                                <p class="mt-1 font-semibold text-sm" id="review_status_pegawai">[Status Pegawai]</p>
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium text-gray-500">Jabatan Terakhir</p>
-                                <!-- Target JS: review_jumlah_cuti -->
-                                <p class="mt-1 font-semibold text-sm" id="review_jabatan">[Jabatan Terakhir]</p>
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium text-gray-500">Pangkat</p>
-                                <!-- Target JS: review_jatah_periode_hari -->
-                                <p class="mt-1 font-semibold text-sm" id="review_pangkat">[Pangkat]</p>
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium text-gray-500">Grade</p>
-                                <!-- Target JS: review_jatah_periode_hari -->
-                                <p class="mt-1 font-semibold text-sm" id="review_grade">[Grade]</p>
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium text-gray-500">TMT Pegawai</p>
-                                <!-- Target JS: review_jatah_periode_hari -->
-                                <p class="mt-1 font-semibold text-sm" id="review_tmt_pegawai">[TMT Pegawai]</p>
-                            </div>
-                            <div>
-                                <p class="text-sm font-medium text-gray-500">Masa Kerja</p>
-                                <!-- Target JS: review_jatah_periode_hari -->
-                                <p class="mt-1 font-semibold text-sm" id="review_masa_kerja">[Masa Kerja]</p>
-                            </div>
-                        </div>
+                    <div class="custom-scroll-container p-4" style="max-height: 70vh; overflow-y: auto;">
+                        @include('partials.pangkatgajitunjangan_letter_content')
                     </div>
                 </div>
 
-                <!-- Modal Footer (Buttons) -->
+                <!-- Modal Footer -->
                 <div class="flex justify-end mt-6 pt-4 border-t">
                     <button type="button" id="cancelButton" class="px-4 py-2 mr-3 text-sm text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">Batal</button>
-                    <!-- TOMBOL KONFIRMASI SUBMIT FORM -->
-                    <button type="button" id="submitButton" class="px-4 py-2 text-white bg-blue-600 text-sm rounded-lg hover:bg-blue-700">Ya, Ajukan Kenaikan Pangkat, Gaji dan Tunjangan</button>
+                    <button id="submitButton" class="px-4 py-2 text-white bg-blue-600 text-sm rounded-lg hover:bg-blue-700">Ya, Ajukan Kenaikan</button>
                 </div>
             </div>
         </div>
-    </div>
 
     <!-- Modal Loading Overlay -->
     <div id="loadingModalPangkatGajiTunjangan" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">

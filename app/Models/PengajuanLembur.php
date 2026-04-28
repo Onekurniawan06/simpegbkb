@@ -40,8 +40,7 @@ class PengajuanLembur extends Model
 
     public function logPersetujuanLembur(): HasMany
     {
-        // Pastikan nama model dan foreign key di bawah ini sesuai dengan struktur database Anda
-        return $this->hasMany(LogPersetujuanLembur::class, 'lembur_id')
+        return $this->hasMany(LogPersetujuanLembur::class, 'id_lembur')
         ->orderByDesc('updated_at');
     }
 

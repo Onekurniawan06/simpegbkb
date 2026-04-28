@@ -8,13 +8,20 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\ChangePasswordController;
 
-// LEVEL AKSES ADMINISTRATOR/HRO
-use App\Http\Controllers\Admin\DashboardController;
-// END LEVEL AKSES ADMINISTRATOR/HRO
+// LEVEL AKSES DIREKTUR
+use App\Http\Controllers\Direktur\DirekturDashboard;
+use App\Http\Controllers\Direktur\DirekturApproval;
+// END LEVEL AKSES DIREKTUR
+
+// LEVEL AKSES HRO
+use App\Http\Controllers\Hro\HroDashboard;
+use App\Http\Controllers\Hro\HroApproval;
+// END LEVEL AKSES HRO
 
 // LEVEL AKSES KEPALA SKKMR
 use App\Http\Controllers\KepalaSKKMR\SkkmrDashboard;
-use App\Http\Controllers\KepalaSKKMR\CreatePengajuanSkkmr;
+use App\Http\Controllers\KepalaSKKMR\SkkmrApproval;
+// use App\Http\Controllers\KepalaSKKMR\CreatePengajuanSkkmr;
 // END LEVEL AKSES KEPALA SKKMR
 
 // LEVEL AKSES MANAGER
@@ -118,7 +125,7 @@ Route::middleware(['auth'])->group(function () {
         ->name('datapengajuan.formDataPengajuan');
 
     // Tracking Pengajuan Cuti Izin
-    Route::get('/datapengajuan/lacakpengajuan-cuti/{nip}', [CutiController::class, 'statuscuti'])->name('datapengajuan.statuscuti');
+    Route::get('/datapengajuan/lacakpengajuan-cuti/{id_cuti}', [CutiController::class, 'statuscuti'])->name('datapengajuan.statuscuti');
 
     // LEMBUR
     // Route Tampilan Form
@@ -149,56 +156,116 @@ Route::middleware(['auth'])->group(function () {
 
 // ==== START LEVEL DIREKTUR ====
 Route::middleware(['auth'])->group(function () {
-    
-    // Route untuk cek frontend Dashboard Direktur (Tanpa Controller)
-    Route::get('/direktur/dashboarddirektur', function () {
-        return view('direktur.dashboarddirektur');
-    })->name('direktur.dashboarddirektur');
 
-    // Route lain (Pegawai/Manager) bisa diletakkan di bawah sini...
+    // Dashboard Utama
+    Route::get('/direktur/dashboard', [DirekturDashboard::class, 'index'])
+        ->name('direktur.dashboarddirektur');
+
+    // CUKUP SATU SAJA untuk halaman daftar tabel (pilih salah satu name-nya)
+    Route::get('/direktur/manajemenpengajuan', [DirekturApproval::class, 'index'])
+        ->name('direktur.manajemenpengajuanpegawai');
+
+    // DETAIL: Pastikan parameter namanya konsisten {id_log} sesuai di Controller
+    Route::get('/direktur/approval/detail/{sumber}/{id_log}', [DirekturApproval::class, 'direkturapproval'])
+        ->name('direktur.detailApproval');
+
+    // UPDATE: Gunakan PUT agar sesuai dengan method di form/ajax
+    Route::put('/direktur/approval/update/{id_log}/{jenis}', [DirekturApproval::class, 'updateStatus'])
+        ->name('direktur.approval.update');
+
 });
 // ==== END LEVEL DIREKTUR ====
 
-// ==== START LEVEL ADMIN/HRO ====
-// Rute Dashboard Administrator
-Route::get('/admin/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'no_back_button']);
+// ==== START LEVEL HRO ====
+Route::middleware(['auth', 'no_back_button'])->group(function () {
 
-// Rute Berita
-Route::get('/admin/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard');
+    // Dashboard Utama HRO
+    Route::get('/hro/dashboardhro', [HroDashboard::class, 'dashboardhro'])
+        ->name('hro.dashboardhro');
 
-// ==== END LEVEL ADMIN/HRO ====
+    // --- Rute Baru: Manajemen Pengajuan HRO ---
+
+    // 1. Pengajuan HRO
+    Route::get('/hro/pengajuanhro', function () {
+        $emptyPagination = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10);
+
+        return view('hro.pengajuanhro', [
+            // Kita set false dulu biar semua tombol pengajuan "terbuka" dan bisa dilihat
+            'isAnyPending' => false,
+            'pendingCutiManager' => false,
+            'pendingLemburManager' => false,
+            'pendingPensiunManager' => false,
+            'pendingPangkatManager' => false,
+            'paginatedSubmissions' => $emptyPagination,
+            'pageTitle' => 'Pengajuan Saya',
+            'breadcrumbs' => ['Beranda' => '#', 'Pengajuan Saya' => '#']
+        ]);
+    })->name('hro.pengajuanhro');
+
+    // 2. Halaman Daftar Antrean Pengajuan (Tabel)
+    Route::get('/hro/manajemen-pengajuan', [HroApproval::class, 'index'])
+        ->name('hro.manajemenpengajuan');
+
+    // 3. Halaman Detail Approval (Tempat HRO Klik Setuju/Tolak)
+    Route::get('/hro/approval/detail/{sumber}/{id_log}', [HroApproval::class, 'detailApproval'])
+        ->name('hro.detailApproval');
+
+    // 4. Proses Eksekusi Simpan Status (Update)
+    Route::put('/hro/approval/update/{sumber}/{id_log}', [HroApproval::class, 'updateStatus'])
+        ->name('hro.updateStatus');
+
+});
+// ==== END LEVEL HRO ====
+
 
 // ==== START LEVEL KEPALA SKKMR ====
-// Rute Dashboard SKKMR
-Route::get('/skkmr/dashboardskkmr', [SkkmrDashboard::class, 'FormDashboarSkkmr'])
-    ->middleware(['auth', 'no_back_button']);
+Route::middleware(['auth', 'no_back_button'])->group(function () {
 
-// Rute Berita
-Route::get('/skkmr/dashboardskkmr', [SkkmrDashboard::class, 'FormDashboarSkkmr'])->name('skkmr.dashboardskkmr');
+    // 1. Rute Dashboard SKKMR
+    Route::get('/skkmr/dashboardskkmr', [SkkmrDashboard::class, 'FormDashboarSkkmr'])
+        ->name('skkmr.dashboardskkmr');
 
-Route::get('skkmr/pengajuanskkmr', [CreatePengajuanSkkmr::class, 'buatPengajuanSkkmr'])
-        ->name('skkmr.pilihpengajuan');
+    // 2. Rute untuk halaman manajemen pengajuan SKKMR
+    Route::get('/skkmr/pengajuanskkmr', function () {
+        $emptyPagination = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10);
+
+        return view('skkmr.pengajuanskkmr', [
+            // Kita set false dulu biar semua tombol pengajuan "terbuka" dan bisa dilihat
+            'isAnyPending' => false,
+            'pendingCutiSkkmr' => false,
+            'pendingLemburSkkmr' => false,
+            'pendingPensiunSkkmr' => false,
+            'pendingPangkatSkkmr' => false,
+            'paginatedSubmissions' => $emptyPagination,
+            'pageTitle' => 'Pengajuan Saya',
+            'breadcrumbs' => ['Beranda' => '#', 'Pengajuan Saya' => '#']
+        ]);
+    })->name('skkmr.pengajuanskkmr');
+
+    // 3. Halaman Daftar Antrean Pengajuan (Tabel)
+    Route::get('/skkmr/manajemen-pengajuan', [SkkmrApproval::class, 'skkmrManagementPersetujuan'])
+        ->name('skkmr.manajemenpengajuan');
+
+    // 4. Halaman Detail Approval 
+    Route::get('/skkmr/approval/detail/{sumber}/{id_log}', [SkkmrApproval::class, 'detailApproval'])
+        ->name('skkmr.detailApproval');
+
+    // 5. Proses Eksekusi Simpan Status (Update)
+    Route::put('/skkmr/approval/update/{sumber}/{id_log}', [SkkmrApproval::class, 'updateStatus'])
+        ->name('skkmr.updateStatus');
+
+    // 6. Lihat dokumen
+    Route::get('/skkmr/lihat-dokumen/{id}', [SkkmrApproval::class, 'lihatDokumen'])
+    ->name('skkmr.lihatDokumen');
+
+});
 
 // ==== END LEVEL SKKMR ====
 
-// ==== START LEVEL MANAGER UMUM ====
+// ==== START LEVEL MANAGER ====
 Route::middleware(['auth'])->group(function () {
-    // Rute Dashboard Manager
-    // Route::get('/manager/dashboardmanager', [ManagerDashboard::class, 'index'])
-    //     ->middleware(['no_back_button'])
-    //     ->name('manager.dashboardmanager');
-
-    // // Rute Pengajuan (Diri Sendiri)
-    // Route::get('/manager/pengajuanmanager', [CreatePengajuan::class, 'buatPengajuanManager'])
-    //     ->name('manager.pilihpengajuan');
 
     Route::get('/manager/dashboard/{divisi}', [ManagerDashboard::class, 'index'])->name('manager.dashboardmanager');
-    // Route::get('/manager/kredit', [ManagerDashboard::class, 'index'])->name('manager.dashboardkredit');
-    // Route::get('/manager/dana', [ManagerDashboard::class, 'index'])->name('manager.dashboarddana');
-
-    // Route::get('/manager/pegawai-divisi', [ManagerDashboard::class, 'dataPegawaiDivisi'])
-    // ->name('manager.pegawaidivisi');
 
     // Route Daftar Pegawai Global
     Route::get('/manager/pegawai', [ManagerDashboard::class, 'dataPegawaiGlobal'])
@@ -212,8 +279,6 @@ Route::middleware(['auth'])->group(function () {
     // Rute Manajemen Approval (Daftar Pengajuan Pegawai)
     Route::get('/manager/manajemenpengajuanmanager', [ManagerApproval::class, 'formManagementPersetujuan'])
         ->name('manager.manajemenpengajuan');
-
-    // --- Rute Tambahan Detail & Update Approval ---
 
     // Menampilkan Detail Pengajuan (Cuti/Lembur)
     Route::get('/manager/manajemenpengajuan/detail/{sumber}/{id}', [ManagerApproval::class, 'detailApproval'])
@@ -230,23 +295,8 @@ Route::middleware(['auth'])->group(function () {
     // Route untuk cetak PDF (sesuai request sebelumnya)
     Route::get('/laporan-pengajuan/cetak', [laporanpengajuan::class, 'cetakPDF'])
         ->name('laporan.cetak');
-
 });
 // ==== END LEVEL MANAGER ====
-
-
-// 1. Rute untuk Menampilkan Halaman Profil (GET)
-// Route::get('/pegawai/profile', [ProfileController::class, 'showProfile'])
-//     ->middleware(['auth'])
-//     ->name('pegawai.profile.view');
-
-    // Rute untuk update photoprofile
-// Route::middleware(['auth'])->group(function () {
-//     // Menggunakan patch untuk update sebagian data (foto_selfie)
-//     // Kami merekomendasikan penamaan URL yang juga mencerminkan struktur rutenya
-//     Route::patch('/pegawai/profile/update-photo', [ProfileController::class, 'updatePhoto'])
-//         ->name('pegawai.profile.updatePhoto');
-// });
 
 // ==== RUTE PROFIL (Dapat diakses Manager & Pegawai) ====
 Route::middleware(['auth'])->group(function () {
@@ -324,7 +374,6 @@ Route::get('/cek-pegawai/{nomor}', function ($nomor) {
         ], 500);
     }
 });
-
 
 // Pastikan rute ini dilindungi oleh middleware 'auth' Form cuti Izin
 Route::middleware(['auth'])->group(function () {

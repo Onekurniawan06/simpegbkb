@@ -1,6 +1,6 @@
 <?php $__env->startSection('content'); ?>
 
-    <div class="bg-gray-100 rounded-tl-md shadow-lg p-4 h-full overflow-y-auto" id="mainContent">
+    <div class="bg-gray-100 rounded-tl-md shadow-lg p-2 h-full overflow-y-auto" id="mainContent">
         
 
         <!-- Tab Navigation Header -->

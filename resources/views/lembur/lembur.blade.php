@@ -2,9 +2,6 @@
 
 @section('content')
 
-    {{-- Div utama tanpa padding internal, konten di dalamnya yang mengatur jarak --}}
-    <!-- Form Tunggal untuk Semua Tab -->
-    <!-- PENTING: enctype="multipart/form-data" tetap harus ada di sini -->
     <form action="{{ route('lembur.updateLembur') }}" method="POST" id="leaveFormLembur">
         @csrf
         @method('PUT')
@@ -13,9 +10,6 @@
         <div class="bg-white rounded-lg shadow-lg max-w-full mx-auto">
             <div style="background-image: linear-gradient(rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0.1)), url('{{ asset('images/vecteezylight.jpg') }}')" class="bg-cover bg-bottom p-2 rounded-t-lg relative">
                     <img src="{{ asset('images/overtime.png') }}" alt="Overtime" class="absolute right-0 top-0 h-40">
-                    {{-- Opsional: Tambahkan overlay gelap agar teks lebih mudah dibaca --}}
-                    {{-- <div class="absolute rounded-t-lg"></div> --}}
-                    {{-- Image and Name section --}}
                     <div class="flex items-center mt-2 ml-2 mb-2">
                         {{-- Container untuk Foto Profil atau Placeholder --}}
                         <div class="h-28 w-28 rounded-full overflow-hidden flex items-center justify-center">
@@ -138,62 +132,28 @@
 
             <!-- === POPUP MODAL REVIEW === -->
             <div id="leaveModallembur" class="fixed inset-0 bg-black-50 flex items-center justify-center hidden z-50 backdrop-blur-sm">
-                <!-- Konten Modal (Background putih, tidak terpengaruh blur) -->
-                <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-lg mx-auto">
+                <!-- Konten Modal (Ubah max-w-lg jadi max-w-4xl agar lebih lebar) -->
+                <div class="bg-white p-6 rounded-lg shadow-lg w-full max-w-4xl mx-auto">
                     <!-- Modal Header -->
                     <div class="flex justify-between items-center border-b pb-3">
-                        <h2 class="text-sm font-semibold">Data Pengajuan Lembur</h2>
+                        <h2 class="text-sm font-semibold">Surat Pengajuan Lembur</h2>
                     </div>
-                    <!-- Modal Body (Area Review Data) -->
+
+                    <!-- Modal Body dengan Container Scroll -->
                     <div class="mt-4">
-                        <div class="space-y-4">
-                            <!-- Section 1: Review Header Info -->
-                            <div class="flex items-center p-3 bg-blue-50 rounded-md">
-                                <span class="text-blue-600 mr-3">📄</span>
-                                <div>
-                                    <!-- Target JS: review_jenis_cuti -->
-                                    <p class="font-small" id="review_nama_pegawai">[Jenis Cuti Placeholder]</p>
-                                    <p class="text-sm text-gray-500">Tanggal Pengajuan: {{ now()->format('d M Y') }}</p>
-                                </div>
-                            </div>
-                            <!-- Section 2: Data Cuti Details Grid -->
-                            <div class="grid grid-cols-2 gap-4">
-                                <div>
-                                    <p class="text-sm font-medium text-gray-500">Tanggal Lembur</p>
-                                    <!-- Target JS: review_tanggal_mulai -->
-                                    <p class="mt-1 font-semibold text-sm" id="review_tanggal_lembur">[Tgl Mulai]</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-500">Jam Mulai Lembur</p>
-                                    <!-- Target JS: review_tanggal_selesai -->
-                                    <p class="mt-1 font-semibold text-sm" id="review_jam_mulai_lembur">[Jam Mulai Lembur]</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-500">Jam Selesai Lembur</p>
-                                    <!-- Target JS: review_jumlah_cuti -->
-                                    <p class="mt-1 font-semibold text-sm" id="review_jam_selesai_lembur">[Jam Selesai Lembur]</p>
-                                </div>
-                                <div>
-                                    <p class="text-sm font-medium text-gray-500">Total Jam Lembur</p>
-                                    <!-- Target JS: review_jatah_periode_hari -->
-                                    <p class="mt-1 font-semibold text-sm" id="review_total_lembur">[Total Jam Lembur]</p>
-                                </div>
-                                    <div class="col-span-2">
-                                    <p class="text-sm font-medium text-gray-500">Uraian Tugas/Kegiatan</p>
-                                    <p class="mt-1 font-semibold" id="review_uraian_tugas">[Uraian Tugas]</p>
-                                </div>
-                            </div>
+                        <div class="custom-scroll-container p-4" style="max-height: 70vh; overflow-y: auto;">
+                            @include('partials.lembur_letter_content')
                         </div>
                     </div>
 
-                    <!-- Modal Footer (Buttons) -->
+                    <!-- Modal Footer -->
                     <div class="flex justify-end mt-6 pt-4 border-t">
                         <button type="button" id="cancelButton" class="px-4 py-2 mr-3 text-sm text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300">Batal</button>
-                        <!-- TOMBOL KONFIRMASI SUBMIT FORM -->
                         <button id="submitButton" class="px-4 py-2 text-white bg-blue-600 text-sm rounded-lg hover:bg-blue-700">Ya, Ajukan Lembur</button>
                     </div>
                 </div>
             </div>
+
             <!-- Modal Loading Overlay -->
             <div id="loadingModalLembur" class="hidden fixed inset-0 bg-black/50 flex items-center justify-center z-50 backdrop-blur-sm">
                 <div class="bg-gray-50 p-8 rounded-xl shadow-2xl flex flex-col items-center">
@@ -205,60 +165,6 @@
                     <p class="mt-4 text-gray-800 text-md font-semibold">Sedang Mengirim Data Pengajuan...</p>
                 </div>
             </div>
-
-            <!-- Modal Sukses (Sesuai Gambar) -->
-            {{-- <div id="successModalLembur" class="{{ Session::has('success') ? 'show-on-load' : '' }} fixed inset-0 bg-black/50 items-center justify-center hidden z-50 backdrop-blur-sm">
-                <!-- Tambahkan class 'relative' pada div putih di bawah ini -->
-                <div class="relative bg-gray-50 p-8 rounded-xl shadow-2xl w-full max-w-lg mx-4">
-                    <!-- Tombol X Close di Pojok Kanan Atas -->
-                    <button id="closeSuccessModalButton" type="button" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors">
-                        <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="www.w3.org">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                        </svg>
-                    </button>
-                    <div class="text-center">
-                        <!-- Icon Sukses -->
-                        <svg class="mx-auto h-16 w-16 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="www.w3.org">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <h2 class="mt-4 text-2xl font-bold text-gray-900">Pengajuan Lembur berhasil dibuat!!!</h2>
-                        <p class="mt-2 text-sm text-gray-500">Permintaan Lembur Anda telah tercatat dan menunggu persetujuan atasan. Silahkan cek notifikasi secara berkala terkait persetujuan lembur anda</p>
-                    </div>
-                    <!-- Wadah Tombol -->
-                    <div class="mt-6 flex justify-center space-x-4">
-                        <!-- Tombol Lihat Pengajuan -->
-                        <a href="{{ route($parentRouteName, ['type' => 'lembur']) }}"
-                            class="px-6 py-2 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md">
-                            Lihat Pengajuan
-                        </a>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Modal Error -->
-            <!-- Perhatikan perubahan pada class dan isi pesan p -->
-            <div id="errorModalLembur" class="{{ (Session::has('error') || $errors->any()) ? 'show-on-load' : '' }} fixed inset-0 bg-black/50 items-center justify-center hidden z-50 backdrop-blur-sm">
-                <div class="bg-gray-50 p-8 rounded-xl shadow-2xl w-full max-w-sm mx-4">
-                    <div class="text-center">
-                        <svg class="mx-auto h-16 w-16 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="www.w3.org">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <h2 class="mt-4 text-xl font-bold text-gray-900">Gagal Mengajukan Lembur</h2>
-                        <p id="errorMessage" class="mt-2 text-sm text-gray-500">
-                            @if($errors->any())
-                                {{ $errors->first() }}
-                            @else
-                                {{ Session::get('error') ?? 'Pesan error akan muncul di sini.' }}
-                            @endif
-                        </p>
-                    </div>
-                    <div class="mt-6 flex justify-center">
-                        <button id="closeErrorModalButton" type="button" class="px-4 py-2 bg-red-600 text-white text-sm rounded-lg hover:bg-red-700 transition-colors">
-                            Tutup
-                        </button>
-                    </div>
-                </div>
-            </div> --}}
         </div>
     </div>
 </form>

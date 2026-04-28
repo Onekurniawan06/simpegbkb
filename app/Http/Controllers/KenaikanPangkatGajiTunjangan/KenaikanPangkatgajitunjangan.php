@@ -32,16 +32,15 @@ class KenaikanPangkatgajitunjangan extends Controller // Nama class sesuai permi
     {
         $user = Auth::user();
 
-        // 1. Logika Role Dinamis dari Database (Menghapus sisa-sisa level_akses)
         $roleMapping = \DB::table('roles_mapping')
             ->where('jabatan_id', $user->jabatan_id)
             ->where('level_id', $user->level_id)
             ->first();
 
-        // Cek apakah dia manager berdasarkan route_name di database
-        $isManagerOrKepala = $roleMapping && str_contains($roleMapping->route_name, 'manager');
+        // 1. PISAHKAN DETEKSI ROLE
+        $isManager = $roleMapping && str_contains($roleMapping->route_name, 'manager');
+        $isSKKMR   = $roleMapping && str_contains($roleMapping->route_name, 'skkmr');
 
-        // 2. Data Master (Eager Loading Divisi & Format Tanggal)
         $pekerjaanData = Pekerjaan::with('divisi')
             ->where('nomor_urut_pegawai', $user->nomor_urut_pegawai)
             ->first();
@@ -52,32 +51,31 @@ class KenaikanPangkatgajitunjangan extends Controller // Nama class sesuai permi
             $tmt_pegawai_formatted = Carbon::parse($cleanDateString)->format('d-m-Y');
         }
 
-        // --- VARIABEL PENTING: JANGAN DIHAPUS ---
         $submissionsType = 'Pangkat/Gaji/Tunjangan';
-        // ----------------------------------------
-
-        // 3. Logika Navigasi & Label Dinamis
         $roleLabel = $roleMapping->role_name ?? 'Pegawai';
-        $pageTitle = 'Kenaikan Pangkat, Gaji & Tunjangan ' . ($isManagerOrKepala ? 'Manager' : 'Pegawai');
 
-        $roleLabel = $roleMapping->role_name ?? 'Pegawai'; // Pastikan variabel ini sudah diambil dari DB
+        // 2. LOGIKA KONDISI UNTUK TAMPILAN DAN RUTE
+        if ($isManager) {
+            $pageTitle = 'Kenaikan Pangkat, Gaji & Tunjangan Manager';
+            $parentRouteName = 'manager.pilihpengajuan';
+            $parentLabel = "Manajemen Pengajuan ↦ Approval Pengajuan $roleLabel";
+        } elseif ($isSKKMR) {
+            $pageTitle = 'Kenaikan Pangkat, Gaji & Tunjangan Kepala Satker';
+            $parentRouteName = 'skkmr.pilihpengajuan'; // Sesuaikan dengan route name SKKMR Anda di web.php
+            $parentLabel = "Manajemen Pengajuan ↦ Approval Pengajuan $roleLabel";
+        } else {
+            $pageTitle = 'Kenaikan Pangkat, Gaji & Tunjangan Pegawai';
+            $parentRouteName = 'datapengajuan.formDataPengajuan';
+            $parentLabel = 'Data Pengajuan';
+        }
 
-        $parentRouteName = $isManagerOrKepala ? 'manager.pilihpengajuan' : 'datapengajuan.formDataPengajuan';
-
-        // Menggunakan variabel $roleLabel agar nama jabatan dinamis
-        $parentLabel = $isManagerOrKepala
-            ? "Manajemen Pengajuan ↦ Approval Pengajuan $roleLabel"
-            : 'Data Pengajuan';
-
-        // 4. Susun Breadcrumbs Dinamis
         $breadcrumbs = [
             'Beranda' => $user->dashboard_link,
             $parentLabel => route($parentRouteName),
             $pageTitle => null
         ];
 
-        // 5. Layout Dinamis (PENTING: Agar Sidebar sesuai role)
-        $layout = $user->layout_file; // Menggunakan Accessor layout_file Anda
+        $layout = $user->layout_file;
 
         return view('kenaikanpangkatgajitunjangan.pangkatgajitunjangan', compact(
             'user',
@@ -87,10 +85,12 @@ class KenaikanPangkatgajitunjangan extends Controller // Nama class sesuai permi
             'tmt_pegawai_formatted',
             'parentRouteName',
             'submissionsType',
-            'layout', // Tambahkan layout agar bisa di-extends di Blade
-            'isManagerOrKepala'
+            'layout',
+            'isManager', // Variabel yang diparsing ke blade dipisah
+            'isSKKMR'
         ));
     }
+
 
     public function updatePangkatGajiTunjangan(Request $request)
     {
@@ -132,17 +132,18 @@ class KenaikanPangkatgajitunjangan extends Controller // Nama class sesuai permi
             ->first();
 
         $isManagerOrKepala = $roleMapping && str_contains($roleMapping->route_name, 'manager');
-        // ------------------------------------------
 
         DB::beginTransaction();
         try {
             // A. Simpan data pengajuan utama
             $pengajuan = PengajuanPangkatgajitunjangan::create($dataUntukTabelUtama);
-            $idPengajuanBaru = $pengajuan->id_pengajuan;
 
-            // B. Simpan Log (Gunakan konstanta StatusPersetujuan)
+            // 1. GANTI id_pengajuan menjadi id_kenaikan
+            $idPengajuanBaru = $pengajuan->id_kenaikan;
+
+            // B. Simpan Log
             LogPersetujuanPangkatgajitunjangan::create([
-                'id_pengajuan'       => $idPengajuanBaru,
+                'id_kenaikan'        => $idPengajuanBaru, // 2. GANTI id_pengajuan menjadi id_kenaikan
                 'nomor_urut_pegawai' => $nomor_urut_pegawai,
                 'tahap_persetujuan'  => 'Pengajuan Awal',
                 'status_persetujuan' => StatusPersetujuan::DIPROSES,
@@ -171,7 +172,8 @@ class KenaikanPangkatgajitunjangan extends Controller // Nama class sesuai permi
                         $path = $file->storeAs($baseUploadPath, $fileNameFormatted, 'local');
 
                         FilePersyaratanpangkatgajitunjangan::create([
-                            'pengajuan_pangkatgajitunjangan_id' => $idPengajuanBaru,
+                            // 3. GANTI pengajuan_pangkatgajitunjangan_id menjadi id_kenaikan
+                            'id_kenaikan'      => $idPengajuanBaru,
                             'nomor_urut_pegawai'               => $nomor_urut_pegawai,
                             'nama_file_asli'                   => $originalName,
                             'path_file_server'                 => $path,
@@ -183,18 +185,22 @@ class KenaikanPangkatgajitunjangan extends Controller // Nama class sesuai permi
 
             DB::commit();
 
-            $user = auth()->user();
-            $roleMapping = \DB::table('roles_mapping')
-                ->where('jabatan_id', $user->jabatan_id)
-                ->where('level_id', $user->level_id)
-                ->first();
-            $isManagerOrKepala = $roleMapping && str_contains($roleMapping->route_name, 'manager');
+            // 1. CEK ULANG ROLE SECARA SPESIFIK
+            $isManager = $roleMapping && str_contains($roleMapping->route_name, 'manager');
+            $isSKKMR   = $roleMapping && str_contains($roleMapping->route_name, 'skkmr');
 
-            // 2. Tentukan Route Tujuan (Gunakan Nama Route, bukan URL)
-            $targetRoute = $isManagerOrKepala ? 'manager.pilihpengajuan' : 'pegawai.dashboard';
-            $parentRouteName = $isManagerOrKepala ? 'manager.pilihpengajuan' : 'datapengajuan.formDataPengajuan';
+            // 2. TENTUKAN RUTE REDIRECT TUJUAN
+            if ($isManager) {
+                $targetRoute = 'manager.pilihpengajuan';
+                $parentRouteName = 'manager.pilihpengajuan';
+            } elseif ($isSKKMR) {
+                $targetRoute = 'skkmr.dashboardskkmr'; // Sesuaikan rute dashboard SKKMR Anda
+                $parentRouteName = 'skkmr.pengajuanskkmr';
+            } else {
+                $targetRoute = 'pegawai.dashboard';
+                $parentRouteName = 'datapengajuan.formDataPengajuan';
+            }
 
-            // 3. Redirect dengan Session (Key 'success' wajib ada untuk memicu modal)
             return redirect()->route($targetRoute)->with([
                 'success' => 'Permintaan Kenaikan Pangkat/Gaji Anda telah tercatat.',
                 'modal_title' => 'Update Berhasil!',

@@ -32,17 +32,28 @@ class DataPengajuanController extends Controller
     {
         $user = auth()->user();
 
-        // 1. Ambil data Role secara dinamis (Hapus level_akses)
+        // 1. Ambil data Role secara dinamis
         $roleMapping = \DB::table('roles_mapping')
             ->where('jabatan_id', $user->jabatan_id)
             ->where('level_id', $user->level_id)
             ->first();
 
-        $isManagerOrKepala = $roleMapping && str_contains($roleMapping->route_name, 'manager');
+        $isManager = $roleMapping && str_contains($roleMapping->route_name, 'manager');
+        $isSKKMR   = $roleMapping && str_contains($roleMapping->route_name, 'skkmr');
 
-        // Tentukan rute dashboard dan parent secara dinamis
-        $dashboardRoute = $isManagerOrKepala ? ($roleMapping->route_name ?? 'manager.dashboardmanagerumum') : 'pegawai.dashboard';
-        $parentRouteName = $isManagerOrKepala ? 'manager.pengajuanmanager' : 'datapengajuan.formDataPengajuan';
+        if ($isManager) {
+            $dashboardRoute = $roleMapping->route_name ?? 'manager.dashboardmanagerumum';
+            $parentRouteName = 'manager.pengajuanmanager';
+            $roleLabel = 'Manager';
+        } elseif ($isSKKMR) {
+            $dashboardRoute = 'skkmr.dashboardskkmr';
+            $parentRouteName = 'skkmr.pengajuanskkmr';
+            $roleLabel = 'Kepala Satker';
+        } else {
+            $dashboardRoute = 'pegawai.dashboard';
+            $parentRouteName = 'datapengajuan.formDataPengajuan';
+            $roleLabel = 'Pegawai';
+        }
 
         $statusFilterRequest = $request->status_pengajuan_filter;
 
@@ -74,7 +85,6 @@ class DataPengajuanController extends Controller
             ->appends($request->query());
 
         // 7. Judul dan Breadcrumbs Dinamis
-        $roleLabel = $isManagerOrKepala ? 'Manager' : 'Pegawai';
         $pageTitle = 'Data Pengajuan ' . $roleLabel;
 
         $breadcrumbs = [
@@ -83,9 +93,22 @@ class DataPengajuanController extends Controller
 
         // Logika Breadcrumbs Level 2 & 3
         if ($type || $request->type) {
-            $currentType = $type ?: $request->type;
-            $breadcrumbs[$pageTitle] = route($parentRouteName); // Level 2 (Klik balik)
-            $breadcrumbs['Pengajuan ' . ucfirst($currentType)] = null; // Level 3 (Aktif)
+            // 1. Ambil nilai type asli (belum di-strtolower)
+            $rawType = $type ?: $request->type;
+
+            // 2. Buat kamus nama yang rapi
+            $typeNames = [
+                'PangkatGajiTunjangan' => 'Pangkat, Gaji, dan Tunjangan',
+                'Cuti' => 'Cuti',
+                'Lembur' => 'Lembur',
+                'Pensiun' => 'Pensiun',
+            ];
+
+            // 3. Ambil nama rapi dari kamus, jika tidak ada baru gunakan ucfirst
+            $formattedType = $typeNames[$rawType] ?? ucfirst($rawType);
+
+            $breadcrumbs[$pageTitle] = route($parentRouteName); // Level 2
+            $breadcrumbs['Pengajuan ' . $formattedType] = null; // Level 3 (Rapi!)
         } else {
             $breadcrumbs[$pageTitle] = null; // Level 2 Aktif
         }
@@ -99,10 +122,10 @@ class DataPengajuanController extends Controller
             'breadcrumbs' => $breadcrumbs,
             'parentRouteName' => $parentRouteName,
             'layout' => $layout,
-            'isManagerOrKepala' => $isManagerOrKepala
+            'isManager' => $isManager, // 🟢 Ganti variabel yang dikirim ke blade
+            'isSKKMR' => $isSKKMR
         ]);
     }
-
 
     private function fetchSubmissions($user, $request): Collection
     {
@@ -117,9 +140,9 @@ class DataPengajuanController extends Controller
             return $query;
         };
 
-        // Terapkan filter tanggal pada setiap query database
+        // 1. Ambil data cuti - UPDATE: Urutkan log berdasarkan id_cuti
         $cutis = $applyDateFilters($user->cutis())->with(['logs' => function ($query) {
-            $query->orderByDesc('updated_at');
+            $query->orderByDesc('updated_at')->orderByDesc('id_cuti');
         }])->get();
 
         $lemburs = $applyDateFilters($user->lemburs())->with(['logPersetujuanLembur' => function ($query) {
@@ -134,22 +157,34 @@ class DataPengajuanController extends Controller
             $query->orderByDesc('updated_at');
         }])->get();
 
-        // Mapping ulang kunci relasi ke nama standar 'logs' dan konversi ke array
-        // ... (sisa kode mapping Anda tetap sama di sini) ...
+        // 2. Mapping data Cuti - UPDATE: Tambahkan alias 'id' agar tidak error di View/Processor
         $processedCuti = $cutis->map(function ($item) {
-            $itemArray = $item->toArray(); $itemArray['type'] = 'Cuti'; return $itemArray;
+            $itemArray = $item->toArray();
+            $itemArray['type'] = 'Cuti';
+            $itemArray['id'] = $item->id_cuti;
+            return $itemArray;
         });
+
         $processedLembur = $lemburs->map(function ($item) {
-            $itemArray = $item->toArray(); $itemArray['type'] = 'Lembur';
+            $itemArray = $item->toArray(); $itemArray['type'] = 'Lembur'; $itemArray['id'] = $item->id_lembur;
             $itemArray['logs'] = $itemArray['log_persetujuan_lembur'] ?? []; unset($itemArray['log_persetujuan_lembur']); return $itemArray;
         });
+
         $processedPensiun = $pensiuns->map(function ($item) {
-            $itemArray = $item->toArray(); $itemArray['type'] = 'Pensiun';
+            $itemArray = $item->toArray(); $itemArray['type'] = 'Pensiun'; $itemArray['id'] = $item->id_pensiun;
             $itemArray['logs'] = $itemArray['log_persetujuan_pensiun'] ?? []; unset($itemArray['log_persetujuan_pensiun']); return $itemArray;
         });
+
         $processedPangkatGajiTunjangan = $pangkatgajitunjangans->map(function ($item) {
-            $itemArray = $item->toArray(); $itemArray['type'] = 'PangkatGajiTunjangan';
-            $itemArray['logs'] = $itemArray['log_persetujuan_pangkatgajitunjangan'] ?? []; unset($itemArray['log_persetujuan_pangkatgajitunjangan']); return $itemArray;
+            $itemArray = $item->toArray();
+            $itemArray['type'] = 'PangkatGajiTunjangan';
+
+            // 🟢 TAMBAHKAN INI AGAR KONSISTEN DENGAN LAINNYA
+            $itemArray['id'] = $item->id_kenaikan;
+
+            $itemArray['logs'] = $itemArray['log_persetujuan_pangkatgajitunjangan'] ?? [];
+            unset($itemArray['log_persetujuan_pangkatgajitunjangan']);
+            return $itemArray;
         });
 
         return collect()
@@ -158,6 +193,7 @@ class DataPengajuanController extends Controller
             ->merge($processedPensiun)
             ->merge($processedPangkatGajiTunjangan);
     }
+
 
     private function paginateSubmissions(Collection $submissions, int $perPage): LengthAwarePaginator
     {
@@ -175,89 +211,120 @@ class DataPengajuanController extends Controller
             ]
         );
     }
-    public function downloadLetterPdf ($nup): Response
+
+    public function downloadLetterPdf($nup)
     {
-        // 1. Eager loading data yang diperlukan
-        $cuti = PengajuanCuti::with(['pegawai.pekerjaan.divisi', 'jenisCuti', 'logs.penyetuju.pekerjaan.divisi'])
-                                ->where('nomor_urut_pegawai', $nup)
-                                ->firstOrFail();
+        try {
+            // 1. Ambil data pengajuan
+            $cuti = PengajuanCuti::with(['pegawai.pekerjaan.divisi', 'pekerjaan.divisi'])
+                                    ->where('nomor_urut_pegawai', $nup)
+                                    ->firstOrFail();
 
-        // 2. Duplikasi Logika Pencarian Manager & Direktur
-        $manager = null;
-        $direktur = null;
+            // 2. LOGIKA MANAGER (Atasan Langsung)
+            $idDivisiPengaju = $cuti->pegawai->pekerjaan->id_divisi ?? null;
+            $managerData = Pekerjaan::where('id_divisi', $idDivisiPengaju)
+                ->where(function($q) {
+                    $q->where('jabatan', 'LIKE', '%Manager%')
+                    ->orWhere('jabatan', 'LIKE', '%Manajer%');
+                })
+                ->with('pegawai')
+                ->first();
 
-        foreach ($cuti->logs as $log) {
-            if ($log->penyetuju && $log->penyetuju->pekerjaan->first()) {
-                $pekerjaanPegawai = $log->penyetuju->pekerjaan->first();
-                $jabatanName = strtolower($pekerjaanPegawai->jabatan);
+            $namaAtasan = $managerData->pegawai->nama ?? '........................';
+            $jabatanAtasan = $managerData->jabatan ?? 'Atasan Langsung';
 
-                if (str_contains($jabatanName, 'manager') && !$manager) {
-                    $manager = $log->penyetuju;
-                } elseif (str_contains($jabatanName, 'direktur operasional') && !$direktur) {
-                    $direktur = $log->penyetuju;
-                }
+            // 3. LOGIKA DIREKSI
+            $dirOps = Pekerjaan::where('jabatan', 'Direktur Operasional')->with('pegawai')->first();
+            $dirKep = Pekerjaan::where('jabatan', 'Direktur Kepatuhan')->with('pegawai')->first();
 
-                if ($manager && $direktur) break;
-            }
-        }
+            $namaDireksi = strtoupper($dirOps->pegawai->nama ?? '............') . ' atau ' . strtoupper($dirKep->pegawai->nama ?? '............');
+            $jabatanDireksi = 'Direktur Operasional atau Direktur Kepatuhan';
 
-        // 3. Kirim SEMUA variabel yang diperlukan ke view
-        $data = compact('cuti', 'manager', 'direktur'); // Tambahkan manager dan direktur di sini
-        $data['is_pdf'] = true; // Menandakan konteksnya adalah PDF
+            // 4. LOGIKA VERIFIKATOR
+            $v1 = Pekerjaan::where('jabatan', 'LIKE', '%Kepala Satker Kepatuhan%')->with('pegawai')->first();
+            $v2 = Pekerjaan::where('jabatan', 'LIKE', '%Human Resources Officer%')->with('pegawai')->first();
 
-        // Menggunakan partial view yang sama untuk konten surat
-        $pdfContent = view(view: 'partials.letter_content', data: $data)->render();
+            $namaVerif1 = strtoupper($v1->pegawai->nama ?? '........................');
+            $jabatanVerif1 = "Kepala Satker Kepatuhan & M.R.";
+            $namaVerif2 = strtoupper($v2->pegawai->nama ?? '........................');
+            $jabatanVerif2 = "Human Resources Officer";
 
-        // ... logika pembuatan PDF selanjutnya ...
-        if (class_exists('Barryvdh\DomPDF\Facade\Pdf')) {
-            $pdf = Pdf::loadHtml(string: $pdfContent);
-            $pdf->setPaper('A4', 'portrait');
+            // 5. Bungkus data (Pastikan KEY-nya sama persis dengan yang dipanggil di Blade)
+            $data = [
+                'cuti'           => $cuti,
+                'is_pdf'         => true,
+                'namaAtasan'     => $namaAtasan,
+                'jabatanAtasan'  => $jabatanAtasan,
+                'namaDireksi'    => $namaDireksi,
+                'jabatanDireksi' => $jabatanDireksi,
+                'namaVerif1'     => $namaVerif1,
+                'jabatanVerif1'  => $jabatanVerif1,
+                'namaVerif2'     => $namaVerif2,
+                'jabatanVerif2'  => $jabatanVerif2,
+            ];
 
-            return $pdf->download(filename: 'Surat_Cuti_' . $nup . '.pdf');
-        } else {
-            return response(content: 'Download functionality requires a PDF library installed in Laravel.', status: 404);
+            // 6. Generate PDF
+            $pdf = Pdf::loadView('partials.letter_content', $data);
+            $pdf->setPaper([0, 0, 609.45, 935.43], 'portrait');
+
+            return $pdf->download('Surat_Cuti_' . $nup . '.pdf');
+
+        } catch (\Exception $e) {
+            // Jika error, tampilkan pesan errornya biar ketahuan salahnya dimana
+            return response()->json(['error' => $e->getMessage()], 500);
         }
     }
 
     public function getLetterDetailsByNup($nup)
     {
-        // Eager loading relasi yang diperlukan (tanpa relasi jabatan master yang kosong)
+        // 1. Ambil data pengajuan cuti
         $cuti = PengajuanCuti::with([
-            'pegawai.pekerjaan',
+            'pegawai.pekerjaan.divisi',
             'jenisCuti',
-            'logs.penyetuju.pekerjaan',
-            'pekerjaan.divisi'
+            'logs.penyetuju.pekerjaan'
         ])->where('nomor_urut_pegawai', $nup)->firstOrFail();
 
-        $manager = null;
-        $direktur = null;
+        // 2. LOGIKA MENCARI MANAGER (ATASAN LANGSUNG) BERDASARKAN DIVISI PENGAJU
+        $idDivisiPengaju = $cuti->pegawai->pekerjaan->id_divisi ?? null;
+        $managerData = Pekerjaan::where('id_divisi', $idDivisiPengaju)
+            ->where(function($q) {
+                $q->where('jabatan', 'LIKE', '%Manager%')
+                ->orWhere('jabatan', 'LIKE', '%Manajer%');
+            })
+            ->with('pegawai')
+            ->first();
 
-        foreach ($cuti->logs as $log) {
-            // Pastikan objek penyetuju ada
-            if ($log->penyetuju) {
-                // Kita perlu mengambil item PERTAMA dari koleksi 'pekerjaan'
-                $pekerjaanPegawai = $log->penyetuju->pekerjaan->first();
+        $namaAtasan = $managerData->pegawai->nama ?? '........................';
+        $jabatanAtasan = $managerData->jabatan ?? 'Atasan Langsung';
 
-                if ($pekerjaanPegawai) {
-                    // Mengakses langsung kolom 'jabatan' (string/varchar)
-                    $jabatanName = strtolower($pekerjaanPegawai->jabatan);
+        // 3. LOGIKA MENCARI DIREKSI DINAMIS (OPS vs KEPATUHAN)
+        $dirOps = Pekerjaan::where('jabatan', 'Direktur Operasional')->with('pegawai')->first();
+        $dirKep = Pekerjaan::where('jabatan', 'Direktur Kepatuhan')->with('pegawai')->first();
 
-                    // dd("Memproses jabatan:", $jabatanName);
+        $namaDireksi = strtoupper($dirOps->pegawai->nama ?? '............') . ' atau ' . strtoupper($dirKep->pegawai->nama ?? '............');
+        $jabatanDireksi = 'Direktur Operasional atau Direktur Kepatuhan';
 
-                    if (str_contains($jabatanName, 'manager') && !$manager) {
-                        $manager = $log->penyetuju; // Menetapkan objek pegawai manajer
-                    } elseif (str_contains($jabatanName, 'direktur operasional') && !$direktur) {
-                        $direktur = $log->penyetuju; // Menetapkan objek pegawai direktur
-                    }
+        // 4. LOGIKA MENCARI VERIFIKATOR (VERSI SINGKAT)
+        $v1 = Pekerjaan::where('jabatan', 'LIKE', '%Kepala Satker Kepatuhan%')->with('pegawai')->first();
+        $v2 = Pekerjaan::where('jabatan', 'LIKE', '%Human Resources Officer%')->with('pegawai')->first();
 
-                    // Hentikan loop jika keduanya sudah ditemukan
-                    if ($manager && $direktur) break;
-                }
-            }
-        }
+        $namaVerif1 = strtoupper($v1->pegawai->nama ?? '........................');
+        $jabatanVerif1 = "Kepala Satker Kepatuhan & M.R.";
+        $namaVerif2 = strtoupper($v2->pegawai->nama ?? '........................');
+        $jabatanVerif2 = "Human Resources Officer";
 
-        // Kirim objek $cuti, $manager, dan $direktur ke view
-        return view('partials.letter_content', compact('cuti', 'manager', 'direktur'));
+        // 5. Return ke view dengan SEMUA variabel yang diminta Blade
+        return view('partials.letter_content', compact(
+            'cuti',
+            'namaAtasan',
+            'jabatanAtasan',
+            'namaDireksi',
+            'jabatanDireksi',
+            'namaVerif1',
+            'jabatanVerif1',
+            'namaVerif2',
+            'jabatanVerif2'
+        ));
     }
 
     public function getLemburLetterDetailsByNup($nup)
@@ -525,81 +592,81 @@ class DataPengajuanController extends Controller
     }
 
     public function downloadLetterPdfPangkatGajiTunjangan($nup): Response
-{
-    // 1. Eager loading data yang diperlukan untuk LEMBUR
-    $pangkatgajitunjangan = PengajuanPangkatgajitunjangan::with([
-        'pegawai.pekerjaan.divisi',
-        'logPersetujuanPangkatgajitunjangan.penyetuju.pekerjaan',
-        // Menambahkan relasi untuk mengambil data file upload dari tabel file_persyaratanpangkatgajitunjangan
-        'files'
-    ])
-    ->where('nomor_urut_pegawai', $nup)
-    ->latest('created_at') // Mengambil yang terbaru berdasarkan waktu buat
-    ->firstOrFail();
-    // dd($pangkatgajitunjangan->toArray());
+    {
+        // 1. Eager loading data yang diperlukan untuk LEMBUR
+        $pangkatgajitunjangan = PengajuanPangkatgajitunjangan::with([
+            'pegawai.pekerjaan.divisi',
+            'logPersetujuanPangkatgajitunjangan.penyetuju.pekerjaan',
+            // Menambahkan relasi untuk mengambil data file upload dari tabel file_persyaratanpangkatgajitunjangan
+            'files'
+        ])
+        ->where('nomor_urut_pegawai', $nup)
+        ->latest('created_at') // Mengambil yang terbaru berdasarkan waktu buat
+        ->firstOrFail();
+        // dd($pangkatgajitunjangan->toArray());
 
-    // $manager = null;
-    $skk_mr = null;
-    $direktur_kepatuhan = null;
-    $direktur_utama = null;
-    $hro = null;
+        // $manager = null;
+        $skk_mr = null;
+        $direktur_kepatuhan = null;
+        $direktur_utama = null;
+        $hro = null;
 
-    // Iterasi log persetujuan untuk mendapatkan data penyetuju sesuai alur pangkatgajitunjangan
-    foreach ($pangkatgajitunjangan->logPersetujuanPangkatgajitunjangan as $log) {
-        if ($log->penyetuju) {
-            $pekerjaanPenyetuju = $log->penyetuju->pekerjaan->first();
+        // Iterasi log persetujuan untuk mendapatkan data penyetuju sesuai alur pangkatgajitunjangan
+        foreach ($pangkatgajitunjangan->logPersetujuanPangkatgajitunjangan as $log) {
+            if ($log->penyetuju) {
+                $pekerjaanPenyetuju = $log->penyetuju->pekerjaan->first();
 
-            if ($pekerjaanPenyetuju) {
-                $jabatanName = strtolower($pekerjaanPenyetuju->jabatan);
+                if ($pekerjaanPenyetuju) {
+                    $jabatanName = strtolower($pekerjaanPenyetuju->jabatan);
 
-                // Filter berdasarkan kata kunci jabatan
-                if (str_contains($jabatanName, 'skk mr') && !$skk_mr) {
-                    $skk_mr = $log->penyetuju;
+                    // Filter berdasarkan kata kunci jabatan
+                    if (str_contains($jabatanName, 'skk mr') && !$skk_mr) {
+                        $skk_mr = $log->penyetuju;
+                    }
+                    elseif (str_contains($jabatanName, 'direktur kepatuhan') && !$direktur_kepatuhan) {
+                        $direktur_kepatuhan = $log->penyetuju;
+                    }
+                    elseif (str_contains($jabatanName, 'direktur utama') && !$direktur_utama) {
+                        $direktur_utama = $log->penyetuju;
+                    }
+                    elseif ((str_contains($jabatanName, 'hro') || str_contains($jabatanName, 'human resource')) && !$hro) {
+                        $hro = $log->penyetuju;
+                    }
+
+                    if ($skk_mr && $direktur_kepatuhan && $direktur_utama && $hro) break;
                 }
-                elseif (str_contains($jabatanName, 'direktur kepatuhan') && !$direktur_kepatuhan) {
-                    $direktur_kepatuhan = $log->penyetuju;
-                }
-                elseif (str_contains($jabatanName, 'direktur utama') && !$direktur_utama) {
-                    $direktur_utama = $log->penyetuju;
-                }
-                elseif ((str_contains($jabatanName, 'hro') || str_contains($jabatanName, 'human resource')) && !$hro) {
-                    $hro = $log->penyetuju;
-                }
-
-                if ($skk_mr && $direktur_kepatuhan && $direktur_utama && $hro) break;
             }
         }
+
+        // 3. Kirim SEMUA variabel yang diperlukan ke view pensiun
+        // Pastikan partial view yang digunakan adalah view untuk konten surat pensiun
+        $data = compact('pangkatgajitunjangan', 'skk_mr', 'direktur_kepatuhan', 'direktur_utama','hro');
+        $data['is_pdf'] = true;
+
+        // Menggunakan partial view KHUSUS untuk konten surat pensiun
+        $pdfContent = view(view: 'partials.pangkatgajitunjangan_letter_content', data: $data)->render();
+
+        // --- LOGIKA BARU UNTUK NAMA FILE ---
+        // 1. Ambil jenis pengajuan (asumsi kolomnya bernama 'jenis_pengajuan')
+        $jenisPengajuan = trim($pangkatgajitunjangan->jenis_pengajuan ?? 'Pengajuan');
+
+        // 2. Bersihkan nama file: ganti spasi dengan underscore (_) dan hapus karakter yang tidak aman
+        // Ini akan mengubah "Kenaikan Pangkat Reguler" menjadi "Kenaikan_Pangkat_Reguler"
+        $cleanFileName = preg_replace('/[^A-Za-z0-9_]/', '', str_replace(' ', '_', $jenisPengajuan));
+
+        // 3. Buat nama file lengkap yang akan dikirim ke browser
+        $fileName = 'Surat_' . $cleanFileName . '_' . $nup . '.pdf';
+        // --- AKHIR LOGIKA BARU ---
+
+        if (class_exists('Barryvdh\DomPDF\Facade\Pdf')) {
+            $pdf = Pdf::loadHtml(string: $pdfContent);
+            $pdf->setPaper('A4', 'portrait');
+
+            // Gunakan variabel $fileName yang sudah dibuat dinamis di sini
+            return $pdf->download(filename: $fileName);
+        } else {
+            return response(content: 'Download functionality requires a PDF library installed in Laravel.', status: 404);
+        }
     }
-
-    // 3. Kirim SEMUA variabel yang diperlukan ke view pensiun
-    // Pastikan partial view yang digunakan adalah view untuk konten surat pensiun
-    $data = compact('pangkatgajitunjangan', 'skk_mr', 'direktur_kepatuhan', 'direktur_utama','hro');
-    $data['is_pdf'] = true;
-
-    // Menggunakan partial view KHUSUS untuk konten surat pensiun
-    $pdfContent = view(view: 'partials.pangkatgajitunjangan_letter_content', data: $data)->render();
-
-    // --- LOGIKA BARU UNTUK NAMA FILE ---
-    // 1. Ambil jenis pengajuan (asumsi kolomnya bernama 'jenis_pengajuan')
-    $jenisPengajuan = trim($pangkatgajitunjangan->jenis_pengajuan ?? 'Pengajuan');
-
-    // 2. Bersihkan nama file: ganti spasi dengan underscore (_) dan hapus karakter yang tidak aman
-    // Ini akan mengubah "Kenaikan Pangkat Reguler" menjadi "Kenaikan_Pangkat_Reguler"
-    $cleanFileName = preg_replace('/[^A-Za-z0-9_]/', '', str_replace(' ', '_', $jenisPengajuan));
-
-    // 3. Buat nama file lengkap yang akan dikirim ke browser
-    $fileName = 'Surat_' . $cleanFileName . '_' . $nup . '.pdf';
-    // --- AKHIR LOGIKA BARU ---
-
-    if (class_exists('Barryvdh\DomPDF\Facade\Pdf')) {
-        $pdf = Pdf::loadHtml(string: $pdfContent);
-        $pdf->setPaper('A4', 'portrait');
-
-        // Gunakan variabel $fileName yang sudah dibuat dinamis di sini
-        return $pdf->download(filename: $fileName);
-    } else {
-        return response(content: 'Download functionality requires a PDF library installed in Laravel.', status: 404);
-    }
-}
 
 }

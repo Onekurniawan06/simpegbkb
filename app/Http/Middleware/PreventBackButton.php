@@ -13,9 +13,17 @@ class PreventBackButton
     {
         $response = $next($request);
 
-        // Menambahkan header no-cache
-        return $response->header('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0')
-                        ->header('Pragma', 'no-cache')
-                        ->header('Expires', 'Sat, 01 Jan 2000 00:00:00 GMT');
+        // 🛡️ Cek apakah response berupa file (BinaryFileResponse)
+        if ($response instanceof \Symfony\Component\HttpFoundation\BinaryFileResponse) {
+            $response->headers->set('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0');
+            $response->headers->set('Pragma', 'no-cache');
+        } else {
+            // Untuk response halaman web biasa
+            $response->header('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0')
+                    ->header('Pragma', 'no-cache');
+        }
+
+        return $response;
     }
+
 }

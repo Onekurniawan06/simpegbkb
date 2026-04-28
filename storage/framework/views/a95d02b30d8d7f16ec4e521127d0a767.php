@@ -167,15 +167,32 @@
                     </div>
                 <?php endif; ?>
 
-                <a href="<?php echo e(route('kenaikanpangkatgajitunjangan.pangkatgajitunjangan')); ?>" class="block h-full">
-                    <div class="bg-white p-4 rounded-lg shadow hover:shadow-md hover:bg-green-50 transition duration-300 cursor-pointer flex items-center flex-col text-center h-full">
-                        <div class="h-12 w-12 bg-yellow-100 rounded-full mb-2">
-                            <img src="<?php echo e(asset('images/ico/promotion-in-salary.svg')); ?>" alt="User Travel Icon" class="w-8 h-8 m-2 mt-2 text-gray-500">
+                <?php if($hasPendingPangkat): ?>
+                    <div class="block h-full cursor-not-allowed group" title="Anda memiliki pengajuan Kenaikan Pangkat, Gaji & Tunjangan yang masih dalam proses persetujuan.">
+                        <div class="bg-white p-4 rounded-lg shadow flex items-center flex-col text-center h-full">
+                            <div class="h-12 w-12 bg-yellow-100 rounded-full mb-2">
+                                <img src="<?php echo e(asset('images/ico/promotion-in-salary.svg')); ?>" alt="User Travel Icon" class="w-8 h-8 m-2 mt-2 text-gray-500">
+                            </div>
+                            <p class="font-semibold text-gray-700 text-sm">Kenaikan Pangkat, Gaji & Tunjangan</p>
+                            <p class="text-xs text-red-500 mt-1 mb-2">Pengajuan sedang diproses</p>
+                            <a href="<?php echo e(route('datapengajuan.formDataPengajuan')); ?>" class="block w-full">
+                                <div class="bg-white p-2 rounded-lg shadow border border-gray-200 hover:bg-green-50 transition duration-300 cursor-pointer flex items-center flex-col text-center h-full">
+                                    <p class="font-semibold text-gray-900 text-xs">Lacak Pengajuan</p>
+                                </div>
+                            </a>
                         </div>
-                        <p class="font-semibold text-gray-700 text-sm">Kenaikan Pangkat, Gaji & Tunjangan</p>
-                        <p class="text-xs text-gray-500 mt-1">Klik untuk buat pengajuan</p>
                     </div>
-                </a>
+                <?php else: ?>
+                    <a href="<?php echo e(route('kenaikanpangkatgajitunjangan.pangkatgajitunjangan')); ?>" class="block h-full">
+                        <div class="bg-white p-4 rounded-lg shadow hover:shadow-md hover:bg-green-50 transition duration-300 cursor-pointer flex items-center flex-col text-center h-full">
+                            <div class="h-12 w-12 bg-yellow-100 rounded-full mb-2">
+                                <img src="<?php echo e(asset('images/ico/promotion-in-salary.svg')); ?>" alt="User Travel Icon" class="w-8 h-8 m-2 mt-2 text-gray-500">
+                            </div>
+                            <p class="font-semibold text-gray-700 text-sm">Kenaikan Pangkat, Gaji & Tunjangan</p>
+                            <p class="text-xs text-gray-500 mt-1">Klik untuk buat pengajuan</p>
+                        </div>
+                    </a>
+                <?php endif; ?>
             </div>
 
             <!-- Card Masa Kerja -->

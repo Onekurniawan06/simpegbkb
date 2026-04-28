@@ -9,7 +9,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PengajuanPangkatgajitunjangan extends Model
 {
-    protected $primaryKey = 'id_pengajuan';
+    // 1. Ganti primary key menjadi id_kenaikan
+    protected $primaryKey = 'id_kenaikan';
     protected $table = 'pengajuan_pangkatgajitunjangan';
     public $timestamps = true;
     const CREATED_AT = 'created_at';
@@ -18,13 +19,14 @@ class PengajuanPangkatgajitunjangan extends Model
 
     public function files(): HasMany
     {
-        return $this->hasMany(FilePersyaratanpangkatgajitunjangan::class, 'pengajuan_pangkatgajitunjangan_id', 'id_pengajuan');
+        // 2. Ganti foreign key dan local key menjadi id_kenaikan
+        return $this->hasMany(FilePersyaratanpangkatgajitunjangan::class, 'id_kenaikan', 'id_kenaikan');
     }
 
-    public function logPersetujuanPangkatgajitunjangan(): HasMany // Bisa juga tanpa ': HasMany'
+    public function logPersetujuanPangkatgajitunjangan(): HasMany
     {
-        // Sesuaikan 'id_pengajuan' dengan nama foreign key di tabel log_persetujuan_pangkatgajitunjangan
-        return $this->hasMany(LogPersetujuanPangkatgajitunjangan::class, 'id_pengajuan', 'id_pengajuan');
+        // 3. Ganti foreign key dan local key menjadi id_kenaikan
+        return $this->hasMany(LogPersetujuanPangkatgajitunjangan::class, 'id_kenaikan', 'id_kenaikan');
     }
 
     public function setTmtPegawaiAttribute($value)
@@ -50,19 +52,16 @@ class PengajuanPangkatgajitunjangan extends Model
 
     public static function isPengajuanExistInDivisi($idDivisi, $ignoreId = null)
     {
-        // Mencari record pengajuan pensiun yang terkait dengan id_divisi yang diberikan
+        // Mencari record pengajuan yang terkait dengan id_divisi yang diberikan
         $query = self::whereHas('pegawai.pekerjaan', function ($q) use ($idDivisi) {
                 $q->where('id_divisi', $idDivisi);
             });
-            // Semua logika tanggal/jam lembur telah dihapus di sini.
 
-        // Abaikan ID pengajuan saat ini jika sedang melakukan update
+        // 4. Ganti 'id_pengajuan' menjadi 'id_kenaikan' untuk ignore ID saat update
         if ($ignoreId) {
-            // Menggunakan 'id_pengajuan' sesuai kolom di gambar Anda
-            $query->where('id_pengajuan', '!=', $ignoreId);
+            $query->where('id_kenaikan', '!=', $ignoreId);
         }
 
-        // Mengembalikan TRUE jika ditemukan setidaknya satu record dalam divisi tersebut
         return $query->exists();
     }
 }

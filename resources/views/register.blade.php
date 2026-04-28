@@ -9,7 +9,7 @@
 
 <body class="flex flex-col min-h-screen bg-moving">
 
-    <div class="flex flex-col items-center justify-center grow p-2">
+    <div class="flex flex-col items-center justify-center grow">
 
         <div class="p-6 rounded-lg shadow-lg bg-gray-50 shadow-gray-300 max-w-xl w-full">
             <img src="{{ asset('images/logobkb.png') }}" alt="Logo Bank Kota Bogor" class="h-10 mb-4 w-auto mx-auto">
@@ -22,134 +22,113 @@
                     Pegawai Lama
                 </button>
             </div>
-
             {{-- <h2 id="tab-title" class="text-md font-semibold font-stylish mb-4 text-gray-800 text-center">Daftar Akun Baru</h2> --}}
+            <div class="custom-scroll-container overflow-y-auto pr-2 flex-1">
 
-            <!-- Area Form Pendaftaran -->
-            <form method="POST" action="{{ url('/register') }}">
-                @csrf
+                <!-- Area Form Pendaftaran -->
+                <form method="POST" action="{{ url('/register') }}">
+                    @csrf
+                    <!-- Input Nama Lengkap: Field dasar yang wajib diisi oleh semua kategori pegawai -->
+                    <div id="extra-field-lama" class="mb-4 hidden">
+                        <label for="nomor_urut_pegawai" class="block text-gray-700 text-sm font-semibold mb-2">Nomor Urut Pegawai</label>
+                        <input type="text" id="nomor_urut_pegawai" name="nomor_urut_pegawai" onkeyup="verifikasiPegawai(this.value)"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm" placeholder="Masukkan Nomor Urut Anda">
+                            <div id="loading-spinner" class="absolute right-3 top-1.5 hidden">
+                                <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="www.w3.org" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                            </div>
+                        <p class="text-xs text-gray-500 mt-1 italic">*Khusus untuk verifikasi data pegawai lama.</p>
+                    </div>
 
-                <!-- Input Nama Lengkap: Field dasar yang wajib diisi oleh semua kategori pegawai -->
-                <!-- Field Tambahan Khusus Pegawai Lama: Bagian ini akan muncul hanya jika tab Pegawai Lama aktif -->
-                <div id="extra-field-lama" class="mb-4 hidden">
-                    <label for="nomor_urut_pegawai" class="block text-gray-700 text-sm font-semibold mb-2">Nomor Urut Pegawai</label>
-                    <input type="text" id="nomor_urut_pegawai" name="nomor_urut_pegawai"
-                        onkeyup="verifikasiPegawai(this.value)"
-                        class="w-full px-3 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm"
-                        placeholder="Masukkan Nomor Urut Anda">
-
-                        <!-- Spinner Loading (Popup Kecil di dalam Input) -->
-                        <div id="loading-spinner" class="absolute right-3 top-1.5 hidden">
-                            <svg class="animate-spin h-5 w-5 text-blue-600" xmlns="www.w3.org" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
+                    <div class="flex gap-2">
+                        <div class="mb-4 flex-1">
+                            <label for="name" class="block text-gray-700 text-sm font-semibold mb-2">Nama Lengkap</label>
+                            <input type="text" id="name" name="name" autocomplete="off"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm" required readonly>
+                            <p id="msg-pegawai" class="text-xs mt-1 hidden"></p>
                         </div>
-                    <p class="text-xs text-gray-500 mt-1 italic">*Khusus untuk verifikasi data pegawai lama.</p>
-                </div>
-
-                <div class="flex gap-2">
-                    <div class="mb-4 flex-1">
-                        <label for="name" class="block text-gray-700 text-sm font-semibold mb-2">Nama Lengkap</label>
-                        <input type="text" id="name" name="name" autocomplete="off"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm" required readonly>
-                        <!-- Pesan feedback kecil jika pegawai ditemukan -->
-                        <p id="msg-pegawai" class="text-xs mt-1 hidden"></p>
-                    </div>
-
-                    <!-- Input Alamat Email: Digunakan sebagai kredensial login utama -->
-                    <div class="mb-4 flex-1">
-                        <label for="email" class="block text-gray-700 text-sm font-semibold mb-2">Alamat Email</label>
-                        <input type="email" id="email" name="email" class="w-full px-3 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm" required>
-                    </div>
-                </div>
-
-                <!-- Input Otomatis: Jabatan & Divisi (Hasil Verifikasi Nomor Urut) -->
-                <div id="extra-info-pegawai" class="flex gap-2 hidden">
-                    <div class="mb-4 flex-1">
-                        <label class="block text-gray-700 text-sm font-semibold mb-2">Jabatan</label>
-                        <input type="text" id="jabatan_display" name="nama_jabatan"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-sm bg-gray-100 text-sm cursor-not-allowed" readonly>
-                    </div>
-                    <div class="mb-4 flex-1">
-                        <label class="block text-gray-700 text-sm font-semibold mb-2">Divisi</label>
-                        <input type="text" id="divisi_display" name="nama_divisi"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-sm bg-gray-100 text-sm cursor-not-allowed" readonly>
-                    </div>
-                </div>
-
-                <div id="field-lahir" class="flex gap-2">
-                    <div class="mb-4 flex-1">
-                        <label for="tempat_lahir" class="block text-gray-700 text-sm font-semibold mb-2">Tempat Lahir</label>
-                        <input type="text" id="tempat_lahir" name="tempat_lahir" autocomplete="off"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm" required>
-                    </div>
-
-                    <div class="mb-4 flex-1">
-                        <label for="tanggal_lahir" class="block text-gray-700 text-sm font-semibold mb-2">Tanggal Lahir</label>
-                        <!-- Menggunakan type date bawaan browser -->
-                        <input type="date" id="tanggal_lahir" name="tanggal_lahir"
-                            class="w-full px-3 py-2 border border-gray-300 rounded-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm" required>
-                    </div>
-                </div>
-
-                <!-- Container Password menggunakan Flexbox -->
-                <div class="flex gap-2">
-                    <!-- Input Password Utama -->
-                    <div class="mb-4 flex-1">
-                        <label for="password" class="block text-gray-700 text-sm font-semibold mb-2">Password</label>
-                        <div class="relative">
-                            <input type="password" id="password" name="password"
-                                onkeyup="cekKesesuaianPassword()"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-200 pr-10 text-sm" required>
-                            <button type="button" onclick="togglePasswordVisibility('password', 'icon-open-1', 'icon-closed-1')" class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-600 hover:text-gray-800">
-                                <div id="icon-open-1" class="h-5 w-5 text-current">
-                                    <x-heroicon-o-eye class="h-full w-full" />
-                                </div>
-                                <div id="icon-closed-1" class="h-5 w-5 text-current hidden">
-                                    <x-heroicon-o-eye-slash class="h-full w-full" />
-                                </div>
-                            </button>
+                        <div class="mb-4 flex-1">
+                            <label for="email" class="block text-gray-700 text-sm font-semibold mb-2">Alamat Email</label>
+                            <input type="email" id="email" name="email" class="w-full px-3 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm" required>
                         </div>
-                        <!-- Error Laravel untuk field password utama -->
-                        @error('password')
-                            <p class="text-[10px] text-red-600 mt-1 italic">{{ $message }}</p>
-                        @enderror
                     </div>
 
-                    <!-- Input Konfirmasi Password -->
-                    <div class="mb-4 flex-1">
-                        <label for="password_confirmation" class="block text-gray-700 text-sm font-semibold mb-2">Konfirmasi Password</label>
-                        <div class="relative">
-                            <input type="password" id="password_confirmation" name="password_confirmation"
-                                onkeyup="cekKesesuaianPassword()"
-                                class="w-full px-3 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-200 pr-10 text-sm" required>
-                            <button type="button" onclick="togglePasswordVisibility('password_confirmation', 'icon-open-2', 'icon-closed-2')" class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-600 hover:text-gray-800">
-                                <div id="icon-open-2" class="h-5 w-5 text-current">
-                                    <x-heroicon-o-eye class="h-full w-full" />
-                                </div>
-                                <div id="icon-closed-2" class="h-5 w-5 text-current hidden">
-                                    <x-heroicon-o-eye-slash class="h-full w-full" />
-                                </div>
-                            </button>
+                    <!-- Input Otomatis: Jabatan & Divisi (Hasil Verifikasi Nomor Urut) -->
+                    <div id="extra-info-pegawai" class="flex gap-2 hidden">
+                        <div class="mb-4 flex-1">
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Jabatan</label>
+                            <input type="text" id="jabatan_display" name="nama_jabatan" class="w-full px-3 py-2 border border-gray-300 rounded-sm bg-gray-100 text-sm cursor-not-allowed" readonly>
                         </div>
-                        <!-- Tempat Notifikasi Error Real-time (JavaScript) -->
-                        <p id="msg-password-error" class="text-[10px] text-red-600 mt-1 hidden font-medium">
-                            ✗ Password tidak cocok
-                        </p>
+                        <div class="mb-4 flex-1">
+                            <label class="block text-gray-700 text-sm font-semibold mb-2">Divisi</label>
+                            <input type="text" id="divisi_display" name="nama_divisi" class="w-full px-3 py-2 border border-gray-300 rounded-sm bg-gray-100 text-sm cursor-not-allowed" readonly>
+                        </div>
                     </div>
-                </div>
 
-                <button type="submit" id="btn-submit-register" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-sm hover:bg-blue-700 transition duration-200 shadow-md flex items-center justify-center">
-                    <!-- Spinner (Hidden by default) -->
-                    <svg id="spinner-register" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    <span id="btn-text">Daftar</span>
-                </button>
-            </form>
+                    <div id="field-lahir" class="flex gap-2">
+                        <div class="mb-4 flex-1">
+                            <label for="tempat_lahir" class="block text-gray-700 text-sm font-semibold mb-2">Tempat Lahir</label>
+                            <input type="text" id="tempat_lahir" name="tempat_lahir" autocomplete="off"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm" required>
+                        </div>
+                        <div class="mb-4 flex-1">
+                            <label for="tanggal_lahir" class="block text-gray-700 text-sm font-semibold mb-2">Tanggal Lahir</label>
+                            <input type="date" id="tanggal_lahir" name="tanggal_lahir"
+                                class="w-full px-3 py-2 border border-gray-300 rounded-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm" required>
+                        </div>
+                    </div>
 
+                    <!-- Container Password menggunakan Flexbox -->
+                    <div class="flex gap-2">
+                        <div class="mb-4 flex-1">
+                            <label for="password" class="block text-gray-700 text-sm font-semibold mb-2">Password</label>
+                            <div class="relative">
+                                <input type="password" id="password" name="password" onkeyup="cekKesesuaianPassword()"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-200 pr-10 text-sm" required>
+                                <button type="button" onclick="togglePasswordVisibility('password', 'icon-open-1', 'icon-closed-1')" class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-600 hover:text-gray-800">
+                                    <div id="icon-open-1" class="h-5 w-5 text-current"> <x-heroicon-o-eye class="h-full w-full" />
+                                    </div>
+                                    <div id="icon-closed-1" class="h-5 w-5 text-current hidden"> <x-heroicon-o-eye-slash class="h-full w-full" />
+                                    </div>
+                                </button>
+                            </div>
+                            <!-- Error Laravel untuk field password utama -->
+                            @error('password')
+                                <p class="text-[10px] text-red-600 mt-1 italic">{{ $message }}</p>
+                            @enderror
+                        </div>
+
+                        <!-- Input Konfirmasi Password -->
+                        <div class="mb-4 flex-1">
+                            <label for="password_confirmation" class="block text-gray-700 text-sm font-semibold mb-2">Konfirmasi Password</label>
+                            <div class="relative">
+                                <input type="password" id="password_confirmation" name="password_confirmation" onkeyup="cekKesesuaianPassword()"
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-sm focus:outline-none focus:ring-2 focus:ring-blue-200 pr-10 text-sm" required>
+                                <button type="button" onclick="togglePasswordVisibility('password_confirmation', 'icon-open-2', 'icon-closed-2')" class="absolute inset-y-0 right-0 flex items-center px-3 text-gray-600 hover:text-gray-800">
+                                    <div id="icon-open-2" class="h-5 w-5 text-current"> <x-heroicon-o-eye class="h-full w-full" />
+                                    </div>
+                                    <div id="icon-closed-2" class="h-5 w-5 text-current hidden"> <x-heroicon-o-eye-slash class="h-full w-full" />
+                                    </div>
+                                </button>
+                            </div>
+                            <p id="msg-password-error" class="text-[10px] text-red-600 mt-1 hidden font-medium">
+                                ✗ Password tidak cocok
+                            </p>
+                        </div>
+                    </div>
+
+                    <button type="submit" id="btn-submit-register" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-sm hover:bg-blue-700 transition duration-200 shadow-md flex items-center justify-center">
+                        <svg id="spinner-register" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        <span id="btn-text">Daftar</span>
+                    </button>
+                </form>
+
+            </div>
             <!-- Footer Form: Memberikan navigasi balik bagi pengguna yang tidak sengaja berada di halaman daftar -->
             <p class="mt-4 text-center text-sm text-gray-600">
                 Sudah punya akun? <a href="{{ url('/') }}" class="text-blue-800 hover:underline font-semibold">Login di sini</a>
@@ -157,8 +136,8 @@
         </div>
     </div>
 
-    <footer class="mt-auto text-center text-white text-sm p-2">
-        ©2025 Bank Kota Bogor
+    <footer class="p-6 text-center text-white/40 text-[11px] tracking-widest font-medium uppercase">
+        &copy; <span id="currentYear"></span> Bank Kota Bogor. All Rights Reserved.
     </footer>
 
     @vite('resources/js/login-slider.js')
@@ -177,6 +156,8 @@
                 popup.classList.add('hidden');
             }
         }
+
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
     </script>
 
     <script>

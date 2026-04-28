@@ -79,7 +79,7 @@
 
 <!-- Date Section -->
 <div class="{{ (isset($is_pdf) && $is_pdf) ? 'date-section' : 'text-right text-sm mb-3' }}" style="{{ (isset($is_pdf) && $is_pdf) ? 'text-align: right;' : '' }}">
-    <p>Bogor, {{\Carbon\Carbon::parse($pensiun->created_at)->format('d F Y') }}</p>
+    <p>Bogor, {{ (isset($cuti) && $cuti->created_at) ? \Carbon\Carbon::parse($cuti->created_at)->locale('id')->translatedFormat('d F Y') : \Carbon\Carbon::now()->locale('id')->translatedFormat('d F Y') }}</p>
 </div>
 
 <!-- Salutation -->
@@ -100,80 +100,95 @@
         <tr>
             <td style="width: 25%; padding: 2px 0;">NUP Pegawai</td>
             <td style="width: 1%; padding: 2px 0;">:</td>
-            <td style="width: 74%; padding: 2px 0;"><strong>{{ $pensiun->pegawai->nomor_urut_pegawai ?? '[Nomor Induk Pegawai Anda]' }}</strong></td>
+            {{-- ID SINKRON DENGAN JS: review_nup --}}
+            <td style="width: 74%; padding: 2px 0;"><strong id="review_nup">{{ $pensiun->pegawai->nomor_urut_pegawai ?? '' }}</strong></td>
         </tr>
         <tr>
             <td style="padding: 2px 0;">Nama Pegawai</td>
             <td style="padding: 2px 0;">:</td>
-            <td style="padding: 2px 0;"><strong>{{ $pensiun->pegawai->nama ?? '[Nama Lengkap Anda]' }}</strong></td>
+            {{-- ID SINKRON DENGAN JS: review_nama_pegawai --}}
+            <td style="padding: 2px 0;"><strong id="review_nama_pegawai">{{ $pensiun->pegawai->nama ?? '' }}</strong></td>
         </tr>
         <tr>
             <td style="padding: 2px 0;">Divisi</td>
             <td style="padding: 2px 0;">:</td>
-            <td style="padding: 2px 0;"><strong>{{ $pensiun->pegawai->pekerjaan->divisi->nama_divisi ?? '[Divisi Pegawai]' }}</strong></td>
+            {{-- ID SINKRON DENGAN JS: review_unit_kerja --}}
+            <td style="padding: 2px 0;"><strong id="review_unit_kerja">{{ $pensiun->pegawai->pekerjaan->divisi->nama_divisi ?? '' }}</strong></td>
         </tr>
         <tr>
             <td style="padding: 2px 0;">Jabatan</td>
             <td style="padding: 2px 0;">:</td>
-            <td style="padding: 2px 0;"><strong>{{ $pensiun->pegawai->pekerjaan->jabatan ?? '[Jabatan Anda]' }}</strong></td>
+            {{-- ID SINKRON DENGAN JS: review_jabatan --}}
+            <td style="padding: 2px 0;"><strong id="review_jabatan">{{ $pensiun->pegawai->pekerjaan->jabatan ?? '' }}</strong></td>
         </tr>
         <tr>
             <td style="padding: 2px 0;">Pangkat/Grade</td>
             <td style="padding: 2px 0;">:</td>
-            <td style="padding: 2px 0;"><strong>{{ $pensiun->pegawai->pekerjaan->pangkat ?? '[Pangkat Anda]' }} / {{ $pensiun->pegawai->pekerjaan->grade ?? '[Grade Anda]' }}</strong></td>
+            <td style="padding: 2px 0;">
+                {{-- ID SINKRON DENGAN JS: review_pangkat & review_grade --}}
+                <strong id="review_pangkat">{{ $pensiun->pegawai->pekerjaan->pangkat ?? '' }}</strong> /
+                <strong id="review_grade">{{ $pensiun->pegawai->pekerjaan->grade ?? '' }}</strong>
+            </td>
         </tr>
         <tr>
             <td style="padding: 2px 0;">TMT Pegawai</td>
             <td style="padding: 2px 0;">:</td>
-            <td style="padding: 2px 0;"><strong>{{ $formatDate($pensiun->tmt_pegawai) }}</strong></td>
+            {{-- ID SINKRON DENGAN JS: review_tmt_pegawai --}}
+            <td style="padding: 2px 0;"><strong id="review_tmt_pegawai">{{ isset($pensiun) ? $formatDate($pensiun->tmt_pegawai) : '' }}</strong></td>
         </tr>
         <tr>
             <td style="padding: 2px 0;">Lama Bergabung</td>
             <td style="padding: 2px 0;">:</td>
-            <td style="padding: 2px 0;"><strong>{{ $pensiun->masa_kerja ?? '[Lama Bergabung Pegawai]' }}</strong></td>
+            {{-- ID SINKRON DENGAN JS: review_masa_kerja --}}
+            <td style="padding: 2px 0;"><strong id="review_masa_kerja">{{ $pensiun->masa_kerja ?? '' }}</strong></td>
         </tr>
         <tr>
             <td style="padding: 2px 0;">TMT Pensiun Pegawai</td>
             <td style="padding: 2px 0;">:</td>
-            <td style="padding: 2px 0;"><strong>{{ $formatDate($pensiun->tmt_pensiun) }}</strong></td>
+            {{-- ID SINKRON DENGAN JS: review_tmt_pensiun --}}
+            <td style="padding: 2px 0;"><strong id="review_tmt_pensiun">{{ isset($pensiun) ? $formatDate($pensiun->tmt_pensiun) : '' }}</strong></td>
         </tr>
     </table>
-    {{-- Akhir dari tabel detail pegawai --}}
 
     {{-- Paragraf Isi Surat --}}
     <p class="mt-4">
-        Berdasarkan Peraturan Perusahaan Perumda BPR Bank Kota Bogor No. 1 Tahun 2025 tentang Kepegawaian Perusahaan Umum Daerah BPR Bank Kota Bogor, maka dengan ini saya bermaksud untuk mengajukan permohonan pensiun <span class="font-semibold">{{ $pensiun->jenis_pengajuan ?? '[Jenis Pensiun]' }}</span> sebagai pegawai tetap Perumda BPR Bank Kota Bogor terhitung mulai tanggal <span class="font-semibold">{{ $formatDate($pensiun->tmt_pensiun) }}</span>.
+        Berdasarkan Peraturan Perusahaan Perumda BPR Bank Kota Bogor No. 1 Tahun 2025 tentang Kepegawaian Perusahaan Umum Daerah BPR Bank Kota Bogor, maka dengan ini saya bermaksud untuk mengajukan permohonan pensiun
+        <span id="review_jenis_pengajuan" class="font-semibold">{{ $pensiun->jenis_pengajuan ?? '' }}</span>
+        sebagai pegawai tetap Perumda BPR Bank Kota Bogor terhitung mulai tanggal
+        <span id="review_tmt_pensiun_text" class="font-semibold">{{ isset($pensiun) ? $formatDate($pensiun->tmt_pensiun) : '' }}</span>.
     </p>
 
     <p class="mt-4 mb-2">Sebagai bahan pertimbangan atas permohonan tersebut saya lampirkan dokumen persyaratan administratif sebagai berikut:</p>
-</div>
 
-{{-- Tabel Lampiran Dokumen DINAMIS --}}
-<div class="mb-4">
-    <table style="width: 100%; border-collapse: collapse;" class="text-sm">
+    {{-- TABEL LAMPIRAN FILE (FIX ERROR BARIS 173) --}}
+    <table style="width: 100%; border: 1px solid black; border-collapse: collapse; margin-top: 10px;">
         <thead>
-            <tr>
-                <th style="border: 1px solid black; padding: 8px; text-align: center; width: 5%;">No</th>
-                <th style="border: 1px solid black; padding: 8px; text-align: left; width: 15%;">Dokumen Persyaratan</th>
-                <th style="border: 1px solid black; padding: 8px; text-align: left; width: 80%;">Nama Dokumen</th>
+            <tr style="background-color: #f2f2f2;">
+                <th style="border: 1px solid black; padding: 8px; width: 5%;">No</th>
+                <th style="border: 1px solid black; padding: 8px; width: 45%;">Jenis Dokumen</th>
+                <th style="border: 1px solid black; padding: 8px; width: 50%;">Nama File</th>
             </tr>
         </thead>
         <tbody>
-            {{-- Loop melalui file yang diunggah untuk pengajuan pensiun ini --}}
-            @forelse($pensiun->files as $index => $file)
+            @if(isset($pensiun) && $pensiun->files && $pensiun->files->count() > 0)
+                @foreach($pensiun->files as $index => $file)
+                    <tr>
+                        <td style="border: 1px solid black; padding: 8px; text-align: center;">{{ $index + 1 }}</td>
+                        <td style="border: 1px solid black; padding: 8px; text-align: left;">{{ $file->tipe_dokumen }}</td>
+                        <td style="border: 1px solid black; padding: 8px;">{{ $file->nama_file_asli }}</td>
+                    </tr>
+                @endforeach
+            @else
                 <tr>
-                    <td style="border: 1px solid black; padding: 8px; text-align: center;">{{ $index + 1 }}</td>
-                    <td style="border: 1px solid black; padding: 8px; text-align: left;">{{ $file->tipe_dokumen }}</td>
-                    <td style="border: 1px solid black; padding: 8px;">{{ $file->nama_file_asli }}</td>
+                    <td colspan="3" style="border: 1px solid black; padding: 8px; text-align: center;">
+                        <em>-- Belum ada dokumen yang dilampirkan --</em>
+                    </td>
                 </tr>
-            @empty
-                <tr>
-                    <td style="border: 1px solid black; padding: 8px;" colspan="3">Tidak ada dokumen yang diunggah.</td>
-                </tr>
-            @endforelse
+            @endif
         </tbody>
     </table>
 </div>
+
 
 {{-- Paragraf Penutup --}}
 <div class="{{ (isset($is_pdf) && $is_pdf) ? 'text-sm mb-8' : 'text-sm mb-8' }}">
@@ -265,27 +280,27 @@
 @endif
 
 {{-- Bagian Tanda Tangan (Web & PDF View) --}}
-{{-- Gunakan div bersih untuk memastikan penempatan yang konsisten --}}
 <div class="text-left mt-4">
     <p class="text-sm mb-4">Hormat saya,</p>
 
     {{-- Placeholder QR Code --}}
     @if(isset($is_pdf) && $is_pdf)
-        {{-- Di PDF, lebih baik menggunakan margin-right langsung --}}
         <div style="width: 100px; height: 100px; margin-right: 0px;">
-            {{-- Logika render QR Code Anda di sini (Misal: {!! QrCode::size(100)->generate('...') !!}) --}}
             <div style="width: 96px; height: 96px; background-color: #e2e8f0; margin-top: 1rem; margin-bottom: 1rem;"></div>
         </div>
     @else
-        {{-- Di Web, gunakan kelas Tailwind --}}
         <div class="flex justify-start">
-            {{-- Logika render QR Code Anda di sini --}}
-             <div class="w-24 h-24 bg-gray-300 my-4"></div>
+            <div class="w-24 h-24 bg-gray-300 my-4"></div>
         </div>
     @endif
 
-    <p class="text-sm font-semibold mt-4">{{ $pensiun->pegawai->nama ?? '[Nama Lengkap Anda]' }}</p>
-    <p class="text-sm font-semibold">{{ $pensiun->pegawai->pekerjaan?->jabatan ?? 'Pegawai' }}</p>
+    {{-- ID review_nama_pegawai_footer & review_jabatan_footer agar JS bisa ngisi otomatis --}}
+    <p id="review_nama_pegawai_footer" class="text-sm font-semibold mt-4">
+        {{ $pensiun->pegawai->nama ?? '[Nama Lengkap Anda]' }}
+    </p>
+    <p id="review_jabatan_footer" class="text-sm font-semibold">
+        {{ $pensiun->pegawai->pekerjaan?->jabatan ?? 'Pegawai' }}
+    </p>
 </div>
 
 {{-- FOOTER KHUSUS WEB (DIPINDAHKAN KE DALAM content-wrap) --}}
