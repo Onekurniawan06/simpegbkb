@@ -18,7 +18,6 @@ class HroDashboard extends Controller
             ->where('level_id', $user->level_id)
             ->first();
 
-        // Pastikan ini adalah HRO
         $jabatanLogin = $role->role_name ?? 'HRO';
 
         // 2. Inisialisasi Counter

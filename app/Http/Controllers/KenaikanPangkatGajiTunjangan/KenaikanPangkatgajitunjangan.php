@@ -90,7 +90,6 @@ class KenaikanPangkatgajitunjangan extends Controller // Nama class sesuai permi
         ));
     }
 
-
     public function updatePangkatGajiTunjangan(Request $request)
     {
         // 1. Validasi Data
@@ -131,7 +130,7 @@ class KenaikanPangkatgajitunjangan extends Controller // Nama class sesuai permi
             // A. Simpan data pengajuan utama
             $dataMain = $validatedData;
             unset($dataMain['documents']);
-            $dataMain['status_kenaikan'] = 'diproses'; // ➕ TAMBAHKAN status awal di tabel utama
+            $dataMain['status_kenaikan'] = 'diproses';
 
             $pengajuan = PengajuanPangkatgajitunjangan::create($dataMain);
             $idKenaikan = $pengajuan->id_kenaikan;
@@ -143,7 +142,6 @@ class KenaikanPangkatgajitunjangan extends Controller // Nama class sesuai permi
                 'tahap_persetujuan'  => 'Pengajuan Awal',
                 'status_persetujuan' => 'diproses',
                 'komentar'           => 'Menunggu verifikasi berkas.',
-                // updated_at diisi otomatis oleh Laravel karena $timestamps = true di model
             ]);
 
             // C. Simpan File Dokumen (Gunakan folder private agar aman)
@@ -275,7 +273,6 @@ class KenaikanPangkatgajitunjangan extends Controller // Nama class sesuai permi
             'layout'
         ));
     }
-
 
     public function lihatDokumen($id)
     {

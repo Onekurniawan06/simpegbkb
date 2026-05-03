@@ -102,9 +102,9 @@ class DirekturApproval extends Controller
             )
             ->where($t['name'] . '.tahap_persetujuan', 'LIKE', '%' . $jabatanLogin . '%')
             ->where($t['name'] . '.' . $t['status_col'], 'diproses')
-            ->whereNull($t['name'] . '.nomor_urut_pegawai_penyetuju'); // Tambahan: Biar gak muncul data lama
+            ->whereNull($t['name'] . '.nomor_urut_pegawai_penyetuju');
 
-            // Filter Search & Tanggal (TETAP SEPERTI KODEMU)
+            // Filter Search & Tanggal
             if ($request->filled('search')) {
                 $query->where(function($q) use ($request) {
                     $q->where('pegawai.nama', 'LIKE', '%' . $request->search . '%')
@@ -121,7 +121,7 @@ class DirekturApproval extends Controller
             $queries[] = $query;
         }
 
-        // 6. EKSEKUSI DATA TABEL (TETAP PAKAI UNIONALL SEPERTI KODEMU)
+        // 6. EKSEKUSI DATA TABEL
         if (empty($queries)) {
             $dataPengajuan = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10);
         } else {
@@ -162,17 +162,15 @@ class DirekturApproval extends Controller
                 ->leftJoin('pekerjaan as pek', 'p.nomor_urut_pegawai', '=', 'pek.nomor_urut_pegawai')
                 ->leftJoin('divisi as div', 'pek.id_divisi', '=', 'div.id_divisi')
                 ->leftJoin('jenis_cuti as jc', 'pc.jenis_cuti', '=', 'jc.nama_cuti')
-                // PERBAIKAN: Gunakan log.id untuk mencari baris spesifik,
-                // bukan log.id_cuti karena satu cuti bisa punya banyak baris log.
                 ->where('log.id', $id_log);
 
             $data = $query->select(
                 'p.nama', 'p.nomor_urut_pegawai', 'pek.jabatan', 'div.nama_divisi',
-                'pc.*', // Mengambil saldo_awal, saldo_akhir, jumlah_cuti
+                'pc.*',
                 'jc.nama_cuti as jenis_cuti_nama',
                 'log.status_pengajuan as status',
                 'log.updated_at as tanggal_proses', 'log.tahap_persetujuan', 'log.komentar',
-                'log.id as id_log_asli' // PK dari tabel log untuk proses update nanti
+                'log.id as id_log_asli'
             )->first();
 
         } elseif ($sumber === 'lembur') {
@@ -247,16 +245,16 @@ class DirekturApproval extends Controller
                 ->get();
         }
 
-        // 6. Kamus Nama (Pastikan Key-nya sinkron dengan slug baru)
+        // 6. Kamus Nama
         $sumberNames = [
-            'pangkat' => 'Pangkat, Gaji, dan Tunjangan', // ➕ Tambahkan key ringkas
+            'pangkat' => 'Pangkat, Gaji, dan Tunjangan',
             'pangkatgajitunjangan' => 'Pangkat, Gaji, dan Tunjangan',
             'cuti' => 'Cuti',
             'lembur' => 'Lembur',
             'pensiun' => 'Pensiun',
         ];
 
-        // 6. Kirim Variabel ke View (Tambahkan 'files' ke dalam compact)
+        // 6. Kirim Variabel ke View
         $sumberNames = [
             'pangkatgajitunjangan' => 'Pangkat, Gaji, dan Tunjangan',
             'cuti' => 'Cuti',
@@ -339,7 +337,6 @@ class DirekturApproval extends Controller
                 \DB::table('pengajuan_pensiun')
                     ->where('id_pensiun', $oldLog->id_pensiun)
                     ->update([
-                        // Sama seperti lainnya: 'diproses' jika setuju (estafet), 'ditolak' jika tidak
                         'status_pensiun' => ($status === 'disetujui') ? 'diproses' : 'ditolak',
                         'updated_at' => now()
                     ]);
@@ -347,8 +344,6 @@ class DirekturApproval extends Controller
                 \DB::table('pengajuan_pangkatgajitunjangan')
                     ->where('id_kenaikan', $oldLog->id_kenaikan)
                     ->update([
-                        // Jika disetujui (Kepatuhan/Utama), status tetap 'diproses' sampai di HRO
-                        // Jika ditolak oleh salah satu Direktur, status langsung 'ditolak'
                         'status_kenaikan' => ($status === 'disetujui') ? 'diproses' : 'ditolak',
                         'updated_at' => now()
                     ]);

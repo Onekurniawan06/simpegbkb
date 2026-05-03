@@ -19,12 +19,11 @@ class DirekturDashboard extends Controller
             ->where('jabatan_id', $user->jabatan_id)
             ->first();
 
-        // Jika tidak ketemu di mapping, ambil default dari tabel jabatan
         if (!$role) {
             $dataJabatan = DB::table('jabatan')->where('jabatan_id', $user->jabatan_id)->first();
             $jabatanAsli = $dataJabatan->nama_jabatan ?? 'Direktur';
         } else {
-            $jabatanAsli = $role->role_name; // Ini akan mengambil "Direktur Operasional" dari tabel Anda
+            $jabatanAsli = $role->role_name;
         }
 
         // 2. NORMALISASI (Agar sinkron dengan teks di tabel Log)
@@ -35,14 +34,13 @@ class DirekturDashboard extends Controller
         } elseif (stripos($jabatanAsli, 'kepatuhan') !== false) {
             $jabatanLogin = 'Direktur Kepatuhan';
         } else {
-            $jabatanLogin = $jabatanAsli; // Gunakan nama asli jika tidak cocok dengan 3 di atas
+            $jabatanLogin = $jabatanAsli;
         }
 
         $totalMenunggu = 0;
         $totalDisetujui = 0;
         $totalDitolak = 0;
 
-        // Daftar tabel log yang dipantau Direktur
         $tables = [
             ['name' => 'log_persetujuan_lembur', 'col' => 'status_persetujuan'],
             ['name' => 'log_persetujuan_cuti', 'col' => 'status_pengajuan'],
