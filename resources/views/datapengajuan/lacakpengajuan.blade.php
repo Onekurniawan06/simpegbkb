@@ -298,10 +298,7 @@
         </div>
     @endif
 
-    {{-- ======================================================= --}}
     {{-- Pastikan Anda MENYISIPKAN JavaScript dan Struktur Modal --}}
-    {{-- di bagian bawah file Blade Anda, di luar section @content --}}
-    {{-- ======================================================= --}}
     <div id="documentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 backdrop-blur-sm">
         <div class="bg-white p-4 rounded-lg shadow-xl w-3/4 max-h-screen overflow-y-auto">
             <div class="flex justify-between items-center mb-4">
