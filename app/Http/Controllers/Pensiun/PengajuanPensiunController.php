@@ -192,78 +192,76 @@ class PengajuanPensiunController extends Controller
 
 
     public function statuspensiun($nip)
-{
-    $user = auth()->user();
+    {
+        $user = auth()->user();
 
-    // 1. Logika Role Dinamis
-    $roleMapping = \DB::table('roles_mapping')
-        ->where('jabatan_id', $user->jabatan_id)
-        ->where('level_id', $user->level_id)
-        ->first();
+        // 1. Logika Role Dinamis
+        $roleMapping = \DB::table('roles_mapping')
+            ->where('jabatan_id', $user->jabatan_id)
+            ->where('level_id', $user->level_id)
+            ->first();
 
-    $isManager = $roleMapping && str_contains($roleMapping->route_name, 'manager');
+        $isManager = $roleMapping && str_contains($roleMapping->route_name, 'manager');
 
-    // 2. Ambil Data Pengajuan
-    $pekerjaanData = Pekerjaan::where('nomor_urut_pegawai', $nip)->first();
+        // 2. Ambil Data Pengajuan
+        $pekerjaanData = Pekerjaan::where('nomor_urut_pegawai', $nip)->first();
 
-    $pengajuanpensiun = PengajuanPensiun::with(['files', 'logPersetujuanPensiun' => function ($query) {
-        // 🔄 DISESUAIKAN: Menggunakan updated_at hasil standarisasi tadi
-        $query->orderByDesc('updated_at');
-    }])
-    ->where('nomor_urut_pegawai', $nip)
-    ->orderBy('created_at', 'desc')
-    ->firstOrFail();
+        $pengajuanpensiun = PengajuanPensiun::with(['files', 'logPersetujuanPensiun' => function ($query) {
+            // 🔄 DISESUAIKAN: Menggunakan updated_at hasil standarisasi tadi
+            $query->orderByDesc('updated_at');
+        }])
+        ->where('nomor_urut_pegawai', $nip)
+        ->orderBy('created_at', 'desc')
+        ->firstOrFail();
 
-    // 3. Siapkan data untuk Processor
-    $submissionRaw = [
-        'id' => $pengajuanpensiun->id_pensiun, // Tambahkan ID untuk link cetak surat
-        'type' => 'Pensiun',
-        'status_pengajuan' => $pengajuanpensiun->status_pensiun, // ➕ Gunakan status dari tabel utama
-        'logs' => $pengajuanpensiun->logPersetujuanPensiun ? $pengajuanpensiun->logPersetujuanPensiun->toArray() : [],
-        'jenis_pengajuan' => $pengajuanpensiun->jenis_pengajuan,
-        'tmt_pegawai' => $pengajuanpensiun->tmt_pegawai,
-        'tmt_pensiun' => $pengajuanpensiun->tmt_pensiun,
-        'masa_kerja' => $pengajuanpensiun->masa_kerja,
-        'created_at' => $pengajuanpensiun->created_at,
-    ];
+        // 3. Siapkan data untuk Processor
+        $submissionRaw = [
+            'id' => $pengajuanpensiun->id_pensiun, // Tambahkan ID untuk link cetak surat
+            'type' => 'Pensiun',
+            'status_pengajuan' => $pengajuanpensiun->status_pensiun,
+            'logs' => $pengajuanpensiun->logPersetujuanPensiun ? $pengajuanpensiun->logPersetujuanPensiun->toArray() : [],
+            'jenis_pengajuan' => $pengajuanpensiun->jenis_pengajuan,
+            'tmt_pegawai' => $pengajuanpensiun->tmt_pegawai,
+            'tmt_pensiun' => $pengajuanpensiun->tmt_pensiun,
+            'masa_kerja' => $pengajuanpensiun->masa_kerja,
+            'created_at' => $pengajuanpensiun->created_at,
+        ];
 
-    // Proses melalui Service Class
-    $submission = $this->submissionProcessor->processSubmissions(collect([$submissionRaw]))->first();
+        $submission = $this->submissionProcessor->processSubmissions(collect([$submissionRaw]))->first();
 
-    // 4. Logika Tampilan & Variabel Penting
-    $latestLog = $pengajuanpensiun->logPersetujuanPensiun->first();
-    $komentarStatus = $latestLog ? $latestLog->komentar : 'Menunggu keputusan';
+        // 4. Logika Tampilan & Variabel Penting
+        $latestLog = $pengajuanpensiun->logPersetujuanPensiun->first();
+        $komentarStatus = $latestLog ? $latestLog->komentar : 'Menunggu keputusan';
 
-    $submissionType = 'Pensiun';
-    $pageTitle = 'Lacak Pengajuan ' . $submissionRaw['type'];
+        $submissionType = 'Pensiun';
+        $pageTitle = 'Lacak Pengajuan ' . $submissionRaw['type'];
 
-    // 5. BREADCRUMBS & ROUTE OTOMATIS
-    $roleName = $roleMapping->role_name ?? 'Pegawai';
-    $parentLabel = $isManager ? "Manajemen Pengajuan ↦ Approval Pengajuan $roleName" : 'Data Pengajuan';
-    $parentRouteName = $isManager ? 'manager.pilihpengajuan' : 'datapengajuan.formDataPengajuan';
+        // 5. BREADCRUMBS & ROUTE OTOMATIS
+        $roleName = $roleMapping->role_name ?? 'Pegawai';
+        $parentLabel = $isManager ? "Manajemen Pengajuan ↦ Approval Pengajuan $roleName" : 'Data Pengajuan';
+        $parentRouteName = $isManager ? 'manager.pilihpengajuan' : 'datapengajuan.formDataPengajuan';
 
-    $breadcrumbs = [
-        'Beranda' => $user->dashboard_link,
-        $parentLabel => route($parentRouteName),
-        $pageTitle => null
-    ];
+        $breadcrumbs = [
+            'Beranda' => $user->dashboard_link,
+            $parentLabel => route($parentRouteName),
+            $pageTitle => null
+        ];
 
-    // 6. LAYOUT OTOMATIS
-    $layout = $user->layout_file;
+        // 6. LAYOUT OTOMATIS
+        $layout = $user->layout_file;
 
-    return view('datapengajuan.lacakpengajuan', compact(
-        'pengajuanpensiun',
-        'pageTitle',
-        'komentarStatus',
-        'pekerjaanData',
-        'submissionRaw',
-        'submissionType',
-        'submission',
-        'breadcrumbs',
-        'layout'
-    ))->with('pengajuankenaikan', null);
-}
-
+        return view('datapengajuan.lacakpengajuan', compact(
+            'pengajuanpensiun',
+            'pageTitle',
+            'komentarStatus',
+            'pekerjaanData',
+            'submissionRaw',
+            'submissionType',
+            'submission',
+            'breadcrumbs',
+            'layout'
+        ))->with('pengajuankenaikan', null);
+    }
 
     public function lihatDokumen($id)
     {
@@ -273,14 +271,8 @@ class PengajuanPensiunController extends Controller
         // Jalur absolut ke file Anda
         $filePath = storage_path(path: 'app/private/' . $path);
 
-        // --- DEBUGGING PAKSA ---
-        // Uncomment baris ini untuk melihat path ABSOLUT yang sedang dicari
-        // dd($filePath);
-        // -----------------------
-
         // Pastikan file tersebut ada di sistem file
         if (!file_exists($filePath)) {
-            // Tampilkan error 404 dengan path lengkap agar Anda bisa memeriksanya
             abort(404, 'Dokumen tidak ditemukan di server: ' . $filePath);
         }
 
