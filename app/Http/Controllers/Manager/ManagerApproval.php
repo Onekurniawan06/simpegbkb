@@ -96,7 +96,10 @@ class ManagerApproval extends Controller
             $countWait = (clone $baseQuery)->count();
             $totalMenunggu += $countWait;
             $detailMenunggu[] = ['label' => $cfg['lb'], 'jumlah' => $countWait];
-            $columnId = ($cfg['slug'] === 'cuti') ? 'id_cuti' : 'id';
+            $columnId = match($cfg['slug']) {
+                'cuti'    => 'id', // Tetap gunakan 'id' (Primary Key Log) agar tidak tertukar data lama
+                'lembur'   => 'id', // Menggunakan PK tabel log_persetujuan_lembur
+            };
 
             $q = (clone $baseQuery)->select(
                 "log.{$columnId} as id_transaksi", // UPDATE: Menggunakan kolom yang benar berdasarkan tabel
@@ -140,150 +143,105 @@ class ManagerApproval extends Controller
     }
 
     public function detailApproval($sumber, $id_log)
-    {
-        $user = auth()->user();
-        $idDivisiManager = $user->id_divisi;
+{
+    $user = auth()->user();
+    $idDivisiManager = $user->id_divisi;
 
-        // 1. Identifikasi Jabatan & Teks Dinamis
-        $jabatanUser = \DB::table('jabatan')->where('jabatan_id', $user->jabatan_id)->first();
-        $namaJabatanLower = strtolower($jabatanUser->nama_jabatan ?? '');
+    // 1. Identifikasi Jabatan & Teks Dinamis
+    $jabatanUser = \DB::table('jabatan')->where('jabatan_id', $user->jabatan_id)->first();
+    $namaJabatanLower = strtolower($jabatanUser->nama_jabatan ?? '');
 
-        if (str_contains($namaJabatanLower, 'kepatuhan') || str_contains($namaJabatanLower, 'skk')) {
-            $tahapTeks = "Verifikasi Kepala SKK & SKKMR";
-        } elseif (str_contains($namaJabatanLower, 'kepala skai') || str_contains($namaJabatanLower, 'skai')) {
-            $tahapTeks = "Verifikasi Kepala SKAI";
-        } elseif (str_contains($namaJabatanLower, 'human resources') || str_contains($namaJabatanLower, 'hro')) {
-            $tahapTeks = "Verifikasi HRO";
-        } elseif (str_contains($namaJabatanLower, 'direktur')) {
-            $tahapTeks = "Verifikasi " . ($jabatanUser->nama_jabatan ?? 'Direktur');
-        } else {
-            $tahapTeks = "Verifikasi Manager";
-        }
-
-        // 2. Mapping Dashboard & Route
-        $mapping = \DB::table('roles_mapping')
-            ->where('level_id', $user->level_id)
-            ->where(function($q) use ($user) {
-                $q->where('jabatan_id', $user->jabatan_id)->orWhereNull('jabatan_id');
-            })
-            ->orderBy('priority', 'asc')
-            ->first();
-        $dashboardRoute = $mapping->route_name ?? 'dashboard';
-
-        $divisiData = \DB::table('divisi')->where('id_divisi', $idDivisiManager)->first();
-        $namaDivisiReal = $divisiData->nama_divisi ?? 'Divisi';
-        $slugDivisi = \Illuminate\Support\Str::slug($namaDivisiReal);
-
-        $isLintasDivisi = str_contains($namaJabatanLower, 'kepatuhan') || str_contains($namaJabatanLower, 'skk') || str_contains($namaJabatanLower, 'direktur') || str_contains($namaJabatanLower, 'hro');
-
-        // 3. Tentukan Tabel Log & Kolom Waktu secara Global
-        $tabelLog = match($sumber) {
-            'cuti' => 'log_persetujuan_cuti',
-            'lembur' => 'log_persetujuan_lembur',
-            'pensiun' => 'log_persetujuan_pensiun',
-            'pangkatgajitunjangan' => 'log_persetujuan_pangkatgajitunjangan',
-            default => 'log_persetujuan_cuti'
-        };
-        $kolomWaktu = ($sumber === 'pensiun') ? 'update_at' : 'updated_at';
-
-        // 4. Query Detail Data Berdasarkan Sumber
-        $primaryKeyLog = ($sumber === 'cuti') ? 'id_cuti' : 'id';
-        $logData = \DB::table($tabelLog)->where($primaryKeyLog, $id_log)->first();
-        if (!$logData) return redirect()->back()->with('error', 'Log tidak ditemukan.');
-
-        if ($sumber === 'cuti') {
-            $query = \DB::table('pengajuan_cuti as pc')
-                ->join($tabelLog . ' as log', 'pc.id_cuti', '=', 'log.id_cuti')
-                ->leftJoin('pegawai as p', 'pc.nomor_urut_pegawai', '=', 'p.nomor_urut_pegawai')
-                ->leftJoin('pekerjaan as pek', 'p.nomor_urut_pegawai', '=', 'pek.nomor_urut_pegawai')
-                ->leftJoin('divisi as div', 'pek.id_divisi', '=', 'div.id_divisi')
-                ->leftJoin('jenis_cuti as jc', 'pc.jenis_cuti', '=', 'jc.id')
-                ->where('log.id_cuti', $id_log);
-
-        } elseif ($sumber === 'lembur') {
-            $query = \DB::table('pengajuan_lembur as pl')
-                ->join($tabelLog . ' as log', 'pl.id_lembur', '=', 'log.id_lembur')
-                ->leftJoin('pegawai as p', 'pl.nomor_urut_pegawai', '=', 'p.nomor_urut_pegawai')
-                ->leftJoin('pekerjaan as pek', 'pl.nomor_urut_pegawai', '=', 'pek.nomor_urut_pegawai')
-                ->leftJoin('divisi as div', 'pek.id_divisi', '=', 'div.id_divisi')
-                ->where('log.id', $id_log);
-
-        } elseif ($sumber === 'pensiun') {
-            $query = \DB::table('pengajuan_pensiun as main')
-                ->join('log_persetujuan_pensiun as log', 'main.id_pensiun', '=', 'log.id_pensiun') // ✨ Diganti id_pensiun
-                ->leftJoin('pegawai as p', 'main.nomor_urut_pegawai', '=', 'p.nomor_urut_pegawai')
-                ->leftJoin('pekerjaan as pek', 'main.nomor_urut_pegawai', '=', 'pek.nomor_urut_pegawai')
-                ->leftJoin('divisi as div', 'pek.id_divisi', '=', 'div.id_divisi')
-                ->where('log.id', $id_log);
-
-            $query->select('p.nama', 'p.nomor_urut_pegawai', 'pek.jabatan', 'div.nama_divisi', 'main.*', 'log.status_persetujuan as status', 'log.' . $kolomWaktu . ' as tanggal_proses', 'log.tahap_persetujuan', 'log.id_pensiun'); // ✨ Diganti id_pensiun
-
-        } else {
-            // Ini biarkan untuk Pangkat/Gaji/Tunjangan (Jika belum diubah DB-nya)
-            $query = \DB::table('pengajuan_pangkatgajitunjangan as main')
-                ->join('log_persetujuan_pangkatgajitunjangan as log', 'main.id_pengajuan', '=', 'log.id_pengajuan')
-                ->leftJoin('pegawai as p', 'main.nomor_urut_pegawai', '=', 'p.nomor_urut_pegawai')
-                ->leftJoin('pekerjaan as pek', 'main.nomor_urut_pegawai', '=', 'pek.nomor_urut_pegawai')
-                ->leftJoin('divisi as div', 'pek.id_divisi', '=', 'div.id_divisi')
-                ->where('log.id', $id_log);
-
-            $query->select('p.nama', 'p.nomor_urut_pegawai', 'pek.jabatan', 'div.nama_divisi', 'main.*', 'log.status_persetujuan as status', 'log.updated_at as tanggal_proses', 'log.tahap_persetujuan', 'log.id_pengajuan');
-        }
-
-        // Filter Akses Manager (Biar gak mental)
-        if (!$isLintasDivisi) {
-            $query->where(function($q) use ($idDivisiManager, $user) {
-                $q->where('pek.id_divisi', $idDivisiManager)
-                ->orWhere('log.nomor_urut_pegawai_penyetuju', $user->nomor_urut_pegawai);
-            });
-        }
-
-        if ($sumber === 'cuti') {
-            $query->select('p.nama', 'p.nomor_urut_pegawai', 'pek.jabatan', 'div.nama_divisi', 'pc.*', 'jc.nama_cuti as jenis_cuti_nama', 'log.status_pengajuan as status', 'log.updated_at as tanggal_proses', 'log.tahap_persetujuan', 'log.komentar');
-        } elseif ($sumber === 'lembur') {
-            $query->select('p.nama', 'p.nomor_urut_pegawai', 'pek.jabatan', 'div.nama_divisi', 'pl.*', 'log.status_persetujuan as status', 'log.updated_at as tanggal_proses', 'log.tahap_persetujuan', 'log.id_lembur');
-        } else {
-            $query->select('p.nama', 'p.nomor_urut_pegawai', 'pek.jabatan', 'div.nama_divisi', 'main.*', 'log.status_persetujuan as status', 'log.' . $kolomWaktu . ' as tanggal_proses', 'log.tahap_persetujuan', 'log.id_pensiun');
-        }
-
-        $data = $query->first();
-
-        if (!$data) {
-            return redirect()->back()->with('error', 'Data tidak ditemukan.');
-        }
-
-        // 5. AMBIL SEMUA HISTORI LOG (Untuk Stepper Tracking)
-        $queryHistory = \DB::table($tabelLog);
-
-        if ($sumber === 'cuti') {
-            $queryHistory->where('id_cuti', $data->id_cuti);
-        } elseif ($sumber === 'lembur' && isset($data->id_lembur)) {
-            $queryHistory->where('id_lembur', $data->id_lembur);
-        } elseif ($sumber === 'pensiun' && isset($data->id_pensiun)) {
-            $queryHistory->where('id_pensiun', $data->id_pensiun);
-        } else {
-            // Ini untuk Pangkat/Gaji/Tunjangan yang masih pakai id_pengajuan
-            if (isset($data->id_pengajuan)) {
-                $queryHistory->where('id_pengajuan', $data->id_pengajuan);
-            }
-        }
-        $orderByCol = ($sumber === 'cuti') ? 'id_cuti' : 'id';
-        $historiLog = $queryHistory->orderBy($orderByCol, 'asc')->get();
-
-        // 6. Kirim Variabel ke View
-        $pageTitle = 'Detail Pengajuan ' . ucfirst($sumber);
-        $breadcrumbs = [
-            'Beranda' => ($dashboardRoute === 'manager.dashboardmanager') ? route($dashboardRoute, ['divisi' => $slugDivisi]) : route($dashboardRoute),
-            "Manajemen Pengajuan ↦ Approval Pegawai Divisi $namaDivisiReal" => route('manager.manajemenpengajuan'),
-            'Detail Pengajuan ' . ucfirst($sumber) => '#',
-        ];
-
-        return view('manager.detail_approval', compact('data', 'sumber', 'pageTitle', 'id_log', 'breadcrumbs', 'dashboardRoute', 'tahapTeks', 'historiLog'));
+    if (str_contains($namaJabatanLower, 'human resources') || str_contains($namaJabatanLower, 'hro')) {
+        $tahapTeks = "Verifikasi HRO";
+    } elseif (str_contains($namaJabatanLower, 'direktur')) {
+        $tahapTeks = "Verifikasi " . ($jabatanUser->nama_jabatan ?? 'Direktur');
+    } else {
+        $tahapTeks = "Verifikasi Manager";
     }
+
+    // 2. Mapping Dashboard & Route
+    $mapping = \DB::table('roles_mapping')
+        ->where('level_id', $user->level_id)
+        ->where(function($q) use ($user) {
+            $q->where('jabatan_id', $user->jabatan_id)->orWhereNull('jabatan_id');
+        })
+        ->orderBy('priority', 'asc')
+        ->first();
+
+    $divisiData = \DB::table('divisi')->where('id_divisi', $idDivisiManager)->first();
+    $namaDivisiReal = $divisiData->nama_divisi ?? 'Divisi';
+    $slugDivisi = \Illuminate\Support\Str::slug($namaDivisiReal);
+
+    $dashboardRoute = $mapping->route_name ?? 'dashboard';
+
+    // 3. Tentukan Tabel Log & Kolom PK Log
+    // Sesuai diskusi kita: Lembur pakai 'id', Cuti pakai 'id' (Primary Key tabel Log)
+    $tabelLog = ($sumber === 'lembur') ? 'log_persetujuan_lembur' : 'log_persetujuan_cuti';
+    $primaryKeyLog = 'id'; // Gunakan 'id' saja agar standar di semua tabel log
+
+    // 4. Ambil Data Log Awal (Berdasarkan baris yang diklik Manager)
+    $logData = \DB::table($tabelLog)->where($primaryKeyLog, $id_log)->first();
+    if (!$logData) return redirect()->back()->with('error', 'Log tidak ditemukan.');
+
+    // 5. Query Detail Data
+    if ($sumber === 'lembur') {
+        $query = \DB::table('pengajuan_lembur as pl')
+            ->join('log_persetujuan_lembur as log', 'pl.id_lembur', '=', 'log.id_lembur')
+            ->leftJoin('pegawai as p', 'pl.nomor_urut_pegawai', '=', 'p.nomor_urut_pegawai')
+            ->leftJoin('pekerjaan as pek', 'p.nomor_urut_pegawai', '=', 'pek.nomor_urut_pegawai')
+            ->leftJoin('divisi as div', 'pek.id_divisi', '=', 'div.id_divisi')
+            ->where('log.id', $id_log) // Filter berdasarkan ID Log yang diklik
+            ->select(
+                'p.nama', 'p.nomor_urut_pegawai', 'pek.jabatan', 'div.nama_divisi', 'pl.*',
+                'log.status_persetujuan as status', 'log.updated_at as tanggal_proses',
+                'log.tahap_persetujuan', 'log.komentar', 'log.id_lembur'
+            );
+    } else {
+        // Sumber Cuti
+        $query = \DB::table('pengajuan_cuti as pc')
+            ->join('log_persetujuan_cuti as log', 'pc.id_cuti', '=', 'log.id_cuti')
+            ->leftJoin('pegawai as p', 'pc.nomor_urut_pegawai', '=', 'p.nomor_urut_pegawai')
+            ->leftJoin('pekerjaan as pek', 'p.nomor_urut_pegawai', '=', 'pek.nomor_urut_pegawai')
+            ->leftJoin('divisi as div', 'pek.id_divisi', '=', 'div.id_divisi')
+            ->where('log.id', $id_log) // Gunakan log.id agar akurat
+            ->select(
+                'p.nama', 'p.nomor_urut_pegawai', 'pek.jabatan', 'div.nama_divisi', 'pc.*',
+                'log.status_pengajuan as status', 'log.updated_at as tanggal_proses',
+                'log.tahap_persetujuan', 'log.komentar', 'log.id_cuti'
+            );
+    }
+
+    $data = $query->first();
+    if (!$data) return redirect()->back()->with('error', 'Data tidak ditemukan.');
+
+    // 6. Histori Log (Untuk Stepper Sejarah Persetujuan)
+    $idRef = ($sumber === 'lembur') ? $data->id_lembur : $data->id_cuti;
+    $fkLog = ($sumber === 'lembur') ? 'id_lembur' : 'id_cuti';
+
+    $historiLog = \DB::table($tabelLog)
+        ->where($fkLog, $idRef)
+        ->orderBy('id', 'asc')
+        ->get();
+
+    // 7. Kirim ke View
+    $pageTitle = 'Detail Pengajuan ' . ucfirst($sumber);
+
+    // Breadcrumbs sederhana agar tidak error slug
+    $breadcrumbs = [
+        'Beranda' => ($dashboardRoute === 'manager.dashboardmanager')
+                ? route($dashboardRoute, ['divisi' => $slugDivisi])
+                : route($dashboardRoute),
+        "Manajemen Pengajuan" => route('manager.manajemenpengajuan'),
+        'Detail ' . ucfirst($sumber) => '#',
+    ];
+
+    return view('manager.detail_approval', compact('data', 'sumber', 'pageTitle', 'id_log', 'breadcrumbs', 'dashboardRoute', 'tahapTeks', 'historiLog'));
+}
+
 
     public function updateStatus(Request $request, $sumber, $id_log)
     {
-        // 1. Validasi Input
+        // 1. Validasi Input - TETAP UTUH
         $rules = [
             'status' => 'required|in:disetujui,ditolak',
             'catatan' => 'nullable|string'
@@ -298,7 +256,7 @@ class ManagerApproval extends Controller
         $request->validate($rules);
         $user = auth()->user();
 
-        // 2. Tentukan Tabel Log & Kolom Status
+        // 2. Tentukan Tabel Log & Kolom Status - TETAP UTUH
         $tabel = match($sumber) {
             'cuti' => 'log_persetujuan_cuti',
             'lembur' => 'log_persetujuan_lembur',
@@ -316,20 +274,34 @@ class ManagerApproval extends Controller
         $logLama = \DB::table($tabel)->where($primaryKeyLog, $id_log)->first();
         if (!$logLama) return response()->json(['success' => false, 'message' => 'Data tidak ditemukan'], 404);
 
-        // --- 3. LOGIKA KHUSUS LEMBUR (UPDATE TABEL UTAMA) ---
-        if ($sumber === 'lembur' && $request->status === 'disetujui') {
+        // --- 3. LOGIKA KHUSUS LEMBUR (UPDATE TABEL UTAMA) - TETAP UTUH ---
+        if ($sumber === 'lembur') {
+            // Ambil data asli untuk cadangan jika input kosong
             $pengajuanAsli = \DB::table('pengajuan_lembur')->where('id_lembur', $logLama->id_lembur)->first();
 
-            $jamMulaiFinal = $request->jam_mulai ?? $pengajuanAsli->jam_mulai;
-            $jamSelesaiFinal = $request->jam_selesai ?? $pengajuanAsli->jam_selesai;
-            $totalJamFinal = $request->total_jam_lembur ?? $pengajuanAsli->total_jam_lembur;
+            $dataUpdateLembur = [
+                'updated_at' => now(),
+                // TAMBAHKAN INI: Agar status di tabel utama berubah jadi 'diproses' (jika OK) atau 'ditolak'
+                'status_lembur' => ($request->status === 'disetujui') ? 'diproses' : 'ditolak'
+            ];
+
+            // Jika Manager setuju, dia boleh revisi jam (sesuai kodemu)
+            if ($request->status === 'disetujui') {
+                $dataUpdateLembur['jam_mulai'] = $request->jam_mulai ?? $pengajuanAsli->jam_mulai;
+                $dataUpdateLembur['jam_selesai'] = $request->jam_selesai ?? $pengajuanAsli->jam_selesai;
+                $dataUpdateLembur['total_jam_lembur'] = $request->total_jam_lembur ?? $pengajuanAsli->total_jam_lembur;
+            }
 
             \DB::table('pengajuan_lembur')
                 ->where('id_lembur', $logLama->id_lembur)
+                ->update($dataUpdateLembur);
+        }
+
+        if ($sumber === 'cuti') {
+            \DB::table('pengajuan_cuti')
+                ->where('id_cuti', $logLama->id_cuti)
                 ->update([
-                    'jam_mulai' => $jamMulaiFinal,
-                    'jam_selesai' => $jamSelesaiFinal,
-                    'total_jam_lembur' => $totalJamFinal,
+                    'status_pengajuan' => $request->status, // Mengikuti 'disetujui' atau 'ditolak'
                     'updated_at' => now()
                 ]);
         }
@@ -341,14 +313,13 @@ class ManagerApproval extends Controller
             $namaTahapAksi = 'Manager';
         }
 
-        // Jika catatan kosong, buat teks default sesuai status
         $teksDefault = ($request->status === 'disetujui')
                         ? "Disetujui oleh " . $namaTahapAksi
                         : "Ditolak oleh " . $namaTahapAksi;
 
         $komentarFinal = $request->filled('catatan') ? $request->catatan : $teksDefault;
 
-        // --- 4. UPDATE BARIS LOG SAAT INI ---
+        // --- 4. UPDATE BARIS LOG SAAT INI - TETAP UTUH ---
         \DB::table($tabel)->where($primaryKeyLog, $id_log)->update([
             $kolomStatus => $request->status,
             'nomor_urut_pegawai_penyetuju' => $user->nomor_urut_pegawai,
@@ -358,16 +329,23 @@ class ManagerApproval extends Controller
 
         // --- 5. LOGIKA JIKA DITOLAK ---
         if ($request->status === 'ditolak') {
+            if ($sumber === 'cuti') {
+                \DB::table('pengajuan_cuti')->where('id_cuti', $logLama->id_cuti)->update(['status_pengajuan' => 'ditolak']);
+            }
+            // ➕ TAMBAHKAN INI UNTUK LEMBUR
+            if ($sumber === 'lembur') {
+                \DB::table('pengajuan_lembur')->where('id_lembur', $logLama->id_lembur)->update(['status_lembur' => 'ditolak']);
+            }
+
             if ($request->ajax() || $request->wantsJson()) return response()->json(['success' => true]);
             return redirect()->route('manager.manajemenpengajuan')->with('error', 'Pengajuan telah ditolak.');
         }
 
-        // --- 6. LOGIKA DISETUJUI (ESTAFET FLOW) ---
+        // --- 6. LOGIKA DISETUJUI (ESTAFET FLOW) - TETAP UTUH ---
         if ($request->status === 'disetujui') {
             $pemohon = \DB::table('users')->where('nomor_urut_pegawai', $logLama->nomor_urut_pegawai)->first();
             $isManagerPemohon = ($pemohon && $pemohon->level_id == 2);
 
-            // A. Penentuan Flow
             if (ucfirst($sumber) === 'Lembur') {
                 $isAudit = ($pemohon && str_contains(strtolower($pemohon->jabatan ?? ''), 'audit'));
                 if ($isAudit) {
@@ -386,14 +364,17 @@ class ManagerApproval extends Controller
             $isRoleManager = str_contains(strtolower($namaTahapAksi), 'manager');
             $isRoleSKK = str_contains(strtolower($namaTahapAksi), 'skk') || str_contains(strtolower($namaTahapAksi), 'kepatuhan');
 
-            // C. Cari Tahap Selanjutnya
             $tahapLama = $logLama->tahap_persetujuan;
             $currentIndex = array_search($tahapLama, $flow);
             if ($currentIndex === false && $isRoleSKK) $currentIndex = array_search('Kepala SKK & SKKMR', $flow);
 
             $nextTahap = ($currentIndex !== false && isset($flow[$currentIndex + 1])) ? $flow[$currentIndex + 1] : 'Selesai';
 
-            // D. Persiapan Insert Base
+            // Update status tabel utama jika sudah mencapai tahap akhir
+            if ($nextTahap === 'Selesai' && $sumber === 'cuti') {
+                \DB::table('pengajuan_cuti')->where('id_cuti', $logLama->id_cuti)->update(['status_pengajuan' => 'disetujui']);
+            }
+
             $insertBase = [
                 'nomor_urut_pegawai' => $logLama->nomor_urut_pegawai,
                 $kolomWaktu => now()
@@ -407,7 +388,6 @@ class ManagerApproval extends Controller
                 $insertBase['id_pengajuan'] = $logLama->id_pengajuan ?? null;
             }
 
-            // E. INSERT BUKTI ACTION
             if ($logLama->tahap_persetujuan === 'Pengajuan Awal') {
                 \DB::table($tabel)->insert(array_merge($insertBase, [
                     'tahap_persetujuan' => $namaTahapAksi,
@@ -420,7 +400,6 @@ class ManagerApproval extends Controller
                 if ($isNextSelf) $nextTahap = $flow[$currentIndex + 2] ?? 'Selesai';
             }
 
-            // F. INSERT ANTRIAN TAHAP BERIKUTNYA
             if ($nextTahap !== 'Selesai') {
                 \DB::table($tabel)->insert(array_merge($insertBase, [
                     'tahap_persetujuan' => $nextTahap,
@@ -428,12 +407,21 @@ class ManagerApproval extends Controller
                     $kolomStatus => 'diproses',
                     'komentar' => 'Menunggu verifikasi ' . $nextTahap,
                 ]));
+
+                if ($sumber === 'cuti') {
+                    \DB::table('pengajuan_cuti')->where('id_cuti', $logLama->id_cuti)->update(['status_pengajuan' => 'diproses']);
+                }
+                // ➕ TAMBAHKAN INI UNTUK LEMBUR (Agar tetap 'diproses' selama flow belum 'Selesai')
+                if ($sumber === 'lembur') {
+                    \DB::table('pengajuan_lembur')->where('id_lembur', $logLama->id_lembur)->update(['status_lembur' => 'diproses']);
+                }
             }
         }
 
         if ($request->ajax() || $request->wantsJson()) return response()->json(['success' => true]);
         return redirect()->route('manager.manajemenpengajuan')->with('success', 'Berhasil diproses.');
     }
+
 
 }
 

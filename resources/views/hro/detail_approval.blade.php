@@ -41,7 +41,6 @@
     }
 @endphp
 
-
 <!-- Tracking Status Stepper -->
 <div class="bg-white border-b border-gray-100 max-w-full py-4 shadow-sm">
     <div class="max-w-4xl mx-auto px-6">
@@ -54,7 +53,7 @@
                     $isDone = ($logStatus === 'disetujui');
                     $isCurr = ($logStatus === 'diproses');
                     $isFail = ($logStatus === 'ditolak'); // Ini tetap ada untuk warna MERAH
-                    $timeCol = ($sumber === 'pensiun') ? 'update_at' : 'updated_at'; // Ini tetap ada untuk TANGGAL
+                    $timeCol = 'updated_at'; // Ini tetap ada untuk TANGGAL
                     $nextLog = $historiLog[$index + 1] ?? null;
                     $nextStatus = $nextLog ? strtolower($nextLog->status_persetujuan ?? $nextLog->status_pengajuan) : null;
 
@@ -171,12 +170,29 @@
             </div>
 
             <!-- Grid Detail -->
-            <div class="grid grid-cols-2 gap-8 mb-4">
-                <div>
+            <div class="flex flex-wrap items-start gap-x-10 gap-y-4 mb-6">
+                {{-- 1. JABATAN --}}
+                <div class="min-w-[120px]">
                     <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Jabatan</label>
-                    <p class="text-sm text-slate-700 font-medium">{{ $data->jabatan }}</p>
+                    <p class="text-sm text-slate-700 font-semibold">{{ $data->jabatan }}</p>
                 </div>
-                <div>
+
+                {{-- 🔒 DATA KHUSUS PENSIUN & PANGKAT --}}
+                @if(in_array($sumber, ['pensiun', 'pangkatgajitunjangan', 'pangkat']))
+                    <div class="min-w-[100px]">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Masa Kerja</label>
+                        <p class="text-sm text-slate-700 font-semibold">{{ $data->masa_kerja ? preg_replace('/(?<=\d)(?=[a-z])|(?<=[a-z])(?=\d)/i', ' ', $data->masa_kerja) : '-' }}</p>
+                    </div>
+                    <div class="min-w-[120px]">
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">TMT Pegawai</label>
+                        <p class="text-sm text-slate-700 font-semibold">
+                            {{ $data->tmt_pegawai ? \Carbon\Carbon::parse($data->tmt_pegawai)->translatedFormat('d F Y') : '-' }}
+                        </p>
+                    </div>
+                @endif
+
+                {{-- 2. JENIS PENGAJUAN --}}
+                <div class="min-w-[120px]">
                     <label class="block text-[10px] font-bold text-slate-400 uppercase mb-1">Jenis Pengajuan</label>
                     <p class="text-sm text-indigo-600 font-medium italic">
                         @if($sumber == 'cuti')
@@ -191,114 +207,151 @@
                 </div>
             </div>
 
-            <!-- Content Card dengan Perbaikan Aksen Garis -->
             <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm relative">
-
-                <!-- Perbaikan Aksen Garis: Menambahkan margin top/bottom dan rounded agar lebih 'soft' -->
                 <div class="absolute left-0 top-4 bottom-4 w-1.5 bg-indigo-500 rounded-r-full shadow-[2px_0_8px_rgba(99,102,241,0.4)]"></div>
 
-                @if($sumber == 'cuti')
-                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 pl-4"> <!-- Tambah padding left agar tidak menempel garis -->
-
-                        <!-- Blok Tanggal -->
-                        <div class="flex items-center space-x-4">
-                            <!-- Mulai -->
-                            <div class="flex items-center gap-4">
-                                <div class="p-3 bg-slate-50 rounded-xl border border-slate-100">
-                                    <svg xmlns="http://www.w3.org" class="h-5 w-5 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Mulai Cuti</span>
-                                    <span class="text-sm font-bold text-slate-800">{{ \Carbon\Carbon::parse($data->tanggal_mulai)->locale('id')->translatedFormat('l, d M Y') }}</span>
-                                </div>
-                            </div>
-
-                            <div class="text-slate-300">
-                                <svg xmlns="http://www.w3.org" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
-                                </svg>
-                            </div>
-
-                            <!-- Kembali -->
-                            <div class="flex items-center gap-4">
-                                <div class="p-3 bg-emerald-50 rounded-xl border border-emerald-100">
-                                    <svg xmlns="http://www.w3.org" class="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                                    </svg>
-                                </div>
-                                <div>
-                                    <span class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Selesai Cuti</span>
-                                    <span class="text-sm font-bold text-emerald-600">{{ \Carbon\Carbon::parse($data->tanggal_selesai)->locale('id')->translatedFormat('l, d M Y') }}</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Durasi (Badge) -->
-                        <div class="bg-indigo-50 px-4 py-2 rounded-xl border border-indigo-100 shadow-sm">
-                            <span class="text-xs font-bold text-indigo-700">
-                                {{ \Carbon\Carbon::parse($data->tanggal_mulai)->diffInDays(\Carbon\Carbon::parse($data->tanggal_selesai)) + 1 }} Hari Cuti
-                            </span>
+                @if($sumber == 'pensiun')
+                    <!-- Blok Detail Pensiun -->
+                    <div class="bg-orange-50/50 rounded-md border border-orange-100 space-y-5">
+                        <div class="bg-white rounded-md border border-slate-200 shadow-sm overflow-x-auto">
+                            <table class="w-full min-w-[500px] text-sm text-left text-slate-700">
+                                <thead class="text-[10px] uppercase text-slate-400 bg-slate-50 border-b border-slate-200">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 font-bold tracking-widest">Dokumen Persyaratan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($files ?? [] as $file)
+                                        <tr class="border-b border-slate-100 hover:bg-slate-50/50 transition">
+                                            <td class="px-6 py-4 font-medium text-slate-700 whitespace-nowrap">
+                                                {{ str_replace('_', ' ', $file->tipe_dokumen) }}
+                                            </td>
+                                            <td class="px-6 py-4 text-right">
+                                                <button type="button"
+                                                        {{-- Pastikan ada parameter kedua setelah URL --}}
+                                                        onclick="openPdfModal('{{ route('hro.lihatDokumen', ['id' => $file->id]) }}', '{{ str_replace('_', ' ', $file->tipe_dokumen) }}')"
+                                                        class="text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded-lg transition shadow-sm inline-block">
+                                                    Lihat Dokumen
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="2" class="px-6 py-5 text-center text-slate-400 italic">
+                                                Tidak ada file dokumen yang diunggah.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 
-                    <hr class="my-3 border-slate-100 ml-3">
-
-                    <!-- Blok Alasan -->
-                    <div class="ml-4 bg-slate-50/50 p-3 rounded-2xl border border-slate-100">
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Alasan Pengajuan</label>
-                        <p class="text-sm text-slate-600 leading-relaxed italic">
-                            "{{ $data->keterangan ?? '-' }}"
-                        </p>
-                    </div>
-                @else
+                @elseif($sumber == 'lembur')
                     <!-- Blok Deskripsi & Detail Waktu Lembur -->
-                    <div class="ml-4 bg-blue-50/50 p-6 rounded-2xl border border-blue-100 space-y-5">
-                        <!-- 1. Uraian Tugas -->
+                    <div class="ml-2 bg-blue-50/50 p-3 rounded-2xl border border-blue-100 space-y-5">
                         <div>
                             <label class="block text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-2">Deskripsi Pengajuan Lembur</label>
-                            <p class="text-sm text-slate-700 leading-relaxed italic">
-                                "{{ $data->uraian_tugas ?? 'Tidak ada deskripsi' }}"
-                            </p>
+                            <p class="text-sm text-slate-700 leading-relaxed italic">"{{ $data->uraian_tugas ?? 'Tidak ada deskripsi' }}"</p>
                         </div>
-
-                        <!-- 2. Grid Detail Waktu (Sesuai Gambar Lu) -->
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-blue-100/50">
-                            <!-- Tanggal -->
                             <div class="flex flex-col">
                                 <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Tanggal Lembur</span>
-                                <span class="text-sm font-semibold text-slate-700 mt-1">
-                                    {{ \Carbon\Carbon::parse($data->tanggal_lembur)->translatedFormat('d F Y') ?? '-' }}
-                                </span>
+                                <span class="text-sm font-semibold text-slate-700 mt-1">{{ \Carbon\Carbon::parse($data->tanggal_lembur)->translatedFormat('d F Y') }}</span>
                             </div>
-
-                            <!-- Jam Mulai -->
                             <div class="flex flex-col">
                                 <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Jam Mulai</span>
-                                <span class="text-sm font-semibold text-emerald-600 mt-1">
-                                    {{ $data->jam_mulai ? date('H:i', strtotime($data->jam_mulai)) : '-' }} WIB
-                                </span>
+                                <span class="text-sm font-semibold text-emerald-600">{{ $data->jam_mulai ? date('H:i', strtotime($data->jam_mulai)) : '-' }} WIB</span>
                             </div>
-
-                            <!-- Jam Selesai -->
                             <div class="flex flex-col">
                                 <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Jam Selesai</span>
-                                <span class="text-sm font-semibold text-rose-600 mt-1">
-                                    {{ $data->jam_selesai ? date('H:i', strtotime($data->jam_selesai)) : '-' }} WIB
-                                </span>
+                                <span class="text-sm font-semibold text-rose-600 mt-1">{{ $data->jam_selesai ? date('H:i', strtotime($data->jam_selesai)) : '-' }} WIB</span>
+                            </div>
+                            <div class="flex flex-col">
+                                <span class="text-[9px] font-bold text-blue-500 uppercase tracking-wider">Total Lembur</span>
+                                <span class="text-sm font-bold text-blue-700 mt-1">{{ $data->total_jam_lembur ?? '0' }}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                @elseif($sumber == 'cuti')
+                    <!-- Blok Deskripsi & Detail Saldo Cuti Berantai -->
+                    <div class="ml-2 bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 space-y-5">
+                        <!-- Grid Utama: Menggunakan 4 kolom yang sama lebar (w-full + grid-cols-4) -->
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-6 w-full">
+                            
+                            {{-- TANGGAL MULAI --}}
+                            <div class="flex flex-col items-start">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Tanggal Mulai</span>
+                                <span class="text-sm font-semibold text-slate-700 mt-1.5">{{ \Carbon\Carbon::parse($data->tanggal_mulai)->translatedFormat('d F Y') }}</span>
                             </div>
 
-                            <!-- Total Jam -->
-                            <div class="flex flex-col bg-blue-600/5 p-2 rounded-xl border border-blue-200/50">
-                                <span class="text-[9px] font-bold text-blue-500 uppercase tracking-wider">Total Lembur</span>
-                                <span class="text-sm font-bold text-blue-700 mt-1">
-                                    {{ $data->total_jam_lembur ?? '0 jam 0 menit' }}
-                                </span>
+                            {{-- TANGGAL SELESAI --}}
+                            <div class="flex flex-col items-start">
+                                <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Tanggal Selesai</span>
+                                <span class="text-sm font-semibold text-slate-700 mt-1.5">{{ \Carbon\Carbon::parse($data->tanggal_selesai)->translatedFormat('d F Y') }}</span>
                             </div>
+
+                            {{-- LAMA CUTI --}}
+                            <div class="flex flex-col items-start">
+                                <span class="text-[9px] font-bold text-orange-500 uppercase tracking-widest">Lama Cuti</span>
+                                <span class="text-sm font-bold text-orange-700 mt-1.5">{{ $data->jumlah_cuti ?? 0 }} <small class="font-normal">Hari</small></span>
+                            </div>
+
+                            {{-- SISA CUTI --}}
+                            <div class="flex flex-col items-start">
+                                <span class="text-[9px] font-bold text-emerald-500 uppercase tracking-widest">Sisa Cuti</span>
+                                <span class="text-sm font-bold text-emerald-700 mt-1.5">{{ $data->saldo_akhir ?? 0 }} <small class="font-normal">Hari</small></span>
+                            </div>
+
+                        </div>
+
+                        <!-- Divider dan Keterangan -->
+                        <div class="border-t border-indigo-100/50 pt-4">
+                            <label class="block text-[10px] font-bold text-indigo-400 uppercase tracking-widest mb-2">Alasan / Keterangan Cuti</label>
+                            <p class="text-sm text-slate-700 leading-relaxed italic">"{{ $data->keterangan ?? 'Tidak ada keterangan' }}"</p>
+                        </div>
+                    </div>
+
+                @elseif($sumber == 'pangkatgajitunjangan' || $sumber == 'pangkat')
+                    <!-- Blok Detail Pangkat/Gaji -->
+                    <div class="ml-4 space-y-4">
+
+                        <!-- 🟢 BLOK DOKUMEN PANGKAT/GAJI/TUNJANGAN -->
+                        <div class="bg-white rounded-md border border-slate-200 shadow-sm overflow-x-auto">
+                            <table class="w-full min-width-[500px] text-sm text-left text-slate-700">
+                                <thead class="text-[10px] uppercase text-slate-400 bg-slate-50 border-b border-slate-200">
+                                    <tr>
+                                        <th scope="col" class="px-6 py-3 font-bold tracking-widest">Dokumen Persyaratan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @forelse($files ?? [] as $file)
+                                        <tr class="border-b border-slate-100 hover:bg-slate-50/50 transition">
+                                            <td class="px-6 py-4 font-medium text-slate-700 whitespace-nowrap">
+                                                {{ str_replace('_', ' ', $file->tipe_dokumen) }}
+                                            </td>
+                                            <td class="px-6 py-4 text-right">
+                                                <button type="button"
+                                                        onclick="openPdfModal('{{ route('hro.lihatDokumen', ['id' => $file->id]) }}', '{{ str_replace('_', ' ', $file->tipe_dokumen) }}')"
+                                                        class="text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded-lg transition shadow-sm inline-block">
+                                                    Lihat Dokumen
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    @empty
+                                        <tr>
+                                            <td colspan="2" class="px-6 py-5 text-center text-slate-400 italic">
+                                                Tidak ada file dokumen yang diunggah.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 @endif
+
             </div>
         </div>
 
@@ -308,86 +361,96 @@
             <!-- 1. TITLE KEPUTUSAN -->
             <div class="p-5 bg-white border-b border-slate-200 flex-none shadow-sm">
                 <h3 class="text-[12px] font-bold text-indigo-600 uppercase tracking-[0.2em]">
-                    {{-- Otomatis menjadi "KEPUTUSAN HRO" --}}
                     Keputusan {{ str_replace('Verifikasi ', '', $tahapTeks) }}
                 </h3>
             </div>
 
             <!-- 2. AREA FORM (Scroll Mandiri) -->
             <div class="flex-1 overflow-y-auto custom-scroll-container p-3 pb-5">
-                {{-- UPDATE: Route diarahkan ke hro.updateStatus dengan parameter id_log --}}
                 <form id="formApproval" action="{{ route('hro.updateStatus', ['sumber' => $sumber, 'id_log' => $id_log]) }}" method="POST" class="flex flex-col">
                     @csrf
                     @method('PUT')
 
-                    {{-- LOGIKA KHUSUS LEMBUR --}}
+                    {{-- LOGIKA KHUSUS LEMBUR (Hanya Tampilan Info) --}}
                     @if($sumber === 'lembur')
                         <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm space-y-3">
                             <div class="flex justify-between items-center">
-                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest">Verifikasi Waktu Lembur</label>
-                                <button type="button" id="btnEditTime" onclick="toggleEditTime()"
-                                    class="text-[11px] font-extrabold text-indigo-600 hover:text-indigo-800 uppercase tracking-widest bg-indigo-50 px-3 py-1.5 rounded-lg transition-all active:scale-95">
-                                    Ubah
-                                </button>
+                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest">Informasi Waktu Lembur</label>
                             </div>
 
                             <div class="grid grid-cols-2 gap-4">
                                 <div class="space-y-2">
                                     <span class="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Jam Mulai</span>
-                                    <input type="time" name="jam_mulai" id="input_jam_mulai"
-                                        value="{{ isset($data->jam_mulai) ? date('H:i', strtotime($data->jam_mulai)) : '00:00' }}"
-                                        disabled
-                                        class="w-full p-3 text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none bg-slate-50 font-medium text-slate-500 disabled:opacity-70 transition-all">
+                                    <input type="time" value="{{ isset($data->jam_mulai) ? date('H:i', strtotime($data->jam_mulai)) : '00:00' }}"
+                                        readonly
+                                        class="w-full p-3 text-sm border border-slate-100 rounded-xl bg-slate-50 font-medium text-slate-500 outline-none cursor-default">
                                 </div>
                                 <div class="space-y-2">
                                     <span class="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Jam Selesai</span>
-                                    <input type="time" name="jam_selesai" id="input_jam_selesai"
-                                        value="{{ isset($data->jam_selesai) ? date('H:i', strtotime($data->jam_selesai)) : '00:00' }}"
-                                        disabled
-                                        class="w-full p-3 text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none bg-slate-50 font-medium text-slate-500 disabled:opacity-70 transition-all">
+                                    <input type="time" value="{{ isset($data->jam_selesai) ? date('H:i', strtotime($data->jam_selesai)) : '00:00' }}"
+                                        readonly
+                                        class="w-full p-3 text-sm border border-slate-100 rounded-xl bg-slate-50 font-medium text-slate-500 outline-none cursor-default">
                                 </div>
                             </div>
 
                             <div class="pt-2">
-                                <span class="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Total Jam Lembur</span>
-                                <input type="text" name="total_jam_lembur" id="input_total_jam"
-                                    value="{{ $data->total_jam_lembur ?? '0 jam 0 menit' }}" readonly
-                                    class="w-full mt-2 p-4 text-sm bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-400 outline-none transition-all">
+                                <span class="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Total Durasi</span>
+                                <input type="text" value="{{ $data->total_jam_lembur ?? '0 jam 0 menit' }}"
+                                    readonly
+                                    class="w-full mt-2 p-4 text-sm bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-400 outline-none">
                             </div>
-                        </div>
-
-                    {{-- LOGIKA KHUSUS CUTI --}}
-                    @elseif($sumber === 'cuti')
-                        <div class="space-y-1">
-                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest">Catatan Penyetuju HRO</label>
-                            <textarea name="catatan" rows="5"
-                                class="w-full p-5 text-sm bg-white border border-slate-200 rounded-3xl text-slate-700 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none transition resize-none placeholder-slate-400 shadow-sm"
-                                placeholder="Berikan alasan atau catatan verifikasi..."
-                                @disabled($data->status !== 'diproses')>{{ $data->komentar ?? '' }}</textarea>
                         </div>
                     @endif
 
+                    {{-- KOTAK CATATAN (Muncul untuk semua jenis pengajuan) --}}
+                    <div class="flex flex-col">
+                        <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Catatan Persetujuan</label>
+                        <textarea name="catatan" rows="4"
+                            class="w-full p-5 text-sm bg-white border border-slate-200 rounded-3xl text-slate-700 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none transition resize-none placeholder-slate-400 shadow-sm"
+                            placeholder="Berikan alasan atau instruksi tambahan"
+                            @if($data->status !== 'diproses') readonly @endif>{{ $data->komentar ?? '' }}</textarea>
+                    </div>
                     <input type="hidden" name="status" id="status_input">
 
                     <!-- 3. ACTION BUTTONS -->
-                    <div class="grid grid-cols-1 gap-3 pt-4">
-                        {{-- Tombol menyala hanya jika status pengajuan di tahap HRO masih 'diproses' --}}
+                    <div class="grid grid-cols-1 gap-3 pt-2">
                         <button type="button" onclick="handleApproval('disetujui')"
-                            @disabled($data->status !== 'diproses')
+                            @disabled($data->status !== 'diproses' && $data->status !== null)
                             class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 disabled:text-slate-400 text-white text-xs font-semibold rounded-xl transition-all shadow-lg shadow-indigo-200 uppercase tracking-widest">
                             Setujui Pengajuan
                         </button>
 
                         <button type="button" onclick="handleApproval('ditolak')"
-                            @disabled($data->status !== 'diproses')
+                            @disabled($data->status !== 'diproses' && $data->status !== null)
                             class="w-full py-4 bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 disabled:border-slate-100 disabled:text-slate-300 text-xs font-semibold rounded-xl transition-all shadow-sm uppercase tracking-widest">
                             Tolak Pengajuan
                         </button>
                     </div>
                 </form>
+                <!-- Modal Tampilan Dokumen -->
+                <div id="kotakPdf" class="hidden fixed inset-0 bg-slate-900/80 flex items-center justify-center z-[999] p-4">
+                    <div class="bg-white rounded-xl shadow-2xl w-full max-w-5xl h-[85vh] flex flex-col overflow-hidden">
+                        <!-- Kepala Modal -->
+                        <div class="flex justify-between items-center px-6 py-4 border-b border-slate-200">
+                            <!-- Tambahkan id="modalTitle" di sini -->
+                            <h3 id="modalTitle" class="text-sm font-bold text-slate-800 uppercase tracking-wider">
+                                TINJAU DOKUMEN PERSYARATAN
+                            </h3>
+                            <button onclick="tutupPdf()" class="text-slate-400 hover:text-rose-600 transition p-2">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                            </button>
+                        </div>
+                        <!-- Wadah File -->
+                        <div class="flex-1 bg-slate-100 p-2">
+                            <iframe id="bingkaiPdf" src="about:blank" class="w-full h-full rounded-lg" frameborder="0"></iframe>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
-
     </div>
 </div>
 
@@ -402,10 +465,8 @@
         const isLocked = jamMulai.disabled;
 
         if (isLocked) {
-            // UNLOCK (Buka Gembok)
             jamMulai.disabled = false;
             jamSelesai.disabled = false;
-            // Ubah gaya visual saat aktif
             [jamMulai, jamSelesai].forEach(el => {
                 el.classList.remove('bg-slate-50', 'text-slate-500');
                 el.classList.add('bg-white', 'text-slate-700');
@@ -415,7 +476,6 @@
             btnEdit.classList.replace('bg-indigo-50', 'bg-rose-50');
             btnEdit.classList.replace('text-indigo-600', 'text-rose-600');
         } else {
-            // LOCK (Kunci Lagi & Reset)
             jamMulai.disabled = true;
             jamSelesai.disabled = true;
             [jamMulai, jamSelesai].forEach(el => {
@@ -429,7 +489,7 @@
         }
     }
 
-    // 2. Logika Hitung (Sama seperti sebelumnya)
+    // 2. Logika Hitung
     function calculateLembur() {
         if (!jamMulai.value || !jamSelesai.value) return;
         const [hStart, mStart] = jamMulai.value.split(':').map(Number);
@@ -448,6 +508,34 @@
         jamSelesai.addEventListener('input', calculateLembur);
         calculateLembur();
     }
+</script>
+
+<!-- Script Modal -->
+<script>
+    // Pastikan parameter 'judul' tertulis di sini
+    function openPdfModal(url, judul) {
+        // Pengaman: Jika judul kosong atau undefined, pakai teks default
+        const judulFinal = judul || 'TINJAU DOKUMEN PERSYARATAN';
+
+        if(document.getElementById('modalTitle')) {
+            document.getElementById('modalTitle').innerText = judulFinal.toUpperCase();
+        }
+
+        document.getElementById('kotakPdf').classList.remove('hidden');
+        document.getElementById('bingkaiPdf').src = url;
+    }
+
+    function tutupPdf() {
+        document.getElementById('kotakPdf').classList.add('hidden');
+        document.getElementById('bingkaiPdf').src = 'about:blank';
+    }
+
+    window.addEventListener('click', function(e) {
+        const wadah = document.getElementById('kotakPdf');
+        if (e.target === wadah) {
+            tutupPdf();
+        }
+    });
 </script>
 
 @endsection

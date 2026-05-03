@@ -27,9 +27,9 @@ class LogPersetujuanLembur extends Model
         // 🗑️ updated_at dihapus dari sini karena diisi otomatis
     ];
 
-    protected $casts = [
-        'status_persetujuan' => \App\Enums\StatusPersetujuan::class,
-    ];
+    // protected $casts = [
+    //     'status_persetujuan' => \App\Enums\StatusPersetujuan::class,
+    // ];
 
     // ➕ Tambahkan relasi ke tabel pengajuan lembur
     public function pengajuanLembur(): BelongsTo

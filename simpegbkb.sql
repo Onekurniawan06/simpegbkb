@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: localhost:3307
--- Generation Time: Apr 27, 2026 at 12:43 PM
+-- Generation Time: May 03, 2026 at 03:41 PM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -166,11 +166,9 @@ CREATE TABLE `file_persyaratanpangkatgajitunjangan` (
 --
 
 INSERT INTO `file_persyaratanpangkatgajitunjangan` (`id`, `id_kenaikan`, `nomor_urut_pegawai`, `nama_file_asli`, `path_file_server`, `tipe_dokumen`, `created_at`) VALUES
-(35, 9, '202690055', '6.+JIKOSTIK_jurnal+ekohardi_QR+code_v1_fin_two+col_230821.pdf', 'dokumen_pangkat_gaji/kenaikan-pangkat-reguler/202690055/Surat_Permohonan_202690055_1777280359.pdf', 'Surat_Permohonan', '2026-04-27 15:59:20'),
-(36, 9, '202690055', '4982-9012-1-SM.pdf', 'dokumen_pangkat_gaji/kenaikan-pangkat-reguler/202690055/Salinan_Surat_Keputusan_Pengangkatan_Pertama_202690055_1777280360.pdf', 'Salinan_Surat_Keputusan_Pengangkatan_Pertama', '2026-04-27 15:59:20'),
-(37, 9, '202690055', 'garuda3488092.pdf', 'dokumen_pangkat_gaji/kenaikan-pangkat-reguler/202690055/Salinan_Surat_Keputusan_Kenaikan_Gaji_Pokok_Berkala_Terakhir_202690055_1777280360.pdf', 'Salinan_Surat_Keputusan_Kenaikan_Gaji_Pokok_Berkala_Terakhir', '2026-04-27 15:59:20'),
-(38, 9, '202690055', 'landinfo.com-GeoData-Indonesia.pdf', 'dokumen_pangkat_gaji/kenaikan-pangkat-reguler/202690055/Salinan_Surat_Keputusan_Kenaikan_Pangkat_Terakhir_202690055_1777280361.pdf', 'Salinan_Surat_Keputusan_Kenaikan_Pangkat_Terakhir', '2026-04-27 15:59:21'),
-(39, 9, '202690055', 'app5_sebi143112_eng.pdf', 'dokumen_pangkat_gaji/kenaikan-pangkat-reguler/202690055/Daftar_Penilaian_Kinerja_2_Tahun_Terakhir_Berpredikat_Rata_Rata_Baik_202690055_1777280361.pdf', 'Daftar_Penilaian_Kinerja_2_Tahun_Terakhir_Berpredikat_Rata_Rata_Baik', '2026-04-27 15:59:21');
+(40, 10, '202690055', '6.+JIKOSTIK_jurnal+ekohardi_QR+code_v1_fin_two+col_230821.pdf', 'private/dokumen_pangkat_gaji/tunjangan-keluarga-anak/202690055/Surat_Permohonan_202690055_1777809657.pdf', 'Surat_Permohonan', '2026-05-03 19:01:00'),
+(41, 10, '202690055', '4982-9012-1-SM.pdf', 'private/dokumen_pangkat_gaji/tunjangan-keluarga-anak/202690055/Salinan_Akta_Kelahiran_202690055_1777809660.pdf', 'Salinan_Akta_Kelahiran', '2026-05-03 19:01:00'),
+(42, 10, '202690055', 'garuda3488092.pdf', 'private/dokumen_pangkat_gaji/tunjangan-keluarga-anak/202690055/Salinan_Kartu_Keluarga__KK__202690055_1777809660.pdf', 'Salinan_Kartu_Keluarga__KK_', '2026-05-03 19:01:00');
 
 -- --------------------------------------------------------
 
@@ -187,6 +185,17 @@ CREATE TABLE `file_persyaratanpensiun` (
   `tipe_dokumen` varchar(100) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+--
+-- Dumping data for table `file_persyaratanpensiun`
+--
+
+INSERT INTO `file_persyaratanpensiun` (`id`, `id_pensiun`, `nomor_urut_pegawai`, `nama_file_asli`, `path_file_server`, `tipe_dokumen`, `created_at`) VALUES
+(56, 13, '202690055', '6.+JIKOSTIK_jurnal+ekohardi_QR+code_v1_fin_two+col_230821.pdf', 'dokumen_pensiun/202690055/Surat_Permohonan_202690055_1777745703.pdf', 'Surat_Permohonan', '2026-05-02 18:15:10'),
+(57, 13, '202690055', '4982-9012-1-SM.pdf', 'dokumen_pensiun/202690055/SK_Gaji_Pokok_Berkala_Terakhir_202690055_1777745710.pdf', 'SK_Gaji_Pokok_Berkala_Terakhir', '2026-05-02 18:15:10'),
+(58, 13, '202690055', 'garuda3488092.pdf', 'dokumen_pensiun/202690055/SK_Pengangkatan_Pertama_Pegawai_Tetap_202690055_1777745710.pdf', 'SK_Pengangkatan_Pertama_Pegawai_Tetap', '2026-05-02 18:15:10'),
+(59, 13, '202690055', 'landinfo.com-GeoData-Indonesia.pdf', 'dokumen_pensiun/202690055/SK_Kenaikan_Pangkat_Terakhir_202690055_1777745711.pdf', 'SK_Kenaikan_Pangkat_Terakhir', '2026-05-02 18:15:11'),
+(60, 13, '202690055', 'app5_sebi143112_eng.pdf', 'dokumen_pensiun/202690055/Daftar_Penilaian_Kerja_Terakhir_202690055_1777745711.pdf', 'Daftar_Penilaian_Kerja_Terakhir', '2026-05-02 18:15:11');
 
 -- --------------------------------------------------------
 
@@ -337,11 +346,19 @@ CREATE TABLE `log_persetujuan_cuti` (
 --
 
 INSERT INTO `log_persetujuan_cuti` (`id`, `id_cuti`, `nomor_urut_pegawai`, `tahap_persetujuan`, `nomor_urut_pegawai_penyetuju`, `status_pengajuan`, `komentar`, `updated_at`, `user_id`) VALUES
-(1, 10, '202690055', 'Pengajuan Awal', '201384018', 'disetujui', 'Oke', '2026-04-24 14:35:48', NULL),
-(2, 10, '202690055', 'Manager', '201384018', 'disetujui', 'Oke', '2026-04-24 14:35:48', NULL),
-(3, 10, '202690055', 'Direktur Operasional', '3', 'disetujui', 'Oke', '2026-04-24 15:14:32', NULL),
-(16, 10, '202690055', 'HRO', '201384018', 'disetujui', 'Oke', '2026-04-24 15:55:45', NULL),
-(17, 10, '202690055', 'Selesai', NULL, 'disetujui', 'Seluruh tahapan pengajuan telah selesai diproses.', '2026-04-24 15:55:45', NULL);
+(25, 15, '202690055', 'Pengajuan Awal', '200781006', 'disetujui', 'Oke', '2026-04-30 15:34:50', NULL),
+(26, 15, '202690055', 'Manager', '200781006', 'disetujui', 'Oke', '2026-04-30 15:34:50', NULL),
+(27, 15, '202690055', 'Direktur Operasional', '3', 'disetujui', 'Oke', '2026-04-30 17:43:27', NULL),
+(28, 15, '202690055', 'HRO', '201384018', 'disetujui', 'Oke', '2026-04-30 18:37:07', NULL),
+(29, 15, '202690055', 'Selesai', '201384018', 'disetujui', 'Seluruh tahapan pengajuan telah selesai diproses.', '2026-04-30 18:37:08', NULL),
+(31, 22, '202690055', 'Pengajuan Awal', '200781006', 'disetujui', 'Oke', '2026-04-30 22:03:28', NULL),
+(32, 22, '202690055', 'Manager', '200781006', 'disetujui', 'Oke', '2026-04-30 22:03:29', NULL),
+(33, 22, '202690055', 'Direktur Operasional', '3', 'ditolak', 'Ditolak', '2026-04-30 22:06:19', NULL),
+(34, 23, '202690055', 'Pengajuan Awal', '200781006', 'disetujui', 'Oke', '2026-05-02 19:19:09', NULL),
+(35, 23, '202690055', 'Manager', '200781006', 'disetujui', 'Oke', '2026-05-02 19:19:09', NULL),
+(36, 23, '202690055', 'Direktur Operasional', '3', 'disetujui', 'Oke', '2026-05-02 19:21:00', NULL),
+(37, 23, '202690055', 'HRO', '201384018', 'disetujui', 'Oke', '2026-05-02 19:24:25', NULL),
+(38, 23, '202690055', 'Selesai', '201384018', 'disetujui', 'Seluruh tahapan pengajuan telah selesai diproses.', '2026-05-02 19:24:25', NULL);
 
 -- --------------------------------------------------------
 
@@ -365,12 +382,13 @@ CREATE TABLE `log_persetujuan_lembur` (
 --
 
 INSERT INTO `log_persetujuan_lembur` (`id`, `id_lembur`, `nomor_urut_pegawai`, `tahap_persetujuan`, `nomor_urut_pegawai_penyetuju`, `status_persetujuan`, `komentar`, `updated_at`) VALUES
-(93, 19, '202690055', 'Pengajuan Awal', '200781006', 'disetujui', 'Disetujui oleh Manager', '2026-04-25 10:57:18'),
-(96, 19, '202690055', 'Manager', '200781006', 'disetujui', 'Disetujui oleh Manager', '2026-04-25 10:57:18'),
-(97, 19, '202690055', 'Kepala SKK & SKKMR', '200984013', 'disetujui', 'Disetujui oleh Kepala Satker Kepatuhan & M.R.', '2026-04-25 11:01:54'),
-(98, 19, '202690055', 'Direktur Operasional', '3', 'disetujui', 'Disetujui oleh Direktur Operasional', '2026-04-25 11:10:28'),
-(99, 19, '202690055', 'HRO', '201384018', 'disetujui', 'Disetujui & Diselesaikan oleh HRO', '2026-04-25 11:27:56'),
-(101, 19, '202690055', 'Selesai', '201384018', 'disetujui', 'Seluruh tahapan pengajuan telah selesai diproses.', '2026-04-25 11:27:56');
+(115, 23, '202690055', 'Pengajuan Awal', '200781006', 'disetujui', 'Disetujui oleh Manager', '2026-05-02 20:42:58'),
+(116, 23, '202690055', 'Manager', '200781006', 'disetujui', 'Disetujui oleh Manager', '2026-05-02 20:42:58'),
+(117, 23, '202690055', 'Kepala SKK & SKKMR', '200984013', 'disetujui', 'Disetujui oleh Kepala SKK & SKKMR', '2026-05-02 21:42:02'),
+(119, 23, '202690055', 'Direktur Kepatuhan', '2', 'disetujui', 'Oke', '2026-05-02 22:41:52'),
+(122, 23, '202690055', 'Direktur Operasional', '3', 'disetujui', 'Oke', '2026-05-02 22:50:58'),
+(123, 23, '202690055', 'HRO', '201384018', 'disetujui', 'Oke', '2026-05-02 23:32:23'),
+(124, 23, '202690055', 'Selesai', '201384018', 'disetujui', 'Seluruh tahapan pengajuan telah selesai diproses oleh HRO.', '2026-05-02 23:32:23');
 
 -- --------------------------------------------------------
 
@@ -394,9 +412,12 @@ CREATE TABLE `log_persetujuan_pangkatgajitunjangan` (
 --
 
 INSERT INTO `log_persetujuan_pangkatgajitunjangan` (`id`, `id_kenaikan`, `nomor_urut_pegawai`, `tahap_persetujuan`, `nomor_urut_pegawai_penyetuju`, `status_persetujuan`, `komentar`, `updated_at`) VALUES
-(29, 9, '202690055', 'Pengajuan Awal', '200984013', 'disetujui', 'oke', '2026-04-27 16:52:46'),
-(30, 9, '202690055', 'Kepala SKK & SKKMR', '200984013', 'disetujui', 'oke', '2026-04-27 16:52:46'),
-(31, 9, '202690055', 'Direktur Kepatuhan', NULL, 'diproses', 'Menunggu verifikasi Direktur Kepatuhan', '2026-04-27 16:52:46');
+(32, 10, '202690055', 'Pengajuan Awal', '200984013', 'disetujui', 'Oke', '2026-05-03 19:40:03'),
+(33, 10, '202690055', 'Kepala SKK & SKKMR', '200984013', 'disetujui', 'Oke', '2026-05-03 19:40:03'),
+(34, 10, '202690055', 'Direktur Kepatuhan', '2', 'disetujui', 'Oke', '2026-05-03 20:16:09'),
+(37, 10, '202690055', 'Direktur Utama', '1', 'disetujui', 'Oke', '2026-05-03 20:17:29'),
+(38, 10, '202690055', 'HRO', '201384018', 'disetujui', 'Oke', '2026-05-03 20:35:13'),
+(39, 10, '202690055', 'Selesai', '201384018', 'disetujui', 'Seluruh tahapan pengajuan telah selesai diproses oleh HRO.', '2026-05-03 20:35:13');
 
 -- --------------------------------------------------------
 
@@ -412,8 +433,20 @@ CREATE TABLE `log_persetujuan_pensiun` (
   `nomor_urut_pegawai_penyetuju` varchar(50) DEFAULT NULL,
   `status_persetujuan` varchar(50) DEFAULT NULL,
   `komentar` text DEFAULT NULL,
-  `update_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
+  `updated_at` datetime DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
+
+--
+-- Dumping data for table `log_persetujuan_pensiun`
+--
+
+INSERT INTO `log_persetujuan_pensiun` (`id`, `id_pensiun`, `nomor_urut_pegawai`, `tahap_persetujuan`, `nomor_urut_pegawai_penyetuju`, `status_persetujuan`, `komentar`, `updated_at`) VALUES
+(47, 13, '202690055', 'Pengajuan Awal', '200984013', 'disetujui', 'oke', '2026-05-03 02:01:03'),
+(48, 13, '202690055', 'Kepala SKK & SKKMR', '200984013', 'disetujui', 'oke', '2026-05-03 02:01:03'),
+(49, 13, '202690055', 'Direktur Kepatuhan', '2', 'disetujui', 'Oke', '2026-05-03 02:38:35'),
+(50, 13, '202690055', 'Direktur Utama', '1', 'disetujui', 'Oke', '2026-05-03 02:40:21'),
+(51, 13, '202690055', 'HRO', '201384018', 'disetujui', 'Oke', '2026-05-03 03:03:01'),
+(52, 13, '202690055', 'Selesai', '201384018', 'disetujui', 'Seluruh tahapan pengajuan telah selesai diproses oleh HRO.', '2026-05-03 03:03:01');
 
 -- --------------------------------------------------------
 
@@ -594,9 +627,10 @@ CREATE TABLE `pengajuan_cuti` (
   `tanggal_selesai` date DEFAULT NULL,
   `jumlah_cuti` int(11) DEFAULT NULL,
   `jatah_periode_hari` int(11) DEFAULT NULL,
-  `sisa_cuti` int(11) DEFAULT NULL,
+  `saldo_awal` int(11) DEFAULT 0,
+  `saldo_akhir` int(11) DEFAULT NULL,
+  `status_pengajuan` varchar(20) DEFAULT 'Pending',
   `keterangan` text DEFAULT NULL,
-  `jalur_dokumen_pendukung` varchar(255) DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
@@ -605,8 +639,10 @@ CREATE TABLE `pengajuan_cuti` (
 -- Dumping data for table `pengajuan_cuti`
 --
 
-INSERT INTO `pengajuan_cuti` (`id_cuti`, `nomor_urut_pegawai`, `jenis_cuti`, `tanggal_mulai`, `tanggal_selesai`, `jumlah_cuti`, `jatah_periode_hari`, `sisa_cuti`, `keterangan`, `jalur_dokumen_pendukung`, `created_at`, `updated_at`) VALUES
-(10, '202690055', 'Cuti Tahunan', '2026-04-27', '2026-04-29', 3, 12, 9, 'Jalan jalan', NULL, '2026-04-22 03:31:16', '2026-04-22 03:31:16');
+INSERT INTO `pengajuan_cuti` (`id_cuti`, `nomor_urut_pegawai`, `jenis_cuti`, `tanggal_mulai`, `tanggal_selesai`, `jumlah_cuti`, `jatah_periode_hari`, `saldo_awal`, `saldo_akhir`, `status_pengajuan`, `keterangan`, `created_at`, `updated_at`) VALUES
+(15, '202690055', 'Cuti Tahunan', '2026-05-04', '2026-05-07', 4, 12, 12, 8, 'disetujui', 'jalan jalan', '2026-04-30 07:23:48', '2026-04-30 11:37:07'),
+(22, '202690055', 'Cuti Tahunan', '2026-05-25', '2026-05-29', 3, 12, 8, 5, 'ditolak', 'Pulang kampung idul adha', '2026-04-30 14:52:54', '2026-04-30 15:06:19'),
+(23, '202690055', 'Cuti Alasan Penting dan Mendesak', '2026-06-01', '2026-06-03', 2, 2, 2, 0, 'disetujui', 'Sunatan anak', '2026-05-01 05:22:34', '2026-05-02 12:24:25');
 
 -- --------------------------------------------------------
 
@@ -621,6 +657,7 @@ CREATE TABLE `pengajuan_lembur` (
   `jam_mulai` time NOT NULL,
   `jam_selesai` time NOT NULL,
   `total_jam_lembur` varchar(50) DEFAULT NULL,
+  `status_lembur` varchar(50) DEFAULT 'diproses',
   `uraian_tugas` text DEFAULT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
@@ -630,8 +667,8 @@ CREATE TABLE `pengajuan_lembur` (
 -- Dumping data for table `pengajuan_lembur`
 --
 
-INSERT INTO `pengajuan_lembur` (`id_lembur`, `nomor_urut_pegawai`, `tanggal_lembur`, `jam_mulai`, `jam_selesai`, `total_jam_lembur`, `uraian_tugas`, `created_at`, `updated_at`) VALUES
-(19, '202690055', '2026-04-25', '13:00:00', '17:00:00', '4 jam 0 menit', 'Cuan', '2026-04-25 03:26:12', '2026-04-25 04:01:54');
+INSERT INTO `pengajuan_lembur` (`id_lembur`, `nomor_urut_pegawai`, `tanggal_lembur`, `jam_mulai`, `jam_selesai`, `total_jam_lembur`, `status_lembur`, `uraian_tugas`, `created_at`, `updated_at`) VALUES
+(23, '202690055', '2026-05-04', '17:00:00', '20:00:00', '3 jam 0 menit', 'disetujui', 'Cuan', '2026-05-02 12:28:21', '2026-05-02 16:32:23');
 
 -- --------------------------------------------------------
 
@@ -650,6 +687,7 @@ CREATE TABLE `pengajuan_pangkatgajitunjangan` (
   `tmt_pegawai` date DEFAULT NULL,
   `jenis_pengajuan` varchar(100) DEFAULT NULL,
   `masa_kerja` varchar(50) DEFAULT NULL,
+  `status_kenaikan` varchar(50) DEFAULT 'diproses',
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
@@ -658,8 +696,8 @@ CREATE TABLE `pengajuan_pangkatgajitunjangan` (
 -- Dumping data for table `pengajuan_pangkatgajitunjangan`
 --
 
-INSERT INTO `pengajuan_pangkatgajitunjangan` (`id_kenaikan`, `nomor_urut_pegawai`, `pangkat`, `grade`, `jabatan`, `unit_kerja`, `status_pegawai`, `tmt_pegawai`, `jenis_pengajuan`, `masa_kerja`, `created_at`, `updated_at`) VALUES
-(9, '202690055', 'Pelaksana Bank Madya', 'G.3', 'Finance Officer', 'Umum', 'Pegawai Tetap', '2023-01-02', 'Kenaikan Pangkat Reguler', '2tahun11bulan', '2026-04-27 08:59:19', '2026-04-27 08:59:19');
+INSERT INTO `pengajuan_pangkatgajitunjangan` (`id_kenaikan`, `nomor_urut_pegawai`, `pangkat`, `grade`, `jabatan`, `unit_kerja`, `status_pegawai`, `tmt_pegawai`, `jenis_pengajuan`, `masa_kerja`, `status_kenaikan`, `created_at`, `updated_at`) VALUES
+(10, '202690055', 'Pelaksana Bank Madya', 'G.3', 'Finance Officer', 'Umum', 'Pegawai Tetap', '2023-01-02', 'Tunjangan Keluarga (Anak)', '2tahun11bulan', 'disetujui', '2026-05-03 12:00:57', '2026-05-03 13:35:13');
 
 -- --------------------------------------------------------
 
@@ -680,15 +718,17 @@ CREATE TABLE `pengajuan_pensiun` (
   `jenis_pengajuan` varchar(100) DEFAULT NULL,
   `masa_kerja` varchar(100) DEFAULT NULL,
   `tmt_pensiun` date DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+  `status_pensiun` varchar(50) DEFAULT 'diproses',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1 COLLATE=latin1_swedish_ci;
 
 --
 -- Dumping data for table `pengajuan_pensiun`
 --
 
-INSERT INTO `pengajuan_pensiun` (`id_pensiun`, `nomor_urut_pegawai`, `nama_pegawai`, `pangkat`, `grade`, `jabatan`, `unit_kerja`, `status_pegawai`, `tmt_pegawai`, `jenis_pengajuan`, `masa_kerja`, `tmt_pensiun`, `created_at`) VALUES
-(10, '202690055', 'Iwan Kurniawan', 'Pelaksana Bank Madya', 'G.3', 'Finance Officer', 'Umum', 'Pegawai Tetap', '2023-01-02', 'Pensiun Normal', '2tahun11bulan', '2079-01-01', '2026-04-25 16:42:25');
+INSERT INTO `pengajuan_pensiun` (`id_pensiun`, `nomor_urut_pegawai`, `nama_pegawai`, `pangkat`, `grade`, `jabatan`, `unit_kerja`, `status_pegawai`, `tmt_pegawai`, `jenis_pengajuan`, `masa_kerja`, `tmt_pensiun`, `status_pensiun`, `created_at`, `updated_at`) VALUES
+(13, '202690055', 'Iwan Kurniawan', 'Pelaksana Bank Madya', 'G.3', 'Finance Officer', 'Umum', 'Pegawai Tetap', '2023-01-02', 'Pensiun Normal', '2tahun11bulan', '2079-01-01', 'disetujui', '2026-05-02 18:15:03', '2026-05-02 20:03:01');
 
 -- --------------------------------------------------------
 
@@ -779,7 +819,7 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('4IW5yqPvYQubBcA3eTFezPJsuV9n9letweFuAkQv', 200984013, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoiZE1xOUpodks0YWFrbEFLSkVGbjhwb09wWGFzZUFPa0VrUUNBQks5ZSI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6Njc6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9za2ttci9hcHByb3ZhbC9kZXRhaWwvcGFuZ2thdGdhaml0dW5qYW5nYW4vMjkiO3M6NToicm91dGUiO3M6MjA6InNra21yLmRldGFpbEFwcHJvdmFsIjt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319czo1MDoibG9naW5fd2ViXzU5YmEzNmFkZGMyYjJmOTQwMTU4MGYwMTRjN2Y1OGVhNGUzMDk4OWQiO3M6OToiMjAwOTg0MDEzIjtzOjIyOiJQSFBERUJVR0JBUl9TVEFDS19EQVRBIjthOjA6e319', 1777286314);
+('VP1XQbZ6vshmeAXITNyxNjU9gcvbqhp9XPrXCgLb', 202690055, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36', 'YTo1OntzOjY6Il90b2tlbiI7czo0MDoidVg0RlBpRmNMVE1iUVRSYVl0alFxZ3hoVXZyNU1jZjE0YWVFcHhVWCI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MTE3OiJodHRwOi8vMTI3LjAuMC4xOjgwMDAvZGF0YXBlbmdhanVhbi9kYXRhUGVuZ2FqdWFuP2RhcmlfdGFuZ2dhbD0maGluZ2dhX3RhbmdnYWw9JnN0YXR1c19wZW5nYWp1YW5fZmlsdGVyPWRpdG9sYWsmdHlwZT0iO3M6NToicm91dGUiO3M6MzE6ImRhdGFwZW5nYWp1YW4uZm9ybURhdGFQZW5nYWp1YW4iO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX1zOjUwOiJsb2dpbl93ZWJfNTliYTM2YWRkYzJiMmY5NDAxNTgwZjAxNGM3ZjU4ZWE0ZTMwOTg5ZCI7czo5OiIyMDI2OTAwNTUiO3M6MjI6IlBIUERFQlVHQkFSX1NUQUNLX0RBVEEiO2E6MDp7fX0=', 1777815618);
 
 -- --------------------------------------------------------
 
@@ -976,7 +1016,6 @@ ALTER TABLE `pekerjaan`
 --
 ALTER TABLE `pengajuan_cuti`
   ADD PRIMARY KEY (`id_cuti`),
-  ADD UNIQUE KEY `nomor_urut_pegawai` (`nomor_urut_pegawai`),
   ADD KEY `jenis_cuti` (`jenis_cuti`);
 
 --
@@ -1066,13 +1105,13 @@ ALTER TABLE `divisi`
 -- AUTO_INCREMENT for table `file_persyaratanpangkatgajitunjangan`
 --
 ALTER TABLE `file_persyaratanpangkatgajitunjangan`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=43;
 
 --
 -- AUTO_INCREMENT for table `file_persyaratanpensiun`
 --
 ALTER TABLE `file_persyaratanpensiun`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=46;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=61;
 
 --
 -- AUTO_INCREMENT for table `jabatan`
@@ -1108,49 +1147,49 @@ ALTER TABLE `level_jabatan`
 -- AUTO_INCREMENT for table `log_persetujuan_cuti`
 --
 ALTER TABLE `log_persetujuan_cuti`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=39;
 
 --
 -- AUTO_INCREMENT for table `log_persetujuan_lembur`
 --
 ALTER TABLE `log_persetujuan_lembur`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=102;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=126;
 
 --
 -- AUTO_INCREMENT for table `log_persetujuan_pangkatgajitunjangan`
 --
 ALTER TABLE `log_persetujuan_pangkatgajitunjangan`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=32;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=40;
 
 --
 -- AUTO_INCREMENT for table `log_persetujuan_pensiun`
 --
 ALTER TABLE `log_persetujuan_pensiun`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=38;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=53;
 
 --
 -- AUTO_INCREMENT for table `pengajuan_cuti`
 --
 ALTER TABLE `pengajuan_cuti`
-  MODIFY `id_cuti` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id_cuti` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=24;
 
 --
 -- AUTO_INCREMENT for table `pengajuan_lembur`
 --
 ALTER TABLE `pengajuan_lembur`
-  MODIFY `id_lembur` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id_lembur` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=25;
 
 --
 -- AUTO_INCREMENT for table `pengajuan_pangkatgajitunjangan`
 --
 ALTER TABLE `pengajuan_pangkatgajitunjangan`
-  MODIFY `id_kenaikan` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+  MODIFY `id_kenaikan` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
 
 --
 -- AUTO_INCREMENT for table `pengajuan_pensiun`
 --
 ALTER TABLE `pengajuan_pensiun`
-  MODIFY `id_pensiun` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=11;
+  MODIFY `id_pensiun` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=14;
 
 --
 -- AUTO_INCREMENT for table `punishment`

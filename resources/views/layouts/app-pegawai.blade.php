@@ -46,36 +46,49 @@
                 </a>
 
                 <!-- Menu Dropdown/Accordion Data Aktivitas Pegawai -->
-                <!-- Gunakan div untuk mengelompokkan item menu utama dan sub-menu -->
-                <div class="mx-2 mb-6">
-                    <!-- Tombol Menu Utama yang bisa di-klik untuk toggle sub-menu -->
-                    <button id="toggleAktivitasPegawai" class="flex items-center justify-between w-full py-2 px-4 text-gray-700 hover:bg-blue-500 hover:text-white rounded-lg focus:outline-none">
+                <div class="mx-2 mb-6"
+                    x-data="{
+                        open: false,
+                        timeout: null,
+                        openMenu() {
+                            clearTimeout(this.timeout);
+                            this.open = true;
+                        },
+                        closeMenu() {
+                            clearTimeout(this.timeout);
+                            this.timeout = setTimeout(() => { this.open = false }, 300);
+                        }
+                    }"
+                    @mouseenter="openMenu()"
+                    @mouseleave="closeMenu()">
+
+                    <button class="flex items-center justify-between w-full py-2 px-4 text-gray-700 hover:bg-blue-500 hover:text-white rounded-lg transition-colors duration-300 focus:outline-none">
                         <span class="flex items-center">
                             <x-heroicon-o-archive-box class="h-5 w-5 mr-3" />
                             Data Aktivitas Pegawai
                         </span>
-                        <!-- Ikon panah yang akan berputar saat di-klik (chevron down/up) -->
-                        <x-heroicon-o-chevron-down id="arrowIcon" class="h-4 w-4 transition-transform duration-300" />
+                        <x-heroicon-o-chevron-down
+                            class="h-4 w-4 transition-transform duration-500"
+                            x-bind:class="open ? 'rotate-180' : ''" />
                     </button>
 
-                    <!-- Sub-menu Container (awalnya tersembunyi dengan class hidden) -->
-                    <div id="subMenuAktivitas" class="pl-8 mt-1 space-y-1 hidden">
-                        <!-- Sub Menu Data Pengajuan -->
-                        <a href="{{ route('datapengajuan.formDataPengajuan') }}" class="flex items-center py-2 px-3 text-gray-600 hover:bg-blue-400 hover:text-white rounded-lg transition duration-150 ease-in-out">
-                            <!-- Anda bisa menambahkan ikon kecil di sini jika mau -->
+                    <!-- Sub-menu: Gunakan x-collapse tanpa x-transition manual agar tidak bentrok -->
+                    <div x-show="open"
+                        x-collapse.duration.500ms
+                        class="pl-8 mt-1 space-y-1"
+                        style="display: none;"> <!-- style ini mencegah menu 'lompat' saat page load -->
+
+                        <a href="{{ route('datapengajuan.formDataPengajuan') }}" class="flex items-center py-2 px-3 text-gray-600 hover:bg-blue-400 hover:text-white rounded-lg transition-colors duration-300 ease-in-out">
                             <x-heroicon-o-book-open class="h-5 w-5 mr-3" />
                             Data Pengajuan
                         </a>
 
-                        <!-- Sub Menu Data Absensi -->
-                        <a href="#" class="flex items-center py-2 px-3 text-gray-600 hover:bg-blue-400 hover:text-white rounded-lg transition duration-150 ease-in-out">
-                            <!-- Anda bisa menambahkan ikon kecil di sini jika mau -->
+                        <a href="#" class="flex items-center py-2 px-3 text-gray-600 hover:bg-blue-400 hover:text-white rounded-lg transition-colors duration-300 ease-in-out">
                             <x-heroicon-o-document-text class="h-5 w-5 mr-3" />
                             Data Absensi
                         </a>
                     </div>
                 </div>
-                <!-- ... menu lainnya ... -->
             </nav>
         </aside>
 
@@ -160,43 +173,59 @@
 
                         <!-- Divider Vertikal -->
                         <div class="border-l border-gray-200 h-10"></div>
-                        <!-- Profil & Dropdown Container (pastikan ini memiliki 'relative') -->
-                        <div class="relative">
+                        <!-- Profil & Dropdown Container -->
+                        <div class="relative inline-block p-2"
+                            x-data="{
+                                open: false,
+                                timeout: null,
+                                openMenu() {
+                                    clearTimeout(this.timeout);
+                                    this.open = true;
+                                },
+                                closeMenu() {
+                                    clearTimeout(this.timeout);
+                                    this.timeout = setTimeout(() => { this.open = false }, 300);
+                                }
+                            }"
+                            @mouseenter="openMenu()"
+                            @mouseleave="closeMenu()">
 
-                            <!-- Checkbox Tersembunyi -->
-                            <input type="checkbox" id="dropdown-toggle" class="hidden">
-
-                            <!-- Label membungkus area profil, berfungsi sebagai tombol klik untuk checkbox -->
-                            <label for="dropdown-toggle" class="flex items-center space-x-2 cursor-pointer p-2">
-                                {{-- Container untuk Foto Profil atau Placeholder --}}
+                            <!-- TOMBOL PROFIL (KODE ASLI ANDA) -->
+                            <button class="flex items-center space-x-3 focus:outline-none">
+                                <!-- Bagian Foto Profil (Asli Anda) -->
                                 <div class="h-10 w-10 bg-gray-100 rounded-full overflow-hidden flex items-center justify-center">
-
                                     @if(Auth::user()->detailPribadi && Auth::user()->detailPribadi->photo_selfie)
-                                        {{-- Menampilkan foto profil jika sudah diunggah --}}
                                         <img src="{{ asset('storage/' . Auth::user()->detailPribadi->photo_selfie) }}?v={{ time() }}"
                                             class="h-full w-full object-cover"
                                             alt="Foto Profil">
                                     @else
-                                        {{-- Placeholder ikon jika belum ada foto diunggah --}}
-                                        <x-heroicon-x-person-profile class="h-10 w-10 text-gray-400 group-hover:text-yellow-500" />
+                                        <x-heroicon-x-person-profile class="h-10 w-10 text-gray-400" />
                                     @endif
-
                                 </div>
-                                <div class="flex flex-col text-sm">
-                                    <span class="font-small text-gray-800">{{ Auth::user()->name ?? 'User' }}</span>
+
+                                <!-- Bagian Nama & Status (Asli Anda) -->
+                                <div class="flex flex-col text-sm text-left">
+                                    <span class="font-medium text-gray-800">{{ Auth::user()->name ?? 'User' }}</span>
                                     <span class="text-xs text-blue-600">Aktif</span>
                                 </div>
-                                <!-- Icon Dropdown -->
-                                <svg xmlns="www.w3.org" class="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </label>
 
-                            <!-- Menu Dropdown (Harus menjadi sibling dari checkbox dan label) -->
-                            <!-- Menu ini awalnya disembunyikan dengan kelas 'hidden' dari Tailwind -->
-                            <div id="dropdown-menu" class="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-20 hidden">
+                                <!-- Ikon Panah (Indikator Dropdown) -->
+                                <x-heroicon-o-chevron-down
+                                    class="h-4 w-4 text-gray-400 transition-transform duration-300"
+                                    x-bind:class="open ? 'rotate-180' : ''" />
+                            </button>
 
-                                <!-- Bagian Pengaturan Akun -->
+                            <!-- MENU DROPDOWN (Auto-Open & Smooth) -->
+                            <div x-show="open"
+                                x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="opacity-0 transform scale-95 -translate-y-2"
+                                x-transition:enter-end="opacity-100 transform scale-100 translate-y-0"
+                                x-transition:leave="transition ease-in duration-150"
+                                x-transition:leave-start="opacity-100 transform scale-100 translate-y-0"
+                                x-transition:leave-end="opacity-0 transform scale-95 -translate-y-2"
+                                class="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-100"
+                                style="display: none;">
+
                                 <div class="p-2">
                                     <p class="text-xs font-semibold text-gray-500 uppercase px-4 py-2">Pengaturan Akun</p>
 
@@ -205,142 +234,90 @@
                                         $isDataIncomplete = empty($userAuth->nomor_urut_pegawai) || empty($userAuth->email);
                                     @endphp
 
-                                    <!-- Tautan Data Diri dengan Validasi -->
                                     @if($isDataIncomplete)
-                                        <!-- Tampilan Notifikasi Warning Jika Data Belum Lengkap -->
-                                        <div class="mx-2 mb-2 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded-md shadow-sm">
-                                            <div class="flex">
-                                                <div class="shrink-0">
-                                                    <!-- Menggunakan Heroicon untuk indikasi peringatan -->
-                                                    <x-heroicon-s-exclamation-triangle class="h-5 w-5 text-yellow-500" />
-                                                </div>
-                                                <div class="ml-3">
-                                                    <p class="text-xs text-yellow-700 leading-relaxed">
-                                                        <strong>Perhatian:</strong> Nomor pegawai atau email belum terdaftar.
-                                                        Silakan lengkapi profil Anda.
-                                                        <br>
-                                                        <a href="{{ route('profile.edit', ['form_type' => 'new']) }}" class="text-xs text-blue-700 hover:text-green-600 font-bold underline decoration-2 underline-offset-2">
-                                                            Isi Data Diri Sekarang
-                                                        </a>
-                                                    </p>
-                                                </div>
-                                            </div>
+                                        <div class="mx-2 mb-2 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded-md">
+                                            <p class="text-[10px] text-yellow-700 leading-tight">
+                                                <strong>Perhatian:</strong> Nomor pegawai atau email belum terdaftar.
+                                                <a href="{{ route('profile.edit', ['form_type' => 'new']) }}" class="text-blue-700 underline font-bold">Lengkapi Sekarang</a>
+                                            </p>
                                         </div>
-
-                                        <!-- Menu Data Diri (Status: Belum Diisi / Mode New) -->
-                                        <a href="{{ route('profile.edit', ['form_type' => 'new']) }}" class="flex items-center px-4 py-2 text-sm text-gray-400 hover:bg-gray-100 rounded-md group">
-                                            <x-heroicon-o-identification class="h-5 w-5 mr-3 text-gray-400 group-hover:text-yellow-500" />
-                                            <span class="flex-1">Data Diri</span>
-                                            <span class="text-[10px] bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded font-medium">Lengkapi</span>
-                                        </a>
-                                    @else
-                                        <!-- Tampilan Menu Normal Saat Data Sudah Lengkap (Mode Edit) -->
-                                        <a href="{{ route('profile.edit', ['form_type' => 'edit']) }}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md group">
-                                            <x-heroicon-o-identification class="h-5 w-5 mr-3 text-blue-400 group-hover:text-blue-600" />
-                                            Data Diri
-                                            <x-heroicon-s-arrow-small-right class="h-5 w-4 ml-auto text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                        </a>
                                     @endif
 
-                                    <!-- Tautan Ubah Password (Tetap Tersedia) -->
-                                    <a href="{{ url('/change-password') }}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md group">
-                                        <x-heroicon-o-lock-closed class="h-5 w-5 mr-3 text-blue-400 group-hover:text-blue-600" />
+                                    <a href="{{ route('profile.edit', ['form_type' => $isDataIncomplete ? 'new' : 'edit']) }}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md group">
+                                        <x-heroicon-o-identification class="h-5 w-5 mr-3 text-blue-400" />
+                                        Data Diri
+                                    </a>
+
+                                    <a href="{{ url('/change-password') }}" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
+                                        <x-heroicon-o-lock-closed class="h-5 w-5 mr-3 text-blue-400" />
                                         Ubah Kata Sandi
-                                        <x-heroicon-s-arrow-small-right class="h-5 w-4 ml-auto text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity" />
                                     </a>
                                 </div>
 
-                                <!-- Tautan Logout -->
-                                <div class="p-2 border-t border-gray-200">
-                                    <a href="{{ url('/logout') }}" class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md w-full text-left group">
-                                        <x-heroicon-o-x-circle class="h-5 w-5 mr-3 text-red-600 group-hover:scale-110 transition-transform" />
+                                <div class="p-2 border-t border-gray-100">
+                                    <a href="{{ url('/logout') }}" class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md">
+                                        <x-heroicon-o-x-circle class="h-5 w-5 mr-3" />
                                         Logout
                                     </a>
                                 </div>
-
                             </div>
                         </div>
+
                     </div>
                 </div>
-                    <div class="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-b-lg">
-                        <nav class="flex" aria-label="Breadcrumb">
-                            <ol class="inline-flex items-center">
-                                @if(isset($breadcrumbs) && count($breadcrumbs) > 0)
-                                    @foreach ($breadcrumbs as $title => $url)
-                                        <li class="inline-flex items-center">
-                                            {{-- Tambahkan separator jika bukan item pertama --}}
-                                            @if(!$loop->first)
-                                                <span class="mx-2 text-gray-400">/</span>
-                                            @endif
-
-                                            @if($url)
-                                                {{-- Jika ada URL, render sebagai link --}}
-                                                <a href="{{ $url }}" class="text-gray-700 hover:text-blue-600 flex items-center text-sm font-medium">
-                                                    @if($loop->first)
-                                                        <x-heroicon-m-home class="h-5 w-5 mr-3" />
-                                                    @endif
-                                                    {{ $title }}
-                                                </a>
-                                            @else
-                                                {{-- Jika URL null (halaman saat ini), render sebagai teks aktif --}}
-                                                <span class="text-gray-700 font-semibold-medium flex items-center text-sm">
-                                                    @if($loop->first)
-                                                        <x-heroicon-m-home class="h-5 w-5 mr-3" />
-                                                    @endif
-                                                    {{ $title }}
-                                                </span>
-                                            @endif
-                                        </li>
-                                    @endforeach
-                                @else
-                                    {{-- DEFAULT: Tampilkan breadcrumb default jika $breadcrumbs tidak disetel di controller --}}
+                <div class="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-b-lg">
+                    <nav class="flex" aria-label="Breadcrumb">
+                        <ol class="inline-flex items-center">
+                            @if(isset($breadcrumbs) && count($breadcrumbs) > 0)
+                                @foreach ($breadcrumbs as $title => $url)
                                     <li class="inline-flex items-center">
-                                        <span class="text-gray-700 font-semibold-medium flex items-center text-sm">
-                                            <x-heroicon-m-home class="h-5 w-5 mr-3" />
-                                            Beranda
-                                        </span>
+                                        {{-- Tambahkan separator jika bukan item pertama --}}
+                                        @if(!$loop->first)
+                                            <span class="mx-2 text-gray-400">/</span>
+                                        @endif
+
+                                        @if($url)
+                                            {{-- Jika ada URL, render sebagai link --}}
+                                            <a href="{{ $url }}" class="text-gray-700 hover:text-blue-600 flex items-center text-sm font-medium">
+                                                @if($loop->first)
+                                                    <x-heroicon-m-home class="h-5 w-5 mr-3" />
+                                                @endif
+                                                {{ $title }}
+                                            </a>
+                                        @else
+                                            {{-- Jika URL null (halaman saat ini), render sebagai teks aktif --}}
+                                            <span class="text-gray-700 font-semibold-medium flex items-center text-sm">
+                                                @if($loop->first)
+                                                    <x-heroicon-m-home class="h-5 w-5 mr-3" />
+                                                @endif
+                                                {{ $title }}
+                                            </span>
+                                        @endif
                                     </li>
-                                @endif
-                            </ol>
-                        </nav>
-                    </div>
+                                @endforeach
+                            @else
+                                {{-- DEFAULT: Tampilkan breadcrumb default jika $breadcrumbs tidak disetel di controller --}}
+                                <li class="inline-flex items-center">
+                                    <span class="text-gray-700 font-semibold-medium flex items-center text-sm">
+                                        <x-heroicon-m-home class="h-5 w-5 mr-3" />
+                                        Beranda
+                                    </span>
+                                </li>
+                            @endif
+                        </ol>
+                    </nav>
+                </div>
             </header>
 
             <!-- Page Content -->
-            {{-- <main id="mainContent" class="flex-1 overflow-x-hidden overflow-y-auto p-2"> --}}
-            {{-- <main id="mainContent" class="flex-1 overflow-hidden p-2"> --}}
             <main id="mainContent" class="flex-1 flex flex-col h-screen overflow-hidden">
                 @yield('content')
             </main>
 
             @include('partials.modal-success')
-
-            </div>
-
         </div>
-            @stack('scripts')
+        @stack('scripts')
     </div>
-
-    <!-- Bagian JavaScript untuk mengaktifkan toggle sub-menu -->
-    <script>
-        // Pastikan skrip ini diletakkan setelah elemen HTML dimuat,
-        // idealnya tepat sebelum tag penutup </body>
-        document.addEventListener('DOMContentLoaded', (event) => {
-            const toggleButton = document.getElementById('toggleAktivitasPegawai');
-            const subMenu = document.getElementById('subMenuAktivitas');
-            const arrowIcon = document.getElementById('arrowIcon');
-
-            toggleButton.addEventListener('click', () => {
-                // Toggle class 'hidden' pada container sub-menu
-                subMenu.classList.toggle('hidden');
-
-                // Opsional: Memutar ikon panah (chevron)
-                arrowIcon.classList.toggle('rotate-180');
-
-                // Logika tambahan jika Anda ingin menu lain tertutup saat menu ini terbuka bisa ditambahkan di sini.
-            });
-        });
-    </script>
 
     <script>
         // Fungsi JavaScript untuk memperbarui jam setiap detik

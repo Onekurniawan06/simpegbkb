@@ -84,10 +84,23 @@
                 </a>
 
                 <!-- Menu Dropdown/Accordion Data Aktivitas Pegawai -->
-                <!-- Gunakan div untuk mengelompokkan item menu utama dan sub-menu -->
-                <div class="mx-2 mb-6">
-                    <!-- Tombol Menu Utama yang bisa di-klik untuk toggle sub-menu -->
-                    <button id="toggleAktivitasPegawai" class="flex items-center justify-between w-full py-2 px-4 text-gray-700 hover:bg-blue-500 hover:text-white rounded-lg focus:outline-none">
+                <div class="mx-2 mb-6"
+                    x-data="{
+                        open: false,
+                        timeout: null,
+                        openMenu() {
+                            clearTimeout(this.timeout);
+                            this.open = true;
+                        },
+                        closeMenu() {
+                            clearTimeout(this.timeout);
+                            this.timeout = setTimeout(() => { this.open = false }, 300);
+                        }
+                    }"
+                    @mouseenter="openMenu()"
+                    @mouseleave="closeMenu()">
+
+                    <button class="flex items-center justify-between w-full py-2 px-4 text-gray-700 hover:bg-blue-500 hover:text-white rounded-lg transition-colors duration-300 focus:outline-none">
                         <span class="flex items-center">
                             <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
@@ -111,7 +124,6 @@
 <?php endif; ?>
                             Data Aktivitas Pegawai
                         </span>
-                        <!-- Ikon panah yang akan berputar saat di-klik (chevron down/up) -->
                         <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
 <?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
@@ -121,7 +133,7 @@
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['id' => 'arrowIcon','class' => 'h-4 w-4 transition-transform duration-300']); ?>
+<?php $component->withAttributes(['class' => 'h-4 w-4 transition-transform duration-500','x-bind:class' => 'open ? \'rotate-180\' : \'\'']); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
@@ -134,11 +146,13 @@
 <?php endif; ?>
                     </button>
 
-                    <!-- Sub-menu Container (awalnya tersembunyi dengan class hidden) -->
-                    <div id="subMenuAktivitas" class="pl-8 mt-1 space-y-1 hidden">
-                        <!-- Sub Menu Data Pengajuan -->
-                        <a href="<?php echo e(route('datapengajuan.formDataPengajuan')); ?>" class="flex items-center py-2 px-3 text-gray-600 hover:bg-blue-400 hover:text-white rounded-lg transition duration-150 ease-in-out">
-                            <!-- Anda bisa menambahkan ikon kecil di sini jika mau -->
+                    <!-- Sub-menu: Gunakan x-collapse tanpa x-transition manual agar tidak bentrok -->
+                    <div x-show="open"
+                        x-collapse.duration.500ms
+                        class="pl-8 mt-1 space-y-1"
+                        style="display: none;"> <!-- style ini mencegah menu 'lompat' saat page load -->
+
+                        <a href="<?php echo e(route('datapengajuan.formDataPengajuan')); ?>" class="flex items-center py-2 px-3 text-gray-600 hover:bg-blue-400 hover:text-white rounded-lg transition-colors duration-300 ease-in-out">
                             <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
 <?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
@@ -162,9 +176,7 @@
                             Data Pengajuan
                         </a>
 
-                        <!-- Sub Menu Data Absensi -->
-                        <a href="#" class="flex items-center py-2 px-3 text-gray-600 hover:bg-blue-400 hover:text-white rounded-lg transition duration-150 ease-in-out">
-                            <!-- Anda bisa menambahkan ikon kecil di sini jika mau -->
+                        <a href="#" class="flex items-center py-2 px-3 text-gray-600 hover:bg-blue-400 hover:text-white rounded-lg transition-colors duration-300 ease-in-out">
                             <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
 <?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
@@ -189,7 +201,6 @@
                         </a>
                     </div>
                 </div>
-                <!-- ... menu lainnya ... -->
             </nav>
         </aside>
 
@@ -313,24 +324,32 @@
 
                         <!-- Divider Vertikal -->
                         <div class="border-l border-gray-200 h-10"></div>
-                        <!-- Profil & Dropdown Container (pastikan ini memiliki 'relative') -->
-                        <div class="relative">
+                        <!-- Profil & Dropdown Container -->
+                        <div class="relative inline-block p-2"
+                            x-data="{
+                                open: false,
+                                timeout: null,
+                                openMenu() {
+                                    clearTimeout(this.timeout);
+                                    this.open = true;
+                                },
+                                closeMenu() {
+                                    clearTimeout(this.timeout);
+                                    this.timeout = setTimeout(() => { this.open = false }, 300);
+                                }
+                            }"
+                            @mouseenter="openMenu()"
+                            @mouseleave="closeMenu()">
 
-                            <!-- Checkbox Tersembunyi -->
-                            <input type="checkbox" id="dropdown-toggle" class="hidden">
-
-                            <!-- Label membungkus area profil, berfungsi sebagai tombol klik untuk checkbox -->
-                            <label for="dropdown-toggle" class="flex items-center space-x-2 cursor-pointer p-2">
-                                
+                            <!-- TOMBOL PROFIL (KODE ASLI ANDA) -->
+                            <button class="flex items-center space-x-3 focus:outline-none">
+                                <!-- Bagian Foto Profil (Asli Anda) -->
                                 <div class="h-10 w-10 bg-gray-100 rounded-full overflow-hidden flex items-center justify-center">
-
                                     <?php if(Auth::user()->detailPribadi && Auth::user()->detailPribadi->photo_selfie): ?>
-                                        
                                         <img src="<?php echo e(asset('storage/' . Auth::user()->detailPribadi->photo_selfie)); ?>?v=<?php echo e(time()); ?>"
                                             class="h-full w-full object-cover"
                                             alt="Foto Profil">
                                     <?php else: ?>
-                                        
                                         <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
 <?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
@@ -340,7 +359,7 @@
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['class' => 'h-10 w-10 text-gray-400 group-hover:text-yellow-500']); ?>
+<?php $component->withAttributes(['class' => 'h-10 w-10 text-gray-400']); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
@@ -352,23 +371,48 @@
 <?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
 <?php endif; ?>
                                     <?php endif; ?>
-
                                 </div>
-                                <div class="flex flex-col text-sm">
-                                    <span class="font-small text-gray-800"><?php echo e(Auth::user()->name ?? 'User'); ?></span>
+
+                                <!-- Bagian Nama & Status (Asli Anda) -->
+                                <div class="flex flex-col text-sm text-left">
+                                    <span class="font-medium text-gray-800"><?php echo e(Auth::user()->name ?? 'User'); ?></span>
                                     <span class="text-xs text-blue-600">Aktif</span>
                                 </div>
-                                <!-- Icon Dropdown -->
-                                <svg xmlns="www.w3.org" class="h-4 w-4 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                </svg>
-                            </label>
 
-                            <!-- Menu Dropdown (Harus menjadi sibling dari checkbox dan label) -->
-                            <!-- Menu ini awalnya disembunyikan dengan kelas 'hidden' dari Tailwind -->
-                            <div id="dropdown-menu" class="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-20 hidden">
+                                <!-- Ikon Panah (Indikator Dropdown) -->
+                                <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
+<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('heroicon-o-chevron-down'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['class' => 'h-4 w-4 text-gray-400 transition-transform duration-300','x-bind:class' => 'open ? \'rotate-180\' : \'\'']); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+                            </button>
 
-                                <!-- Bagian Pengaturan Akun -->
+                            <!-- MENU DROPDOWN (Auto-Open & Smooth) -->
+                            <div x-show="open"
+                                x-transition:enter="transition ease-out duration-200"
+                                x-transition:enter-start="opacity-0 transform scale-95 -translate-y-2"
+                                x-transition:enter-end="opacity-100 transform scale-100 translate-y-0"
+                                x-transition:leave="transition ease-in duration-150"
+                                x-transition:leave-start="opacity-100 transform scale-100 translate-y-0"
+                                x-transition:leave-end="opacity-0 transform scale-95 -translate-y-2"
+                                class="absolute right-0 mt-2 w-56 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-100"
+                                style="display: none;">
+
                                 <div class="p-2">
                                     <p class="text-xs font-semibold text-gray-500 uppercase px-4 py-2">Pengaturan Akun</p>
 
@@ -377,121 +421,40 @@
                                         $isDataIncomplete = empty($userAuth->nomor_urut_pegawai) || empty($userAuth->email);
                                     ?>
 
-                                    <!-- Tautan Data Diri dengan Validasi -->
                                     <?php if($isDataIncomplete): ?>
-                                        <!-- Tampilan Notifikasi Warning Jika Data Belum Lengkap -->
-                                        <div class="mx-2 mb-2 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded-md shadow-sm">
-                                            <div class="flex">
-                                                <div class="shrink-0">
-                                                    <!-- Menggunakan Heroicon untuk indikasi peringatan -->
-                                                    <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
-<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('heroicon-s-exclamation-triangle'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['class' => 'h-5 w-5 text-yellow-500']); ?>
-<?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-                                                </div>
-                                                <div class="ml-3">
-                                                    <p class="text-xs text-yellow-700 leading-relaxed">
-                                                        <strong>Perhatian:</strong> Nomor pegawai atau email belum terdaftar.
-                                                        Silakan lengkapi profil Anda.
-                                                        <br>
-                                                        <a href="<?php echo e(route('profile.edit', ['form_type' => 'new'])); ?>" class="text-xs text-blue-700 hover:text-green-600 font-bold underline decoration-2 underline-offset-2">
-                                                            Isi Data Diri Sekarang
-                                                        </a>
-                                                    </p>
-                                                </div>
-                                            </div>
+                                        <div class="mx-2 mb-2 p-3 bg-yellow-50 border-l-4 border-yellow-400 rounded-md">
+                                            <p class="text-[10px] text-yellow-700 leading-tight">
+                                                <strong>Perhatian:</strong> Nomor pegawai atau email belum terdaftar.
+                                                <a href="<?php echo e(route('profile.edit', ['form_type' => 'new'])); ?>" class="text-blue-700 underline font-bold">Lengkapi Sekarang</a>
+                                            </p>
                                         </div>
-
-                                        <!-- Menu Data Diri (Status: Belum Diisi / Mode New) -->
-                                        <a href="<?php echo e(route('profile.edit', ['form_type' => 'new'])); ?>" class="flex items-center px-4 py-2 text-sm text-gray-400 hover:bg-gray-100 rounded-md group">
-                                            <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
-<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('heroicon-o-identification'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['class' => 'h-5 w-5 mr-3 text-gray-400 group-hover:text-yellow-500']); ?>
-<?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-                                            <span class="flex-1">Data Diri</span>
-                                            <span class="text-[10px] bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded font-medium">Lengkapi</span>
-                                        </a>
-                                    <?php else: ?>
-                                        <!-- Tampilan Menu Normal Saat Data Sudah Lengkap (Mode Edit) -->
-                                        <a href="<?php echo e(route('profile.edit', ['form_type' => 'edit'])); ?>" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md group">
-                                            <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
-<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('heroicon-o-identification'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['class' => 'h-5 w-5 mr-3 text-blue-400 group-hover:text-blue-600']); ?>
-<?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-                                            Data Diri
-                                            <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
-<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('heroicon-s-arrow-small-right'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['class' => 'h-5 w-4 ml-auto text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity']); ?>
-<?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-                                        </a>
                                     <?php endif; ?>
 
-                                    <!-- Tautan Ubah Password (Tetap Tersedia) -->
-                                    <a href="<?php echo e(url('/change-password')); ?>" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md group">
+                                    <a href="<?php echo e(route('profile.edit', ['form_type' => $isDataIncomplete ? 'new' : 'edit'])); ?>" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md group">
+                                        <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
+<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('heroicon-o-identification'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['class' => 'h-5 w-5 mr-3 text-blue-400']); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+                                        Data Diri
+                                    </a>
+
+                                    <a href="<?php echo e(url('/change-password')); ?>" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md">
                                         <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
 <?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
@@ -501,7 +464,7 @@
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['class' => 'h-5 w-5 mr-3 text-blue-400 group-hover:text-blue-600']); ?>
+<?php $component->withAttributes(['class' => 'h-5 w-5 mr-3 text-blue-400']); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
@@ -513,32 +476,11 @@
 <?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
 <?php endif; ?>
                                         Ubah Kata Sandi
-                                        <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
-<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('heroicon-s-arrow-small-right'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['class' => 'h-5 w-4 ml-auto text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity']); ?>
-<?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
                                     </a>
                                 </div>
 
-                                <!-- Tautan Logout -->
-                                <div class="p-2 border-t border-gray-200">
-                                    <a href="<?php echo e(url('/logout')); ?>" class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md w-full text-left group">
+                                <div class="p-2 border-t border-gray-100">
+                                    <a href="<?php echo e(url('/logout')); ?>" class="flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md">
                                         <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
 <?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
@@ -548,7 +490,7 @@
 <?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
 <?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
 <?php endif; ?>
-<?php $component->withAttributes(['class' => 'h-5 w-5 mr-3 text-red-600 group-hover:scale-110 transition-transform']); ?>
+<?php $component->withAttributes(['class' => 'h-5 w-5 mr-3']); ?>
 <?php echo $__env->renderComponent(); ?>
 <?php endif; ?>
 <?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
@@ -562,86 +504,27 @@
                                         Logout
                                     </a>
                                 </div>
-
                             </div>
                         </div>
+
                     </div>
                 </div>
-                    <div class="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-b-lg">
-                        <nav class="flex" aria-label="Breadcrumb">
-                            <ol class="inline-flex items-center">
-                                <?php if(isset($breadcrumbs) && count($breadcrumbs) > 0): ?>
-                                    <?php $__currentLoopData = $breadcrumbs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $title => $url): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                                        <li class="inline-flex items-center">
-                                            
-                                            <?php if(!$loop->first): ?>
-                                                <span class="mx-2 text-gray-400">/</span>
-                                            <?php endif; ?>
-
-                                            <?php if($url): ?>
-                                                
-                                                <a href="<?php echo e($url); ?>" class="text-gray-700 hover:text-blue-600 flex items-center text-sm font-medium">
-                                                    <?php if($loop->first): ?>
-                                                        <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
-<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('heroicon-m-home'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['class' => 'h-5 w-5 mr-3']); ?>
-<?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-                                                    <?php endif; ?>
-                                                    <?php echo e($title); ?>
-
-                                                </a>
-                                            <?php else: ?>
-                                                
-                                                <span class="text-gray-700 font-semibold-medium flex items-center text-sm">
-                                                    <?php if($loop->first): ?>
-                                                        <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
-<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
-<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
-<?php $component->withName('heroicon-m-home'); ?>
-<?php if ($component->shouldRender()): ?>
-<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
-<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
-<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
-<?php endif; ?>
-<?php $component->withAttributes(['class' => 'h-5 w-5 mr-3']); ?>
-<?php echo $__env->renderComponent(); ?>
-<?php endif; ?>
-<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
-<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
-<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
-<?php endif; ?>
-                                                    <?php endif; ?>
-                                                    <?php echo e($title); ?>
-
-                                                </span>
-                                            <?php endif; ?>
-                                        </li>
-                                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                                <?php else: ?>
-                                    
+                <div class="flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-b-lg">
+                    <nav class="flex" aria-label="Breadcrumb">
+                        <ol class="inline-flex items-center">
+                            <?php if(isset($breadcrumbs) && count($breadcrumbs) > 0): ?>
+                                <?php $__currentLoopData = $breadcrumbs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $title => $url): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
                                     <li class="inline-flex items-center">
-                                        <span class="text-gray-700 font-semibold-medium flex items-center text-sm">
-                                            <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
+                                        
+                                        <?php if(!$loop->first): ?>
+                                            <span class="mx-2 text-gray-400">/</span>
+                                        <?php endif; ?>
+
+                                        <?php if($url): ?>
+                                            
+                                            <a href="<?php echo e($url); ?>" class="text-gray-700 hover:text-blue-600 flex items-center text-sm font-medium">
+                                                <?php if($loop->first): ?>
+                                                    <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
 <?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
 <?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
 <?php $component->withName('heroicon-m-home'); ?>
@@ -661,50 +544,83 @@
 <?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
 <?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
 <?php endif; ?>
-                                            Beranda
-                                        </span>
+                                                <?php endif; ?>
+                                                <?php echo e($title); ?>
+
+                                            </a>
+                                        <?php else: ?>
+                                            
+                                            <span class="text-gray-700 font-semibold-medium flex items-center text-sm">
+                                                <?php if($loop->first): ?>
+                                                    <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
+<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('heroicon-m-home'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['class' => 'h-5 w-5 mr-3']); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+                                                <?php endif; ?>
+                                                <?php echo e($title); ?>
+
+                                            </span>
+                                        <?php endif; ?>
                                     </li>
-                                <?php endif; ?>
-                            </ol>
-                        </nav>
-                    </div>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            <?php else: ?>
+                                
+                                <li class="inline-flex items-center">
+                                    <span class="text-gray-700 font-semibold-medium flex items-center text-sm">
+                                        <?php if (isset($component)) { $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c = $component; } ?>
+<?php if (isset($attributes)) { $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c = $attributes; } ?>
+<?php $component = BladeUI\Icons\Components\Svg::resolve([] + (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag ? $attributes->all() : [])); ?>
+<?php $component->withName('heroicon-m-home'); ?>
+<?php if ($component->shouldRender()): ?>
+<?php $__env->startComponent($component->resolveView(), $component->data()); ?>
+<?php if (isset($attributes) && $attributes instanceof Illuminate\View\ComponentAttributeBag): ?>
+<?php $attributes = $attributes->except(\BladeUI\Icons\Components\Svg::ignoredParameterNames()); ?>
+<?php endif; ?>
+<?php $component->withAttributes(['class' => 'h-5 w-5 mr-3']); ?>
+<?php echo $__env->renderComponent(); ?>
+<?php endif; ?>
+<?php if (isset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $attributes = $__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__attributesOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+<?php if (isset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c)): ?>
+<?php $component = $__componentOriginal643fe1b47aec0b76658e1a0200b34b2c; ?>
+<?php unset($__componentOriginal643fe1b47aec0b76658e1a0200b34b2c); ?>
+<?php endif; ?>
+                                        Beranda
+                                    </span>
+                                </li>
+                            <?php endif; ?>
+                        </ol>
+                    </nav>
+                </div>
             </header>
 
             <!-- Page Content -->
-            
-            
             <main id="mainContent" class="flex-1 flex flex-col h-screen overflow-hidden">
                 <?php echo $__env->yieldContent('content'); ?>
             </main>
 
             <?php echo $__env->make('partials.modal-success', array_diff_key(get_defined_vars(), ['__data' => 1, '__path' => 1]))->render(); ?>
-
-            </div>
-
         </div>
-            <?php echo $__env->yieldPushContent('scripts'); ?>
+        <?php echo $__env->yieldPushContent('scripts'); ?>
     </div>
-
-    <!-- Bagian JavaScript untuk mengaktifkan toggle sub-menu -->
-    <script>
-        // Pastikan skrip ini diletakkan setelah elemen HTML dimuat,
-        // idealnya tepat sebelum tag penutup </body>
-        document.addEventListener('DOMContentLoaded', (event) => {
-            const toggleButton = document.getElementById('toggleAktivitasPegawai');
-            const subMenu = document.getElementById('subMenuAktivitas');
-            const arrowIcon = document.getElementById('arrowIcon');
-
-            toggleButton.addEventListener('click', () => {
-                // Toggle class 'hidden' pada container sub-menu
-                subMenu.classList.toggle('hidden');
-
-                // Opsional: Memutar ikon panah (chevron)
-                arrowIcon.classList.toggle('rotate-180');
-
-                // Logika tambahan jika Anda ingin menu lain tertutup saat menu ini terbuka bisa ditambahkan di sini.
-            });
-        });
-    </script>
 
     <script>
         // Fungsi JavaScript untuk memperbarui jam setiap detik

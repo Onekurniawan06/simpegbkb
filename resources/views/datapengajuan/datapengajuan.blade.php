@@ -1,7 +1,7 @@
 @extends($layout)
 @section('content')
 
-    <div class="bg-white rounded-lg shadow-lg max-w-full mx-auto">
+    <div class="bg-white rounded-lg shadow-lg max-w-full">
         <div class="bg-white p-4 rounded-l-md shadow-md">
             <form action="{{ route('datapengajuan.formDataPengajuan') }}" method="GET" class="space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -55,7 +55,7 @@
                         <svg xmlns="http://www.w3.org" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                         </svg>
-                        <span class="text-sm font-semibold">Filter Data</span>
+                        <span class="text-sm font-semibold">Cari Data</span>
                     </button>
 
                     <a href="{{ route('datapengajuan.formDataPengajuan') }}" class="h-10 px-4 flex items-center justify-center bg-gray-200 hover:bg-gray-300 text-gray-700 rounded-lg shadow-md transition duration-150 gap-2">
@@ -216,8 +216,8 @@
                             @endphp
 
                             {{-- Tombol Surat - Emerald/Green (Identik dengan Dokumen/Selesai) --}}
-                            <button onclick="event.preventDefault(); fetchAndOpenModal('{{ $nup }}', '{{ $typeSegment }}', '{{ $submission['type'] }}')"
-                                    class="px-6 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold uppercase tracking-widest rounded-full transition-all shadow-sm shadow-emerald-100 active:scale-95">
+                            <button onclick="event.preventDefault(); fetchAndOpenModal('{{ $submission['id'] }}', '{{ $typeSegment }}', '{{ $submission['type'] }}')"
+                                class="px-6 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold uppercase tracking-widest rounded-full transition-all shadow-sm shadow-emerald-100 active:scale-95">
                                 Surat
                             </button>
                         </div>
@@ -262,16 +262,21 @@
                 <div id="modal-footer" class="flex justify-end items-center pt-3 border-t text-sm mt-4">
                     <button
                         id="btn-download"
-                        onclick="downloadPDF()"
-                        class="flex items-center justify-center px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                        <!-- Kode SVG yang LENGKAP dan BENAR -->
-                        <svg id="loading-spinner" class="hidden animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org" fill="none" viewBox="0 0 24 24">
+                        onclick="downloadPDF()" {{-- KEMBALIKAN INI --}}
+                        class="flex items-center justify-center px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                        data-download-url=""
+                        data-file-name="">
+
+                        {{-- PERBAIKAN: xmlns harus lengkap agar standar W3C terpenuhi --}}
+                        <svg id="loading-spinner" class="hidden animate-spin -ml-1 mr-3 h-5 w-5 text-white"
+                            xmlns="http://w3.org" fill="none" viewBox="0 0 24 24">
                             <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                             <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                         </svg>
                         <span id="btn-text">Download PDF</span>
                     </button>
                 </div>
+
             </div>
         </div>
         <!-- Modal Container (Akhir) -->

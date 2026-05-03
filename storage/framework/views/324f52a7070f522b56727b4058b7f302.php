@@ -7,13 +7,13 @@
 </div>
 
 <?php
-    // 1. AMBIL DATA TERAKHIR DULU
+    // 1. AMBIL DATA TERAKHIR
     $lastLog = $historiLog->last();
 
     // Ambil status terakhir secara dinamis
     $statusTerakhir = strtolower($lastLog->status_persetujuan ?? $lastLog->status_pengajuan ?? '');
 
-    // 2. DEFINISIKAN VARIABLE CEK (Termasuk yang memicu eror)
+    // 2. DEFINISIKAN VARIABLE CEK
     $isHRODone = ($statusTerakhir === 'disetujui' && $lastLog->tahap_persetujuan === 'HRO');
     $isSelesai = ($lastLog->tahap_persetujuan === 'Selesai');
     $isFailFinal = ($statusTerakhir === 'ditolak');
@@ -50,7 +50,7 @@
                     $isDone = ($logStatus === 'disetujui');
                     $isCurr = ($logStatus === 'diproses');
                     $isFail = ($logStatus === 'ditolak'); // Ini tetap ada untuk warna MERAH
-                    $timeCol = ($sumber === 'pensiun') ? 'update_at' : 'updated_at'; // Ini tetap ada untuk TANGGAL
+                    $timeCol = 'updated_at';
                     $nextLog = $historiLog[$index + 1] ?? null;
                     $nextStatus = $nextLog ? strtolower($nextLog->status_persetujuan ?? $nextLog->status_pengajuan) : null;
 
@@ -67,11 +67,9 @@
                 ?>
 
                 <div class="flex flex-col items-center flex-1 relative">
-                    
                     <?php if(!$loop->last): ?>
                         <div class="absolute top-5 left-1/2 w-full h-[2.5px] z-0 <?php echo e($lineColor); ?>"></div>
                     <?php else: ?>
-                        
                         <div class="absolute top-5 left-1/2 w-full h-[2.5px] z-0 <?php echo e($isHRODone ? 'bg-emerald-500' : ($isFailFinal ? 'bg-red-500' : ($isCurr ? 'bg-orange-500' : 'bg-gray-100'))); ?>"></div>
                     <?php endif; ?>
 
@@ -97,8 +95,6 @@
                         <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Tahap <?php echo e($index + 1); ?></p>
                         <p class="text-[11px] font-semibold text-gray-900 mt-1 leading-tight"><?php echo e($log->tahap_persetujuan == 'Pengajuan Awal' ? 'Pengajuan' : $log->tahap_persetujuan); ?></p>
                         <p class="text-[9px] font-bold <?php echo e($isDone ? 'text-emerald-600' : ($isFail ? 'text-red-600' : 'text-orange-600')); ?> mt-1 italic uppercase"><?php echo e($logStatus); ?></p>
-
-                        
                         <?php if($log->$timeCol): ?>
                             <p class="text-[8px] text-gray-400 mt-1"><?php echo e(\Carbon\Carbon::parse($log->$timeCol)->format('d/m H:i')); ?> WIB</p>
                         <?php endif; ?>
@@ -109,7 +105,6 @@
             
             <?php if(count($historiLog) == 1 && $statusTerakhir !== 'ditolak'): ?>
                 <div class="flex flex-col items-center flex-1 relative">
-                    
                     <div class="absolute top-5 left-1/2 w-full h-[2.5px] z-0 bg-gray-100"></div>
                     
                     <div class="relative flex items-center justify-center z-10">
@@ -193,7 +188,6 @@
 
                         </p>
                     </div>
-                    
                 <?php endif; ?>
 
                 
@@ -210,11 +204,7 @@
                 </div>
             </div>
 
-
-            <!-- Content Card dengan Perbaikan Aksen Garis -->
             <div class="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm relative">
-
-                <!-- Perbaikan Aksen Garis: Menambahkan margin top/bottom dan rounded agar lebih 'soft' -->
                 <div class="absolute left-0 top-4 bottom-4 w-1.5 bg-indigo-500 rounded-r-full shadow-[2px_0_8px_rgba(99,102,241,0.4)]"></div>
 
                 <?php if($sumber == 'pensiun'): ?>
@@ -235,8 +225,9 @@
 
                                             </td>
                                             <td class="px-6 py-4 text-right">
-                                                <button type="button" onclick="openPdfModal('<?php echo e(route('skkmr.lihatDokumen', $file->id)); ?>')"
-                                                        class="text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded-lg transition shadow-sm inline-block">
+                                                <button type="button" 
+                                                    onclick="openPdfModal('<?php echo e(route('skkmr.lihatDokumen', $file->id)); ?>', '<?php echo e(str_replace('_', ' ', $file->tipe_dokumen)); ?>')"
+                                                    class="text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded-lg transition shadow-sm inline-block">
                                                     Lihat Dokumen
                                                 </button>
                                             </td>
@@ -326,7 +317,7 @@
         <!-- KOLOM KANAN: Action (Scroll Mandiri) -->
         <div class="lg:col-span-1 flex flex-col bg-slate-50 overflow-hidden border-l border-slate-100 h-full">
 
-            <!-- 1. TITLE KEPUTUSAN (Wajib Ada di Sini agar Sticky/Tetap Muncul) -->
+            <!-- 1. TITLE KEPUTUSAN -->
             <div class="p-5 bg-white border-b border-slate-200 flex-none shadow-sm">
                 <h3 class="text-[12px] font-bold text-indigo-600 uppercase tracking-[0.2em]">
                     Keputusan <?php echo e(str_replace('Verifikasi ', '', $tahapTeks)); ?>
@@ -335,7 +326,6 @@
             </div>
 
             <!-- 2. AREA FORM (Scroll Mandiri) -->
-            <!-- pb-10 saja biar margin bawah nggak terlalu jauh -->
             <div class="flex-1 overflow-y-auto custom-scroll-container p-3 pb-5">
                 <form id="formApproval" action="<?php echo e(route('skkmr.updateStatus', ['sumber' => $sumber, 'id_log' => $id_log])); ?>" method="POST" class="flex flex-col">
                     <?php echo csrf_field(); ?>
@@ -380,8 +370,6 @@
                             placeholder="Berikan alasan atau instruksi tambahan"
                             <?php if($data->status !== 'diproses'): ?> readonly <?php endif; ?>><?php echo e($data->komentar ?? ''); ?></textarea>
                     </div>
-
-                    
                     <input type="hidden" name="status" id="status_input">
 
                     <!-- 3. ACTION BUTTONS -->
@@ -432,10 +420,8 @@
         const isLocked = jamMulai.disabled;
 
         if (isLocked) {
-            // UNLOCK (Buka Gembok)
             jamMulai.disabled = false;
             jamSelesai.disabled = false;
-            // Ubah gaya visual saat aktif
             [jamMulai, jamSelesai].forEach(el => {
                 el.classList.remove('bg-slate-50', 'text-slate-500');
                 el.classList.add('bg-white', 'text-slate-700');
@@ -445,7 +431,6 @@
             btnEdit.classList.replace('bg-indigo-50', 'bg-rose-50');
             btnEdit.classList.replace('text-indigo-600', 'text-rose-600');
         } else {
-            // LOCK (Kunci Lagi & Reset)
             jamMulai.disabled = true;
             jamSelesai.disabled = true;
             [jamMulai, jamSelesai].forEach(el => {
@@ -459,7 +444,7 @@
         }
     }
 
-    // 2. Logika Hitung (Sama seperti sebelumnya)
+    // 2. Logika Hitung
     function calculateLembur() {
         if (!jamMulai.value || !jamSelesai.value) return;
         const [hStart, mStart] = jamMulai.value.split(':').map(Number);
@@ -483,22 +468,29 @@
 <!-- Script Modal -->
 <script>
     function openPdfModal(url, docName) {
-        document.getElementById('modalTitle').innerText = docName.toUpperCase();
-        document.getElementById('pdfIframe').src = url;
-        document.getElementById('pdfModal').classList.remove('hidden');
+        const modal = document.getElementById('pdfModal');
+        const iframe = document.getElementById('pdfIframe');
+        const title = document.getElementById('modalTitle');
+
+        if (modal && iframe) {
+            // Set Judul & URL
+            title.innerText = docName ? docName.toUpperCase() : "LIHAT DOKUMEN";
+            iframe.src = url;
+            
+            // Tampilkan Modal
+            modal.classList.remove('hidden');
+            modal.classList.add('flex'); // Pakai flex supaya items-center & justify-center jalan
+        }
     }
 
     function closePdfModal() {
-        document.getElementById('pdfModal').classList.add('hidden');
-        document.getElementById('pdfIframe').src = '';
-        document.getElementById('modalTitle').innerText = "LIHAT DOKUMEN";
-    }
-
-    // Tutup jika klik di luar area modal
-    window.onclick = function(event) {
         const modal = document.getElementById('pdfModal');
-        if (event.target == modal) {
-            closePdfModal();
+        const iframe = document.getElementById('pdfIframe');
+
+        if (modal && iframe) {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            iframe.src = ''; // Penting: Kosongkan iframe agar tidak berat & tidak bocor suara/data
         }
     }
 </script>

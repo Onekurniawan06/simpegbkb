@@ -14,7 +14,7 @@
 <div class="rounded-l-md text-white relative group transition-all duration-300">
     <!-- Ornamen Lingkaran 1 (Kanan Atas) -->
     <div class="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full group-hover:scale-110 transition-transform duration-500"></div>
-    
+
     <!-- Ornamen Lingkaran 2 ( Kiri Bawah ) -->
     <div class="absolute -left-6 -bottom-6 w-20 h-20 bg-white/5 rounded-full group-hover:scale-110 transition-transform duration-500"></div>
 
@@ -63,7 +63,6 @@
     <div class="p-3 shadow-sm flex flex-col h-full">
         <span class="text-sm font-semibold text-blue-700">#Section Data Pengajuan Pegawai</span>
         <hr class="border-b border-gray-200 mt-2">
-
         <form action="{{ url()->current() }}" method="GET"> {{-- Otomatis mengikuti route direktur yang aktif --}}
             <div class="bg-teal-50 p-4 rounded-t-lg border border-gray-300 border-b-0 mt-2">
                 <div class="flex flex-wrap items-end gap-3">
@@ -72,7 +71,6 @@
                         <label class="text-[11px] font-bold text-gray-500 uppercase block mb-1">Cari Pegawai</label>
                         <input type="text" name="search" value="{{ request('search') }}" placeholder="Nama / Nomor Urut Pegawai..." class="w-full px-3 py-2 border border-gray-300 rounded text-xs outline-none focus:ring-1 focus:ring-blue-500">
                     </div>
-
                     <!-- Filter Tanggal -->
                     <div class="w-40">
                         <label class="text-[11px] font-bold text-gray-500 uppercase block mb-1">Dari Tanggal</label>
@@ -82,7 +80,6 @@
                         <label class="text-[11px] font-bold text-gray-500 uppercase block mb-1">Sampai Tanggal</label>
                         <input type="date" name="end_date" value="{{ request('end_date') }}" class="w-full px-2 py-2 border border-gray-300 rounded text-xs outline-none bg-white">
                     </div>
-
                     <!-- Filter Jenis Pengajuan (Sudah Ditambahkan Pensiun & Kenaikan) -->
                     <div class="w-48"> {{-- Lebar sedikit ditambah agar teks tidak terpotong --}}
                         <label class="text-[11px] font-bold text-gray-500 uppercase block mb-1">Jenis Pengajuan</label>

@@ -69,90 +69,88 @@ class PengajuanLemburController extends Controller
     }
 
     public function updateLembur(Request $request)
-    {
+{
+    $validatedData = $request->validate([
+        'tanggal_lembur' => 'required|date',
+        'jam_mulai' => 'required|date_format:H:i',
+        'jam_selesai' => 'required|date_format:H:i|after:jam_mulai',
+        'total_jam_lembur' => 'required|string|max:100',
+        'uraian_tugas' => 'required|string|max:1000',
+        'nomor_urut_pegawai' => 'required'
+    ]);
 
-        $validatedData = $request->validate([
-            'tanggal_lembur' => 'required|date',
-            'jam_mulai' => 'required|date_format:H:i',
-            'jam_selesai' => 'required|date_format:H:i|after:jam_mulai',
-            'total_jam_lembur' => 'required|string|max:100',
-            'uraian_tugas' => 'required|string|max:1000',
-            'nomor_urut_pegawai' => 'required' // Pastikan ini divalidasi juga
+    $nomor_urut_pegawai = $request->input('nomor_urut_pegawai');
+
+    // --- 1. Logika Role Dinamis ---
+    $userLogin = auth()->user();
+    $roleMapping = \DB::table('roles_mapping')
+        ->where('jabatan_id', $userLogin->jabatan_id)
+        ->where('level_id', $userLogin->level_id)
+        ->first();
+
+    $isManagerOrKepala = $roleMapping && str_contains($roleMapping->route_name, 'manager');
+
+    // --- 2. Logging & Cek Data Pekerjaan ---
+    $userOwner = User::with('pegawai.pekerjaan')->where('nomor_urut_pegawai', $nomor_urut_pegawai)->first();
+
+    if (!$userOwner || !$userOwner->pegawai || !$userOwner->pegawai->pekerjaan) {
+        return back()->with('error', 'Data divisi pegawai tidak ditemukan.')->withInput();
+    }
+
+    $idDivisi = $userOwner->pegawai->pekerjaan->id_divisi ?? null;
+
+    // --- 3. Cek Existing Request ---
+    // Di sini kita bisa langsung cek ke kolom status_lembur di tabel utama agar lebih cepat
+    $existingRequest = PengajuanLembur::where('nomor_urut_pegawai', $nomor_urut_pegawai)
+        ->where('status_lembur', 'diproses')
+        ->exists();
+
+    if ($existingRequest) {
+        return back()->with('error', 'Anda masih memiliki pengajuan lembur yang sedang diproses.')->withInput();
+    }
+
+    // --- 4. Eksekusi Transaction ---
+    DB::beginTransaction();
+    try {
+        // SIMPAN KE TABEL UTAMA
+        $pengajuan = PengajuanLembur::create([
+            'nomor_urut_pegawai' => $nomor_urut_pegawai,
+            'tanggal_lembur'     => $validatedData['tanggal_lembur'],
+            'jam_mulai'          => $validatedData['jam_mulai'],
+            'jam_selesai'        => $validatedData['jam_selesai'],
+            'total_jam_lembur'   => $validatedData['total_jam_lembur'],
+            'uraian_tugas'       => $validatedData['uraian_tugas'],
+            'status_lembur'      => 'diproses', // ➕ TAMBAHKAN INI agar tabel utama punya status
         ]);
 
-        $nomor_urut_pegawai = $request->input('nomor_urut_pegawai');
+        // SIMPAN KE TABEL LOG
+        LogPersetujuanLembur::create([
+            'id_lembur'          => $pengajuan->id_lembur,
+            'nomor_urut_pegawai' => $nomor_urut_pegawai,
+            'tahap_persetujuan'  => 'Pengajuan Awal',
+            'status_persetujuan' => 'diproses', // Sesuaikan jika pakai Enum (StatusPersetujuan::DIPROSES)
+            'komentar'           => 'Menunggu Verifikasi.',
+        ]);
 
-        // --- 1. Logika Role Dinamis (Untuk Redirect) ---
-        $userLogin = auth()->user();
-        $roleMapping = \DB::table('roles_mapping')
-            ->where('jabatan_id', $userLogin->jabatan_id)
-            ->where('level_id', $userLogin->level_id)
-            ->first();
+        DB::commit();
 
-        $isManagerOrKepala = $roleMapping && str_contains($roleMapping->route_name, 'manager');
+        // --- 5. REDIRECT DINAMIS ---
+        $parentRouteName = $isManagerOrKepala ? 'manager.pilihpengajuan' : 'datapengajuan.formDataPengajuan';
+        $targetRoute = $isManagerOrKepala ? 'manager.pilihpengajuan' : 'pegawai.dashboard';
 
-        // --- 2. Logging & Cek Data Pekerjaan ---
-        \Log::info('Request masuk ke Controller untuk NIP: ' . $nomor_urut_pegawai);
-        $userOwner = User::with('pegawai.pekerjaan')->where('nomor_urut_pegawai', $nomor_urut_pegawai)->first();
+        return redirect()->route($targetRoute)->with([
+            'success'     => 'Permintaan Lembur Anda telah tercatat.',
+            'modal_title' => 'Pengajuan Lembur berhasil dibuat!!!',
+            'modal_link'  => route($parentRouteName)
+        ]);
 
-        if (!$userOwner || !$userOwner->pegawai || !$userOwner->pegawai->pekerjaan) {
-            return back()->with('error', 'Data divisi pegawai tidak ditemukan.')->withInput();
-        }
-
-        $idDivisi = $userOwner->pegawai->pekerjaan->id_divisi ?? null;
-        if (empty($idDivisi)) {
-            return back()->with('error', 'Data divisi tidak ditemukan di tabel pekerjaan.')->withInput();
-        }
-
-        // --- 3. Cek Existing Request ---
-        $existingRequest = PengajuanLembur::where('nomor_urut_pegawai', $nomor_urut_pegawai)
-            ->whereHas('logPersetujuanLembur', function ($query) {
-                $query->where('status_persetujuan', StatusPersetujuan::DIPROSES);
-            })->exists();
-
-        if ($existingRequest) {
-            return back()->with('error', 'Anda masih memiliki pengajuan lembur yang sedang diproses.')->withInput();
-        }
-
-        // --- 4. Eksekusi Transaction ---
-        DB::beginTransaction();
-        try {
-            $pengajuan = PengajuanLembur::create([
-                'nomor_urut_pegawai' => $nomor_urut_pegawai,
-                'tanggal_lembur' => $validatedData['tanggal_lembur'],
-                'jam_mulai' => $validatedData['jam_mulai'],
-                'jam_selesai' => $validatedData['jam_selesai'],
-                'total_jam_lembur' => $validatedData['total_jam_lembur'],
-                'uraian_tugas' => $validatedData['uraian_tugas'],
-            ]);
-
-            LogPersetujuanLembur::create([
-                'id_lembur' => $pengajuan->id_lembur,
-                'nomor_urut_pegawai' => $nomor_urut_pegawai,
-                'tahap_persetujuan' => 'Pengajuan Awal',
-                'status_persetujuan' => StatusPersetujuan::DIPROSES,
-                'komentar' => 'Menunggu Verifikasi.',
-                // 'update_at' => Carbon::now(),
-            ]);
-
-            DB::commit();
-
-            // --- 5. REDIRECT DINAMIS ---
-            $parentRouteName = $isManagerOrKepala ? 'manager.pilihpengajuan' : 'datapengajuan.formDataPengajuan';
-            $targetRoute = $isManagerOrKepala ? 'manager.pilihpengajuan' : 'pegawai.dashboard';
-
-            return redirect()->route($targetRoute)->with([
-                'success' => 'Permintaan Lembur Anda telah tercatat.',
-                'modal_title' => 'Pengajuan Lembur berhasil dibuat!!!',
-                'modal_link' => route($parentRouteName) // Mengirim URL utuh ke Session
-            ]);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            \Log::error('Gagal simpan Pengajuan Lembur: ' . $e->getMessage());
-            return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan sistem.');
-        }
+    } catch (\Exception $e) {
+        DB::rollBack();
+        \Log::error('Gagal simpan Pengajuan Lembur: ' . $e->getMessage());
+        return redirect()->back()->withInput()->with('error', 'Terjadi kesalahan sistem.');
     }
+}
+
 
     public function statuslembur($nip)
     {

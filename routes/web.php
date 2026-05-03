@@ -163,15 +163,19 @@ Route::middleware(['auth'])->group(function () {
 
     // CUKUP SATU SAJA untuk halaman daftar tabel (pilih salah satu name-nya)
     Route::get('/direktur/manajemenpengajuan', [DirekturApproval::class, 'index'])
-        ->name('direktur.manajemenpengajuanpegawai');
+    ->name('direktur.manajemenpengajuan');
 
     // DETAIL: Pastikan parameter namanya konsisten {id_log} sesuai di Controller
-    Route::get('/direktur/approval/detail/{sumber}/{id_log}', [DirekturApproval::class, 'direkturapproval'])
-        ->name('direktur.detailApproval');
+    Route::get('/direktur/approval/detail/{sumber}/{id_log}', [DirekturApproval::class, 'detailApproval'])
+    ->name('direktur.detailApproval');
 
     // UPDATE: Gunakan PUT agar sesuai dengan method di form/ajax
-    Route::put('/direktur/approval/update/{id_log}/{jenis}', [DirekturApproval::class, 'updateStatus'])
-        ->name('direktur.approval.update');
+    Route::put('/direktur/approval/update/{sumber}/{id_log}', [DirekturApproval::class, 'updateStatus'])
+    ->name('direktur.updateStatus');
+
+    // Lihat dokumen
+    Route::get('/direktur/lihat-dokumen/{id}', [DirekturApproval::class, 'lihatDokumen'])
+    ->name('direktur.lihatDokumen');
 
 });
 // ==== END LEVEL DIREKTUR ====
@@ -214,6 +218,10 @@ Route::middleware(['auth', 'no_back_button'])->group(function () {
     Route::put('/hro/approval/update/{sumber}/{id_log}', [HroApproval::class, 'updateStatus'])
         ->name('hro.updateStatus');
 
+    // Lihat dokumen
+    Route::get('/hro/lihat-dokumen/{id}', [HroApproval::class, 'lihatDokumen'])
+    ->name('hro.lihatDokumen');
+
 });
 // ==== END LEVEL HRO ====
 
@@ -246,7 +254,7 @@ Route::middleware(['auth', 'no_back_button'])->group(function () {
     Route::get('/skkmr/manajemen-pengajuan', [SkkmrApproval::class, 'skkmrManagementPersetujuan'])
         ->name('skkmr.manajemenpengajuan');
 
-    // 4. Halaman Detail Approval 
+    // 4. Halaman Detail Approval
     Route::get('/skkmr/approval/detail/{sumber}/{id_log}', [SkkmrApproval::class, 'detailApproval'])
         ->name('skkmr.detailApproval');
 
@@ -377,24 +385,18 @@ Route::get('/cek-pegawai/{nomor}', function ($nomor) {
 
 // Pastikan rute ini dilindungi oleh middleware 'auth' Form cuti Izin
 Route::middleware(['auth'])->group(function () {
-    // Rute untuk menampilkan formulir (GET method)
-    // Route::get('/pegawai/formCutiIzin', [CutiController::class, 'formCutiIzin'])->name('pegawai.formCutiIzin');
 
-    // Mengubah URI menjadi spesifik untuk Cuti Izin
-    // Route::post('/pegawai/cuti-izin', [CutiController::class, 'updateCutiizin'])->name('pegawai.updateCutiizin');
+    Route::get('/api/get-cuti-details', [CutiController::class, 'getCutiDetails'])
+    ->name('api.get.cuti.details');
 
-    Route::get('/api/get-cuti-details', [CutiController::class, 'getCutiDetails'])->name('api.get.cuti.details');
+    // 1. PREVIEW: Gunakan ID agar data yang muncul di modal tidak salah/tertukar
+    Route::get('/pengajuan-cuti/{id}/detail-surat', [DataPengajuanController::class, 'getLetterDetailsByNup'])
+        ->name('pengajuan.preview');
 
-    // // Tracking Pengajuan Cuti Izin
-    // Route::get('/pegawai/lacakpengajuan-cuti/{nip}', [CutiController::class, 'statuscuti'])->name('pengajuan.statuscuti');
-
-    // Rute spesifik untuk Cuti
-    Route::get('/pengajuan-cuti/{nup}/detail-surat', [DataPengajuanController::class, 'getLetterDetailsByNup']);
-
-    // Route::get('/pegawai/surat-cuti/{id}/download-pdf', [DataPengajuanController::class, 'downloadPdf'])->name('pegawai.downloadPdf');
-    // Rute baru untuk mendownload surat dalam format PDF berdasarkan NUP
-    // Pastikan name('pengajuan.download') sesuai dengan yang dipanggil di view
-    Route::get('/download-surat-cuti/{nup}', [DataPengajuanController::class, 'downloadLetterPdf'])->name('pengajuan.download');
+    // 2. DOWNLOAD: Ubah {nup} menjadi {id_cuti}
+    // Ini solusi agar tidak error 500 dan tidak mengambil data cuti tahun lalu
+    Route::get('/download-surat-cuti/{id}', [DataPengajuanController::class, 'downloadLetterPdf'])
+        ->name('pengajuan.download');
 });
 
 // Dalam grup middleware 'auth' (contoh penempatan)
@@ -409,9 +411,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/pegawai/lacakpengajuan-lembur/{nip}', [PengajuanLemburController::class, 'statuslembur'])->name('pengajuan.statuslembur');
 
     // Rute spesifik Surat untuk Lembur
-    Route::get('/pengajuan-lembur/{nup}/detail-surat', [DataPengajuanController::class, 'getLemburLetterDetailsByNup']);
-
-    Route::get('/download-surat-lembur/{nup}', [DataPengajuanController::class, 'downloadLetterPdfLembur'])->name('pengajuan.download.lembur');
+    Route::get('/pengajuan-lembur/{id}/detail-surat', [DataPengajuanController::class, 'getLemburLetterDetailsByNup']);
+    Route::get('/download-surat-lembur/{id}', [DataPengajuanController::class, 'downloadLetterPdfLembur'])->name('pengajuan.download.lembur');
 });
 
 // Dalam grup middleware 'auth' (contoh penempatan)
@@ -432,8 +433,8 @@ Route::middleware(['auth'])->group(function () {
       ->name('datapengajuan.statuspensiun'); // Tambahkan 'datapengajuan.' di sini
 
     // Rute spesifik Surat untuk Pensiun
-    Route::get('/pengajuan-pensiun/{nup}/detail-surat', [DataPengajuanController::class, 'getPensiunLetterDetailsByNup']);
-    Route::get('/download-surat-pensiun/{nup}', [DataPengajuanController::class, 'downloadLetterPdfPensiun'])->name('pengajuan.download.pensiun');
+    Route::get('/pengajuan-pensiun/{id}/detail-surat', [DataPengajuanController::class, 'getPensiunLetterDetailsByNup']);
+    Route::get('/download-surat-pensiun/{id}', [DataPengajuanController::class, 'downloadLetterPdfPensiun'])->name('pengajuan.download.pensiun');
 });
 
 // Route::middleware(['auth'])->group(function () {

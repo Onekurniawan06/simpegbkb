@@ -94,7 +94,7 @@ export function initCutiHandler() {
     const currentYear = new Date().getFullYear();
     fetchHolidays(currentYear);
 
-    const JATAH_CUTI_TAHUNAN_MAKSIMAL = parseInt(dataBridge.dataset.jatahCutiMax || '12', 10);
+    const SALDO_TERAKHIR_DATABASE = parseInt(dataBridge.dataset.sisaCutiTahunIni || '12', 10);
     let allJenisCuti = [];
     try {
         allJenisCuti = JSON.parse(dataBridge.dataset.allJenisCuti);
@@ -192,27 +192,24 @@ export function initCutiHandler() {
         return count;
     };
 
-    // --- 2. Konfigurasi Mapping File ---
-    // (Fungsi fileMapping telah dihapus)
-
     // --- 3. Seleksi Elemen DOM ---
     const elements = {
         jenisCutiEl: document.getElementById('jenis_cuti'),
         durationEl: document.getElementById('jumlah_cuti'),
         remainingCutiEl: document.getElementById('sisa_cuti'),
         durationDisplayEl: document.getElementById('jatah_periode_hari'),
+        saldoAwalEl: document.getElementById('saldo_awal'),
         startDateEl: document.getElementById('tanggal_mulai'),
         endDateEl: document.getElementById('tanggal_selesai'),
         subJenisCutiContainer: document.getElementById('sub_jenis_cuti_container'),
         subJenisCutiEl: document.getElementById('sub_jenis_cuti'),
-        // Bagian Download & Upload (file_cuti) telah dihapus
         tnCloseWarningPopup: document.getElementById('close-warning-popup'),
         btnCloseError: document.getElementById('btn-close-error'),
         btnCloseWarning: document.getElementById('btn-close-warning'),
         btnRefresh: document.getElementById('btn_refresh_form'),
     };
 
-    let takenDates = []; // Variabel untuk menyimpan tanggal cuti yang sudah diambil
+    let takenDates = [];
 
     const fetchTakenDates = async () => {
         try {
@@ -234,7 +231,7 @@ export function initCutiHandler() {
         let overlapFound = false;
 
         for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-            const currentDateFormatted = d.toISOString().split('T')[0]; // Menambahkan [0] untuk format YYYY-MM-DD
+            const currentDateFormatted = d.toISOString().split('T')[0];
 
             if (takenDates.includes(currentDateFormatted)) {
                 overlapFound = true;
@@ -252,20 +249,16 @@ export function initCutiHandler() {
         hideCustomWarningPopup();
 
         if (elements.startDateEl?.value && elements.endDateEl?.value) {
-            // Ambil jenis pengajuan dari bridge, ubah ke huruf kecil semua
             const jenisForm = (dataBridge.dataset.jenisPengajuan || 'cuti').toLowerCase();
 
             // Cek apakah ini form lembur
             const isLembur = (jenisForm === 'lembur');
-
-            // Hitung hari kerja dengan parameter isLembur
             const workingDaysTaken = calculateWorkingDaysBetweenDates(
                 elements.startDateEl.value,
                 elements.endDateEl.value,
                 isLembur
             );
 
-            // --- Logika Overlap (Tumpang Tindih) ---
             const hasOverlap = checkForOverlap(elements.startDateEl.value, elements.endDateEl.value);
             if (hasOverlap) {
                 showCustomErrorPopup('PERINGATAN: Tanggal yang Anda pilih tumpang tindih dengan cuti rekan satu divisi!');
@@ -276,18 +269,16 @@ export function initCutiHandler() {
 
             if (workingDaysTaken > 0) {
                 const selectedCutiName = elements.jenisCutiEl?.value;
-
-                // Validasi khusus Cuti Tahunan (Sabtu/Minggu sudah otomatis tidak dihitung)
                 if (selectedCutiName === 'Cuti Tahunan' && !isLembur) {
-                    if (workingDaysTaken > JATAH_CUTI_TAHUNAN_MAKSIMAL) {
-                        showCustomErrorPopup(`PERINGATAN: Maksimal ${JATAH_CUTI_TAHUNAN_MAKSIMAL} hari kerja.`);
+                    const saldoAwalSekarang = parseInt(document.getElementById('saldo_awal').value) || 0;
+
+                    if (workingDaysTaken > saldoAwalSekarang) {
+                        showCustomErrorPopup(`PERINGATAN: Sisa cuti Anda tinggal ${saldoAwalSekarang} hari. Anda mencoba mengambil ${workingDaysTaken} hari.`);
                         elements.endDateEl.value = '';
-                        elements.durationEl.value = 0;
+                        if (elements.durationEl) elements.durationEl.value = 0;
                         return;
                     }
                 }
-
-                // Set nilai ke input durasi
                 if (elements.durationEl) {
                     elements.durationEl.value = workingDaysTaken;
                 }
@@ -298,92 +289,96 @@ export function initCutiHandler() {
         updateCutiFields();
     };
 
-
     /**
      * FUNGSI UPDATE FIELD CUTI (Logika Utama + Perhitungan Tanggal Otomatis)
      */
     const updateCutiFields = () => {
-        // Panggil closePopup di sini juga untuk memastikan popup tertutup saat jenis cuti berubah
         hideCustomErrorPopup();
         hideCustomWarningPopup();
 
         const selectedCutiName = elements.jenisCutiEl?.value;
-        if (!selectedCutiName) return;
+        if (!selectedCutiName) {
+            if (elements.saldoAwalEl) elements.saldoAwalEl.value = '';
+            return;
+        }
+
         const selectedCutiData = allJenisCuti.find(c => c.nama_cuti === selectedCutiName);
         if (!selectedCutiData) return;
 
-        const startDateString = elements.startDateEl?.value;
+        // --- LOGIKA UNTUK MENGISI KOTAK "SALDO CUTI SAAT INI" ---
+        if (elements.saldoAwalEl) {
+            if (selectedCutiName === 'Cuti Tahunan') {
+                elements.saldoAwalEl.value = dataBridge.dataset.sisaCutiTahunIni || '12';
+            } else {
+                elements.saldoAwalEl.value = selectedCutiData.durasi_hari || selectedCutiData.durasi_bulan || 0;
+            }
+        }
+        // -------------------------------------------------------
 
-        // Asumsi data bridge menyediakan durasi_hari untuk Cuti Sakit (misal: durasi_hari: 3)
+        const startDateString = elements.startDateEl?.value;
         const durationDays = selectedCutiData.durasi_hari;
         const durationMonths = selectedCutiData.durasi_bulan;
 
         if (selectedCutiName === 'Cuti Tahunan') {
             if (elements.endDateEl) elements.endDateEl.readOnly = false;
         }
-        // LOGIKA Cuti Besar atau Cuti Melahirkan (berdasarkan durasi_bulan)
         else if (startDateString && (selectedCutiName === 'Cuti Besar' || selectedCutiName === 'Cuti Melahirkan') && durationMonths) {
-
-            // 1. Hitung tanggal selesai kalender (Bulan)
             const calendarEndDateString = calculateEndDateInMonths(startDateString, durationMonths);
-
-            // 2. Hitung total hari (Gunakan fungsi asli Anda, tapi kita tambahkan parameter 'false' atau bypass)
-            // Asumsi: Kita buat variabel durasi kalender murni
             const start = new Date(startDateString);
             const end = new Date(calendarEndDateString);
             const totalCalendarDays = Math.ceil(Math.abs(end - start) / (1000 * 60 * 60 * 24)) + 1;
 
             if (elements.endDateEl) {
-                // Langsung gunakan hasil dari calculateEndDateInMonths (Tanpa skip sabtu minggu)
                 elements.endDateEl.value = calendarEndDateString;
                 elements.endDateEl.readOnly = true;
             }
             if (elements.durationEl) {
                 elements.durationEl.value = totalCalendarDays;
             }
-
         }
-        // JENIS CUTI LAIN DENGAN DURASI HARI TETAP (Termasuk Cuti Sakit 3 Hari)
         else if (startDateString && durationDays) {
             const endDate = calculateEndDateExcludingWeekendsAndHolidays(startDateString, durationDays);
             if (elements.endDateEl) {
                 elements.endDateEl.value = endDate;
-                elements.endDateEl.readOnly = true; // Otomatis
+                elements.endDateEl.readOnly = true;
             }
             if (elements.durationEl) {
-                elements.durationEl.value = durationDays; // Otomatis terisi 3
+                elements.durationEl.value = durationDays;
             }
         } else {
-            // Jenis Cuti Lain TANPA durasi hari/bulan tetap (misal: izin)
             if (elements.endDateEl) {
-                elements.endDateEl.value = '';
+                if (selectedCutiName !== 'Cuti Tahunan' && !startDateString) {
+                    elements.endDateEl.value = '';
+                }
                 elements.endDateEl.readOnly = false;
             }
         }
 
-        // --- LOGIKA SUB JENIS CUTI (TETAP DI-MAINTAIN) ---
         if (selectedCutiName.toLowerCase().includes('penting')) {
             elements.subJenisCutiContainer.style.display = 'block';
         } else {
             elements.subJenisCutiContainer.style.display = 'none';
         }
 
-        // Bagian Logika Link Download dan Download Section telah dihapus sepenuhnya dari sini
-
-        // Update Durasi Maksimal & Sisa Cuti
         if (elements.durationDisplayEl) {
             elements.durationDisplayEl.value = selectedCutiData.durasi_hari ? `${selectedCutiData.durasi_hari} Hari` : (selectedCutiData.durasi_bulan ? `${selectedCutiData.durasi_bulan} Bulan` : '');
         }
 
-        // Logika sisa cuti tahunan
-        if (selectedCutiName === 'Cuti Tahunan' && elements.remainingCutiEl) {
+        // --- LOGIKA HITUNG SISA CUTI (MENGGUNAKAN SALDO BERJALAN) ---
+        if (elements.remainingCutiEl) {
+            const saldoAwalSekarang = parseInt(elements.saldoAwalEl?.value) || 0;
             const daysProposed = parseInt(elements.durationEl?.value || '0', 10);
-            elements.remainingCutiEl.value = daysProposed > 0 ? (JATAH_CUTI_TAHUNAN_MAKSIMAL - daysProposed) : '';
-        } else if (elements.remainingCutiEl) {
-            elements.remainingCutiEl.value = '';
-        }
-    };
 
+            // Hanya isi kotak "Sisa Cuti Nanti" jika jumlah hari yang diambil > 0
+            if (daysProposed > 0) {
+                elements.remainingCutiEl.value = saldoAwalSekarang - daysProposed;
+            } else {
+                // Jika belum pilih tanggal atau durasi masih 0, kosongkan kotaknya
+                elements.remainingCutiEl.value = ''; 
+            }
+        }
+
+    };
 
     /**
      * Reset Formulir secara manual
@@ -402,10 +397,6 @@ export function initCutiHandler() {
     elements.startDateEl?.addEventListener('change', updateCutiFields);
     elements.endDateEl?.addEventListener('change', calculateDuration);
     elements.btnRefresh?.addEventListener('click', handleManualRefresh);
-
-    // Listener untuk tombol refresh, input file, dan tutup modal PDF telah dihapus
-
-    // TAMBAHKAN EVENT LISTENERS UNTUK TOMBOL TUTUP DI SINI:
     if (elements.btnCloseError) {
         elements.btnCloseError.addEventListener('click', hideCustomErrorPopup);
     }
@@ -413,14 +404,13 @@ export function initCutiHandler() {
         elements.btnCloseWarning.addEventListener('click', hideCustomWarningPopup);
     }
 
-    // Inisialisasi UI saat pertama kali dimuat
+    if (elements.saldoAwalEl) {
+        elements.saldoAwalEl.value = '';
+    }
+
     updateCutiFields();
-
-    // Fungsi clearFileSelection() telah dihapus karena area status PDF ditiadakan
-
-    fetchTakenDates(); // Tumpang tindih waktu tanggal mulai cuti
+    fetchTakenDates();
 }
 
-// Jalankan fungsi inisialisasi saat DOM Content dimuat
 document.addEventListener('DOMContentLoaded', initCutiHandler);
 

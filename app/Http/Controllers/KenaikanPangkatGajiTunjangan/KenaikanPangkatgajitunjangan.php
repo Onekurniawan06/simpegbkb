@@ -1,8 +1,8 @@
 <?php
 
-namespace App\Http\Controllers\KenaikanPangkatgajitunjangan; // Namespace baru
+namespace App\Http\Controllers\KenaikanPangkatgajitunjangan;
 
-use App\Http\Controllers\Controller; // Jangan lupa import base Controller
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -10,8 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Symfony\Component\HttpFoundation\Response;
-use App\Services\SubmissionProcessorService; // PENTING: Import service class
-// use Illuminate\Support\Collection;
+use App\Services\SubmissionProcessorService;
 use App\Models\Pekerjaan;
 use App\Models\PengajuanPangkatgajitunjangan;
 use App\Models\FilePersyaratanpangkatgajitunjangan;
@@ -93,201 +92,193 @@ class KenaikanPangkatgajitunjangan extends Controller // Nama class sesuai permi
 
 
     public function updatePangkatGajiTunjangan(Request $request)
-    {
-        // 1. Validasi Data
-        $validatedData = $request->validate([
-            'nomor_urut_pegawai' => 'required|string|max:15',
-            'pangkat'            => 'nullable|string|max:50',
-            'grade'              => 'nullable|string|max:10',
-            'jabatan'            => 'nullable|string|max:100',
-            'unit_kerja'         => 'nullable|string|max:100',
-            'status_pegawai'     => 'nullable|string|max:50',
-            'tmt_pegawai'        => 'nullable|date',
-            'jenis_pengajuan'    => 'required|string|max:100',
-            'masa_kerja'         => 'nullable|string|max:50',
-            'documents'          => 'required|array',
-            'documents.*'        => 'required|file|mimes:pdf|max:5120',
+{
+    // 1. Validasi Data
+    $validatedData = $request->validate([
+        'nomor_urut_pegawai' => 'required|string|max:15',
+        'pangkat'            => 'nullable|string|max:50',
+        'grade'              => 'nullable|string|max:10',
+        'jabatan'            => 'nullable|string|max:100',
+        'unit_kerja'         => 'nullable|string|max:100',
+        'status_pegawai'     => 'nullable|string|max:50',
+        'tmt_pegawai'        => 'nullable', // Biarkan mutator model yang bekerja
+        'jenis_pengajuan'    => 'required|string|max:100',
+        'masa_kerja'         => 'nullable|string|max:50',
+        'documents'          => 'required|array',
+        'documents.*'        => 'required|file|mimes:pdf|max:5120',
+    ]);
+
+    $nomor_urut_pegawai = $validatedData['nomor_urut_pegawai'];
+    $jenisPengajuan = $validatedData['jenis_pengajuan'];
+
+    // 2. Cek Pengajuan Pending (Gunakan kolom status_kenaikan agar lebih cepat)
+    $hasPendingRequest = PengajuanPangkatgajitunjangan::where('nomor_urut_pegawai', $nomor_urut_pegawai)
+        ->where('status_kenaikan', 'diproses')
+        ->exists();
+
+    if ($hasPendingRequest) {
+        return back()->with('error', 'Anda masih memiliki pengajuan kenaikan yang sedang diproses.')->withInput();
+    }
+
+    $user = auth()->user();
+    $roleMapping = \DB::table('roles_mapping')
+        ->where('jabatan_id', $user->jabatan_id)
+        ->where('level_id', $user->level_id)
+        ->first();
+
+    DB::beginTransaction();
+    try {
+        // A. Simpan data pengajuan utama
+        $dataMain = $validatedData;
+        unset($dataMain['documents']);
+        $dataMain['status_kenaikan'] = 'diproses'; // ➕ TAMBAHKAN status awal di tabel utama
+
+        $pengajuan = PengajuanPangkatgajitunjangan::create($dataMain);
+        $idKenaikan = $pengajuan->id_kenaikan;
+
+        // B. Simpan Log (Gunakan string 'diproses' agar konsisten dengan yang lain)
+        LogPersetujuanPangkatgajitunjangan::create([
+            'id_kenaikan'        => $idKenaikan,
+            'nomor_urut_pegawai' => $nomor_urut_pegawai,
+            'tahap_persetujuan'  => 'Pengajuan Awal',
+            'status_persetujuan' => 'diproses',
+            'komentar'           => 'Menunggu verifikasi berkas.',
+            // updated_at diisi otomatis oleh Laravel karena $timestamps = true di model
         ]);
 
-        $dataUntukTabelUtama = $validatedData;
-        unset($dataUntukTabelUtama['documents']);
+        // C. Simpan File Dokumen (Gunakan folder private agar aman)
+        if ($request->hasFile('documents')) {
+            $safeFolderName = \Str::slug($jenisPengajuan);
+            // Simpan ke private/ agar tidak bisa diakses publik via URL
+            $baseUploadPath = 'private/dokumen_pangkat_gaji/' . $safeFolderName . '/' . $nomor_urut_pegawai;
 
-        $nomor_urut_pegawai = $validatedData['nomor_urut_pegawai'];
-        $jenisPengajuan = $validatedData['jenis_pengajuan'];
+            foreach ($request->file('documents') as $kodeDokumen => $file) {
+                if ($file->isValid()) {
+                    $extension = $file->getClientOriginalExtension();
+                    $originalName = $file->getClientOriginalName();
 
-        // 2. Cek Pengajuan Pending (Sesuai Logika Sebelumnya)
-        $hasPendingRequest = PengajuanPangkatgajitunjangan::where('nomor_urut_pegawai', $nomor_urut_pegawai)
-            ->whereHas('logPersetujuanPangkatgajitunjangan', function ($query) {
-                $query->where('status_persetujuan', StatusPersetujuan::DIPROSES);
-            })->exists();
+                    $fileNameFormatted = sprintf(
+                        "%s_%s_%s.%s",
+                        $kodeDokumen,
+                        $nomor_urut_pegawai,
+                        now()->timestamp,
+                        $extension
+                    );
 
-        if ($hasPendingRequest) {
-            return back()->with('error', 'Anda masih memiliki pengajuan yang sedang diproses.')->withInput();
-        }
+                    $path = $file->storeAs($baseUploadPath, $fileNameFormatted, 'local');
 
-        $user = auth()->user();
-        $roleMapping = \DB::table('roles_mapping')
-            ->where('jabatan_id', $user->jabatan_id)
-            ->where('level_id', $user->level_id)
-            ->first();
-
-        $isManagerOrKepala = $roleMapping && str_contains($roleMapping->route_name, 'manager');
-
-        DB::beginTransaction();
-        try {
-            // A. Simpan data pengajuan utama
-            $pengajuan = PengajuanPangkatgajitunjangan::create($dataUntukTabelUtama);
-
-            // 1. GANTI id_pengajuan menjadi id_kenaikan
-            $idPengajuanBaru = $pengajuan->id_kenaikan;
-
-            // B. Simpan Log
-            LogPersetujuanPangkatgajitunjangan::create([
-                'id_kenaikan'        => $idPengajuanBaru, // 2. GANTI id_pengajuan menjadi id_kenaikan
-                'nomor_urut_pegawai' => $nomor_urut_pegawai,
-                'tahap_persetujuan'  => 'Pengajuan Awal',
-                'status_persetujuan' => StatusPersetujuan::DIPROSES,
-                'komentar'           => 'Menunggu persetujuan.',
-                'update_at'          => Carbon::now(),
-            ]);
-
-            // C. Simpan File Dokumen
-            if ($request->hasFile('documents')) {
-                $safeFolderName = \Str::slug($jenisPengajuan);
-                $baseUploadPath = 'dokumen_pangkat_gaji/' . $safeFolderName . '/' . $nomor_urut_pegawai;
-
-                foreach ($request->file('documents') as $kodeDokumen => $file) {
-                    if ($file->isValid()) {
-                        $extension = $file->getClientOriginalExtension();
-                        $originalName = $file->getClientOriginalName();
-
-                        $fileNameFormatted = sprintf(
-                            "%s_%s_%s.%s",
-                            $kodeDokumen,
-                            $nomor_urut_pegawai,
-                            Carbon::now()->timestamp,
-                            $extension
-                        );
-
-                        $path = $file->storeAs($baseUploadPath, $fileNameFormatted, 'local');
-
-                        FilePersyaratanpangkatgajitunjangan::create([
-                            // 3. GANTI pengajuan_pangkatgajitunjangan_id menjadi id_kenaikan
-                            'id_kenaikan'      => $idPengajuanBaru,
-                            'nomor_urut_pegawai'               => $nomor_urut_pegawai,
-                            'nama_file_asli'                   => $originalName,
-                            'path_file_server'                 => $path,
-                            'tipe_dokumen'                     => $kodeDokumen,
-                        ]);
-                    }
+                    FilePersyaratanpangkatgajitunjangan::create([
+                        'id_kenaikan'      => $idKenaikan,
+                        'nomor_urut_pegawai' => $nomor_urut_pegawai,
+                        'nama_file_asli'     => $originalName,
+                        'path_file_server'   => $path,
+                        'tipe_dokumen'       => $kodeDokumen,
+                    ]);
                 }
             }
-
-            DB::commit();
-
-            // 1. CEK ULANG ROLE SECARA SPESIFIK
-            $isManager = $roleMapping && str_contains($roleMapping->route_name, 'manager');
-            $isSKKMR   = $roleMapping && str_contains($roleMapping->route_name, 'skkmr');
-
-            // 2. TENTUKAN RUTE REDIRECT TUJUAN
-            if ($isManager) {
-                $targetRoute = 'manager.pilihpengajuan';
-                $parentRouteName = 'manager.pilihpengajuan';
-            } elseif ($isSKKMR) {
-                $targetRoute = 'skkmr.dashboardskkmr'; // Sesuaikan rute dashboard SKKMR Anda
-                $parentRouteName = 'skkmr.pengajuanskkmr';
-            } else {
-                $targetRoute = 'pegawai.dashboard';
-                $parentRouteName = 'datapengajuan.formDataPengajuan';
-            }
-
-            return redirect()->route($targetRoute)->with([
-                'success' => 'Permintaan Kenaikan Pangkat/Gaji Anda telah tercatat.',
-                'modal_title' => 'Update Berhasil!',
-                'modal_link' => route($parentRouteName)
-            ]);
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            \Log::error('Gagal simpan Pangkat/Gaji: ' . $e->getMessage());
-            return back()->withInput()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }
+
+        DB::commit();
+
+        // 3. TENTUKAN REDIRECT BERDASARKAN ROLE
+        $isManager = $roleMapping && str_contains($roleMapping->route_name, 'manager');
+        $isSKKMR   = $roleMapping && str_contains($roleMapping->route_name, 'skkmr');
+
+        if ($isManager) {
+            $targetRoute = 'manager.pilihpengajuan';
+            $parentRouteName = 'manager.pilihpengajuan';
+        } elseif ($isSKKMR) {
+            $targetRoute = 'skkmr.dashboardskkmr';
+            $parentRouteName = 'skkmr.pengajuanskkmr';
+        } else {
+            $targetRoute = 'pegawai.dashboard';
+            $parentRouteName = 'datapengajuan.formDataPengajuan';
+        }
+
+        return redirect()->route($targetRoute)->with([
+            'success' => 'Permintaan Kenaikan Pangkat/Gaji Anda telah tercatat.',
+            'modal_title' => 'Berhasil!',
+            'modal_link' => route($parentRouteName)
+        ]);
+
+    } catch (\Exception $e) {
+        DB::rollBack();
+        \Log::error('Gagal simpan Pangkat/Gaji: ' . $e->getMessage());
+        return back()->withInput()->with('error', 'Terjadi kesalahan sistem.');
     }
+}
+
 
     public function statuspangkatgajitunjangan($nip)
-    {
-        $user = auth()->user();
+{
+    $user = auth()->user();
 
-        // 1. Logika Role Dinamis (Menghapus level_akses)
-        $roleMapping = \DB::table('roles_mapping')
-            ->where('jabatan_id', $user->jabatan_id)
-            ->where('level_id', $user->level_id)
-            ->first();
+    // 1. Logika Role Dinamis
+    $roleMapping = \DB::table('roles_mapping')
+        ->where('jabatan_id', $user->jabatan_id)
+        ->where('level_id', $user->level_id)
+        ->first();
 
-        // Menggunakan nama variabel yang konsisten dengan form pengajuan
-        $isManagerOrKepala = $roleMapping && str_contains($roleMapping->route_name, 'manager');
+    $isManagerOrKepala = $roleMapping && str_contains($roleMapping->route_name, 'manager');
 
-        // 2. Ambil Data Pengajuan
-        $pekerjaanData = Pekerjaan::where('nomor_urut_pegawai', $nip)->first();
+    // 2. Ambil Data Pengajuan
+    $pekerjaanData = Pekerjaan::where('nomor_urut_pegawai', $nip)->first();
 
-        $pengajuankenaikan = PengajuanPangkatgajitunjangan::with(['files', 'LogPersetujuanPangkatgajitunjangan' => function ($query) {
-            $query->orderByDesc('updated_at');
-        }])
-        ->where('nomor_urut_pegawai', $nip)
-        ->orderBy('created_at', 'desc')
-        ->firstOrFail();
+    $pengajuankenaikan = PengajuanPangkatgajitunjangan::with(['files', 'logPersetujuanPangkatgajitunjangan' => function ($query) {
+        $query->orderByDesc('updated_at');
+    }])
+    ->where('nomor_urut_pegawai', $nip)
+    ->orderBy('created_at', 'desc')
+    ->firstOrFail();
 
-        // 3. Siapkan data untuk Processor
-        $submissionRaw = [
-            'type' => 'PangkatGajiTunjangan',
-            'logs' => $pengajuankenaikan->LogPersetujuanPangkatgajitunjangan ? $pengajuankenaikan->LogPersetujuanPangkatgajitunjangan->toArray() : [],
-            'tmt_pegawai' => $pengajuankenaikan->tmt_pegawai,
-            'masa_kerja' => $pengajuankenaikan->masa_kerja,
-            'jenis_pengajuan' => $pengajuankenaikan->jenis_pengajuan,
-            'created_at' => $pengajuankenaikan->created_at,
-        ];
+    // 3. Siapkan data untuk Processor (Normalisasi agar seragam)
+    $submissionRaw = [
+        'id' => $pengajuankenaikan->id_kenaikan, // ➕ Tambahkan ID untuk link preview
+        'type' => 'PangkatGajiTunjangan',
+        'status_pengajuan' => $pengajuankenaikan->status_kenaikan, // ➕ Gunakan status dari tabel utama
+        'logs' => $pengajuankenaikan->logPersetujuanPangkatgajitunjangan ? $pengajuankenaikan->logPersetujuanPangkatgajitunjangan->toArray() : [],
+        'tmt_pegawai' => $pengajuankenaikan->tmt_pegawai,
+        'masa_kerja' => $pengajuankenaikan->masa_kerja,
+        'jenis_pengajuan' => $pengajuankenaikan->jenis_pengajuan,
+        'created_at' => $pengajuankenaikan->created_at,
+    ];
 
-        $submission = $this->submissionProcessor->processSubmissions(collect([$submissionRaw]))->first();
+    // Proses data menggunakan Service Class
+    $submission = $this->submissionProcessor->processSubmissions(collect([$submissionRaw]))->first();
 
-        // 4. Logika Tampilan & Variabel Penting
-        $latestLog = $pengajuankenaikan->LogPersetujuanPangkatgajitunjangan->first();
-        $komentarStatus = $latestLog ? $latestLog->komentar : 'Menunggu keputusan';
+    // 4. Logika Tampilan
+    $latestLog = $pengajuankenaikan->logPersetujuanPangkatgajitunjangan->first();
+    $komentarStatus = $latestLog ? $latestLog->komentar : 'Menunggu keputusan';
 
-        // Gunakan string yang sama dengan yang diharapkan oleh Data Transformer
-        $submissionType = 'PangkatGajiTunjangan';
+    $submissionType = 'PangkatGajiTunjangan';
+    $pageTitle = 'Lacak Pengajuan Kenaikan Pangkat/Gaji/Tunjangan';
 
-        $pageTitle = 'Lacak Pengajuan Kenaikan Pangkat/Gaji/Tunjangan';
+    // 5. BREADCRUMBS & ROUTE
+    $roleName = $roleMapping->role_name ?? 'Pegawai';
+    $parentLabel = $isManagerOrKepala ? "Manajemen Pengajuan ↦ Approval Pengajuan $roleName" : 'Data Pengajuan';
+    $parentRouteName = $isManagerOrKepala ? 'manager.pilihpengajuan' : 'datapengajuan.formDataPengajuan';
 
-        // 5. BREADCRUMBS & ROUTE OTOMATIS
-        $roleName = $roleMapping->role_name ?? 'Pegawai'; // Mengambil nama jabatan dari DB
+    $breadcrumbs = [
+        'Beranda' => $user->dashboard_link,
+        $parentLabel => route($parentRouteName),
+        $pageTitle => null
+    ];
 
-        $parentLabel = $isManagerOrKepala
-            ? "Manajemen Pengajuan ↦ Approval Pengajuan $roleName"
-            : 'Data Pengajuan';
+    $layout = $user->layout_file;
 
-        $parentRouteName = $isManagerOrKepala ? 'manager.pilihpengajuan' : 'datapengajuan.formDataPengajuan';
+    return view('datapengajuan.lacakpengajuan', compact(
+        'pengajuankenaikan',
+        'pageTitle',
+        'komentarStatus',
+        'pekerjaanData',
+        'submissionRaw',
+        'submissionType',
+        'submission',
+        'breadcrumbs',
+        'layout'
+    ));
+}
 
-        $breadcrumbs = [
-            'Beranda' => $user->dashboard_link,
-            $parentLabel => route($parentRouteName),
-            $pageTitle => null
-        ];
-
-        // 6. LAYOUT OTOMATIS
-        $layout = $user->layout_file; // Menggunakan Accessor layout_file
-
-        return view('datapengajuan.lacakpengajuan', compact(
-            'pengajuankenaikan',
-            'pageTitle',
-            'komentarStatus',
-            'pekerjaanData',
-            'submissionRaw',
-            'submissionType',
-            'submission',
-            'breadcrumbs',
-            'layout'
-        ));
-    }
 
     public function lihatDokumen($id)
     {

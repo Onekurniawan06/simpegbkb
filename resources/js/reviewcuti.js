@@ -39,43 +39,37 @@ document.addEventListener('DOMContentLoaded', () => {
         const sisa = elements.durationDisplayEl ? elements.durationDisplayEl.value : '';
         const ket = elements.keteranganEl ? elements.keteranganEl.value : '-';
 
-        // 2. Target element di Modal Review
-        const reviewLamaTabel = document.getElementById('review_cuti_diambil_display');
-        const reviewSisaTabel = document.getElementById('review_sisa_cuti_display');
+        // 2. Bersihkan dulu SEMUA centang, lama cuti, dan sisa cuti di tabel
+        document.querySelectorAll('[id^="v_"]').forEach(el => el.innerHTML = '');
+        document.querySelectorAll('.review-lama-cuti').forEach(el => el.textContent = '');
+        document.querySelectorAll('.review-sisa-cuti').forEach(el => el.textContent = '');
+
+        // 3. Isi data ke baris yang sesuai
+        if (jenis) {
+            const slug = jenis.toLowerCase().trim().replace(/\s+/g, '_').replace(/[^\w-]+/g, '');
+            
+            // Isi Centang
+            const targetV = document.getElementById(`v_${slug}`);
+            if (targetV) targetV.innerHTML = '<span class="checkmark">✓</span>';
+
+            // Isi Lama Cuti di baris tersebut
+            const targetLama = document.getElementById(`lama_${slug}`);
+            if (targetLama) targetLama.textContent = (jumlah && jumlah !== '0') ? `${jumlah} Hari` : '';
+
+            // Isi Sisa Cuti di baris tersebut
+            const targetSisa = document.getElementById(`sisa_${slug}`);
+            if (targetSisa) targetSisa.textContent = (sisa !== '' && sisa !== null) ? `${sisa} Hari` : '';
+        }
+
+        // 4. Isi data detail di kolom kanan (tetap seperti aslinya)
         const reviewJumlah = document.getElementById('review_jumlah_cuti_display');
         const reviewTmt = document.getElementById('review_tmt_cuti_display');
         const reviewAlasan = document.getElementById('review_alasan_cuti_display');
 
-        // --- SISIPAN LOGIKA SATUAN HARI ---
-        if (reviewLamaTabel) {
-            reviewLamaTabel.textContent = (jumlah && jumlah !== '0') ? `${jumlah} Hari` : '';
-        }
-        if (reviewSisaTabel) {
-            reviewSisaTabel.textContent = (sisa !== '' && sisa !== null) ? `${sisa} Hari` : '';
-        }
-        if (reviewJumlah) {
-            reviewJumlah.textContent = jumlah || '0';
-        }
-        if (reviewTmt) {
-            reviewTmt.textContent = (tglMulai && tglSelesai) ? `${tglMulai} s/d ${tglSelesai}` : '... s/d ...';
-        }
-        if (reviewAlasan) {
-            reviewAlasan.textContent = ket;
-        }
-
-        // 3. Logika Centang (✔)
-        const allCheckboxes = document.querySelectorAll('[id^="v_"]');
-        allCheckboxes.forEach(el => el.innerHTML = '');
-
-        if (jenis) {
-            const slug = jenis.toLowerCase().trim().replace(/\s+/g, '_').replace(/[^\w-]+/g, '');
-            const targetEl = document.getElementById(`v_${slug}`);
-            if (targetEl) {
-                targetEl.innerHTML = '<span class="checkmark">&#10003;</span>';
-            }
-        }
+        if (reviewJumlah) reviewJumlah.textContent = jumlah || '0';
+        if (reviewTmt) reviewTmt.textContent = (tglMulai && tglSelesai) ? `${tglMulai} s/d ${tglSelesai}` : '... s/d ...';
+        if (reviewAlasan) reviewAlasan.textContent = ket;
     };
-
 
     const openModal = () => {
         populateModalData();

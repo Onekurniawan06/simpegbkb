@@ -89,49 +89,87 @@
             </tr>
         </thead>
         <tbody>
-            <?php
-                $list = [['nama' => 'Cuti Tahunan', 'kuota' => '12 Hari'], ['nama' => 'Cuti Besar', 'kuota' => '2 Bulan'], ['nama' => 'Cuti Menikah', 'kuota' => '5 Hari'], ['nama' => 'Cuti Melahirkan', 'kuota' => '3 Bulan'], ['nama' => 'Cuti Sakit', 'kuota' => '3 x'], ['nama' => 'Cuti Hari Raya Keagamaan', 'kuota' => '-'], ['nama' => 'Cuti Menunaikan Ibadah Keagamaan', 'kuota' => '14 Hari'], ['nama' => 'Cuti Alasan Penting dan Mendesak', 'kuota' => '2 Hari'], ['nama' => 'Izin Tidak Masuk Kerja', 'kuota' => '-']];
-            ?>
-            <?php $__currentLoopData = $list; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $i => $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-            <tr>
-                
-                <td style="white-space: nowrap;"><?php echo e($i+1); ?>. <?php echo e($item['nama']); ?></td>
-                <td class="text-center"><span class="checkmark" id="v_<?php echo e(Str::slug($item['nama'], '_')); ?>"><?php echo (isset($cuti) && $cuti->jenis_cuti == $item['nama']) ? '&#10003;' : ''; ?></span></td>
-                <td class="text-center"><?php echo e($item['kuota']); ?></td>
-                
-                <td class="text-center" id="review_cuti_diambil_display">
-                    <?php echo e((isset($cuti) && $cuti->jenis_cuti == $item['nama'] && $cuti->jumlah_cuti) ? $cuti->jumlah_cuti . ' Hari' : ''); ?>
+    <?php
+        $list = [
+            ['nama' => 'Cuti Tahunan', 'kuota' => '12 Hari'], 
+            ['nama' => 'Cuti Besar', 'kuota' => '2 Bulan'], 
+            ['nama' => 'Cuti Menikah', 'kuota' => '5 Hari'], 
+            ['nama' => 'Cuti Melahirkan', 'kuota' => '3 Bulan'], 
+            ['nama' => 'Cuti Sakit', 'kuota' => '3 x'], 
+            ['nama' => 'Cuti Hari Raya Keagamaan', 'kuota' => '-'], 
+            ['nama' => 'Cuti Menunaikan Ibadah Keagamaan', 'kuota' => '14 Hari'], 
+            ['nama' => 'Cuti Alasan Penting dan Mendesak', 'kuota' => '2 Hari'], 
+            ['nama' => 'Izin Tidak Masuk Kerja', 'kuota' => '-']
+        ];
 
-                </td>
+        // Ambil data jika sudah ada di DB (untuk mode view/lacak)
+        $jenisCutiDb = $cuti->jenis_cuti ?? '';
+    ?>
 
-                
-                <td class="text-center" id="review_sisa_cuti_display">
-                    <?php echo e(($i == 0 && isset($cuti) && $cuti->sisa_cuti !== null) ? $cuti->sisa_cuti . ' Hari' : ''); ?>
+    <?php $__currentLoopData = $list; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $i => $item): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+    <?php
+        $isRowSelected = (isset($cuti) && $cuti->jenis_cuti == $item['nama']);
+    ?>
+    <tr>
+        
+        <td style="white-space: nowrap;"><?php echo e($i+1); ?>. <?php echo e($item['nama']); ?></td>
+        
+        
+        <td class="text-center">
+            <span class="checkmark" id="v_<?php echo e(Str::slug($item['nama'], '_')); ?>">
+                <?php echo $isRowSelected ? '✓' : ''; ?>
 
-                </td>
+            </span>
+        </td>
 
-                
-                <?php if($i == 0): ?>
-                    <td>1. Tgl Pengajuan</td><td><?php echo e((isset($cuti) && $cuti->created_at) ? \Carbon\Carbon::parse($cuti->created_at)->format('d/m/Y') : date('d/m/Y')); ?></td>
-                <?php elseif($i == 1): ?>
-                    <td>2. Lama Cuti</td><td><span id="review_jumlah_cuti_display"><?php echo e($cuti->jumlah_cuti ?? '0'); ?></span> Hari</td>
-                <?php elseif($i == 2): ?>
-                    <td>3. TMT Cuti</td><td id="review_tmt_cuti_display" style="font-size: 7.5pt;"><?php echo e((isset($cuti) && $cuti->tanggal_mulai) ? \Carbon\Carbon::parse($cuti->tanggal_mulai)->format('d/m/Y').' s/d '.\Carbon\Carbon::parse($cuti->tanggal_selesai)->format('d/m/Y') : '... s/d ...'); ?></td>
-                <?php elseif($i == 3): ?>
-                    <td colspan="2" class="bg-blue-grey font-bold">IV. ALASAN CUTI</td>
-                <?php elseif($i == 4): ?>
-                    <td colspan="2" rowspan="2" id="review_alasan_cuti_display" style="height: 35px; vertical-align: top;"><?php echo e($cuti->keterangan ?? '-'); ?></td>
-                <?php elseif($i == 6): ?>
-                    <td colspan="2" class="bg-blue-grey font-bold">V. YANG MENGAJUKAN</td>
-                <?php elseif($i == 7): ?>
-                    <td colspan="2" rowspan="2" class="text-center" style="vertical-align: top; padding-top: 5px;">
-                        <p style="margin: 0; font-size: 8pt;">Hormat Saya,</p><div style="height: 25px;"></div>
-                        <p style="margin: 0; font-weight: bold; text-decoration: underline;"><?php echo e($cuti->pegawai->nama ?? (auth()->user()->pegawai->nama ?? '-')); ?></p>
-                    </td>
-                <?php endif; ?>
-            </tr>
-            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-        </tbody>
+        <td class="text-center"><?php echo e($item['kuota']); ?></td>
+
+        
+<td class="text-center review-lama-cuti" id="lama_<?php echo e(Str::slug($item['nama'], '_')); ?>">
+    <?php echo e((isset($cuti) && $cuti->jenis_cuti == $item['nama']) ? $cuti->jumlah_cuti . ' Hari' : ''); ?>
+
+</td>
+
+
+<td class="text-center review-sisa-cuti" id="sisa_<?php echo e(Str::slug($item['nama'], '_')); ?>">
+    <?php echo e((isset($cuti) && $cuti->jenis_cuti == $item['nama']) ? ($cuti->saldo_akhir ?? $cuti->sisa_cuti) . ' Hari' : ''); ?>
+
+</td>
+
+
+        
+        <?php if($i == 0): ?>
+            <td>1. Tgl Pengajuan</td>
+            <td id="review_tgl_pengajuan"><?php echo e((isset($cuti) && $cuti->created_at) ? \Carbon\Carbon::parse($cuti->created_at)->format('d/m/Y') : date('d/m/Y')); ?></td>
+        <?php elseif($i == 1): ?>
+            <td>2. Lama Cuti</td>
+            <td><span id="review_jumlah_cuti_display"><?php echo e($cuti->jumlah_cuti ?? '0'); ?></span> Hari</td>
+        <?php elseif($i == 2): ?>
+            <td>3. TMT Cuti</td>
+            <td id="review_tmt_cuti_display" style="font-size: 7.5pt;">
+                <?php echo e((isset($cuti) && $cuti->tanggal_mulai) ? \Carbon\Carbon::parse($cuti->tanggal_mulai)->format('d/m/Y').' s/d '.\Carbon\Carbon::parse($cuti->tanggal_selesai)->format('d/m/Y') : '... s/d ...'); ?>
+
+            </td>
+        <?php elseif($i == 3): ?>
+            <td colspan="2" class="bg-blue-grey font-bold">IV. ALASAN CUTI</td>
+        <?php elseif($i == 4): ?>
+            <td colspan="2" rowspan="2" id="review_alasan_cuti_display" style="height: 35px; vertical-align: top;"><?php echo e($cuti->keterangan ?? '-'); ?></td>
+        <?php elseif($i == 6): ?>
+            <td colspan="2" class="bg-blue-grey font-bold">V. YANG MENGAJUKAN</td>
+        <?php elseif($i == 7): ?>
+            <td colspan="2" rowspan="2" class="text-center" style="vertical-align: top; padding-top: 5px;">
+                <p style="margin: 0; font-size: 8pt;">Hormat Saya,</p>
+                <div style="height: 25px;"></div>
+                <p style="margin: 0; font-weight: bold; text-decoration: underline;">
+                    <?php echo e($cuti->pegawai->nama ?? (auth()->user()->pegawai->nama ?? '-')); ?>
+
+                </p>
+            </td>
+        <?php endif; ?>
+    </tr>
+    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+</tbody>
+
     </table>
 
     <div class="spacer"></div>

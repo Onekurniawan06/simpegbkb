@@ -10,21 +10,24 @@ class SubmissionProcessorService
     public function processSubmissions(Collection $submissions): Collection
     {
         return $submissions->map(function ($submission) {
-            // --- 1. Tentukan Role Secara Dinamis (Tanpa level_akses) ---
+            // --- 1. Tentukan Role Secara Dinamis ---
             $user = auth()->user();
             $roleMapping = \DB::table('roles_mapping')
                 ->where('jabatan_id', $user->jabatan_id)
                 ->where('level_id', $user->level_id)
                 ->first();
 
-            // 1. Identifikasi Role (Gunakan role_name dari mapping lu)
+            // Identifikasi Role
             $isManager = $roleMapping && str_contains($roleMapping->route_name, 'manager');
-            $isSKAI = $roleMapping && str_contains(strtolower($roleMapping->role_name), 'skai'); // Nangkep Kepala SKAI
-            $isSKK = $roleMapping && str_contains(strtolower($roleMapping->role_name), 'kepatuhan'); // Nangkep Kepala SKK & SKKMR
+            $isSKAI = $roleMapping && str_contains(strtolower($roleMapping->role_name), 'skai');
+            $isSKK = $roleMapping && str_contains(strtolower($roleMapping->role_name), 'kepatuhan');
+
+            // ✨ SISIPAN: Identifikasi Direktur Kepatuhan
+            $isDirKepatuhan = $roleMapping && str_contains(strtolower($roleMapping->role_name), 'direktur kepatuhan');
+
             $type = $submission['type'];
 
             // --- 2. Tentukan Alur (Flow) ---
-            // DEFAULT FLOW (5 Tahap Standar)
             $flow = ['Pengajuan Awal', 'Kepala SKK & SKKMR', 'Direktur Kepatuhan', 'Direktur Utama', 'HRO'];
 
             if ($isManager) {
@@ -34,28 +37,21 @@ class SubmissionProcessorService
                 } elseif ($type === 'Pensiun') {
                     $flow = ['Pengajuan Awal', 'Kepala SKK & SKKMR', 'Direktur Kepatuhan', 'Direktur Utama', 'HRO'];
                 } elseif ($type === 'Cuti') {
-                    // Cuti Manager: Pengajuan -> Dir. Operasional -> HRO
+                    // ✅ PERBAIKAN: Cuti Manager LANGSUNG ke Dir. Ops, tidak lewat Kepatuhan
                     $flow = ['Pengajuan Awal', 'Direktur Operasional', 'HRO'];
                 } elseif ($type === 'Lembur') {
-                    // Lembur Manager: Pengajuan -> Kepala SKK & SKKMR -> HRO (DIROPS DIBUANG)
-                    $flow = ['Pengajuan Awal', 'Kepala SKK & SKKMR', 'Direktur Operasional', 'HRO'];
+                    // Lembur Manager tetap lewat Kepatuhan (Sesuai Flow Lembur)
+                    $flow = ['Pengajuan Awal', 'Kepala SKK & SKKMR', 'Direktur Kepatuhan', 'Direktur Operasional', 'HRO'];
                 }
             } else {
                 // --- LOGIKA KHUSUS USER PEGAWAI ---
-                if (in_array($type, ['Cuti', 'Lembur'])) {
-                    // DEFAULT PEGAWAI: Pengajuan -> Manager -> Dir. Operasional -> HRO
+                if ($type === 'Cuti') {
+                    // ✅ PERBAIKAN: Cuti Pegawai hanya: Awal -> Manager -> Dir. Ops -> HRO
                     $flow = ['Pengajuan Awal', 'Manager', 'Direktur Operasional', 'HRO'];
-
-                    if ($type === 'Lembur') {
-                        // PENYESUAIAN LEMBUR PEGAWAI (FIX TANPA DIREKTUR OPS)
-                        if ($isSKAI) {
-                            // RUTE AUDIT: Pengajuan -> Kepala SK Audit -> Kepala SKK & SKKMR -> HRO
-                            $flow = ['Pengajuan Awal', 'Kepala SK Audit', 'Kepala SKK & SKKMR', 'Direktur Operasional', 'HRO'];
-                        } else {
-                            // RUTE PEGAWAI BIASA: Pengajuan -> Manager -> Kepala SKK & SKKMR -> HRO
-                            $flow = ['Pengajuan Awal', 'Manager', 'Kepala SKK & SKKMR', 'Direktur Operasional', 'HRO'];
-                        }
-                    }
+                }
+                elseif ($type === 'Lembur') {
+                    // Lembur Pegawai tetap lewat Kepatuhan
+                    $flow = ['Pengajuan Awal', 'Manager', 'Kepala SKK & SKKMR', 'Direktur Kepatuhan', 'Direktur Operasional', 'HRO'];
                 }
             }
 
@@ -236,8 +232,8 @@ class SubmissionProcessorService
                 default  => data_get($submission, 'keterangan') // Fallback untuk Pensiun/Pangkat jika ada kolom keterangan
             };
 
-            $display['sisa_cuti'] = ($type === 'Cuti')
-                ? (data_get($submission, 'sisa_cuti') ?? data_get($submission, 'pengajuancuti.sisa_cuti', '0')) . ' hari'
+            $display['saldo_akhir'] = ($type === 'Cuti')
+                ? (data_get($submission, 'saldo_akhir') ?? data_get($submission, 'pengajuancuti.saldo_akhir', '0')) . ' hari'
                 : null;
 
             // Menghubungkan ke view Blade
