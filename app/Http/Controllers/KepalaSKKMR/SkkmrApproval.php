@@ -15,8 +15,6 @@ class SkkmrApproval extends Controller
 
         // 1. Kunci hak akses untuk Pensiun, Pangkat, dan LEMBUR
         $allowedSources = ['lembur', 'pensiun', 'pangkat'];
-
-        // Tahap yang boleh diverifikasi oleh SKKMR
         $searchTahap = ['Kepala SKK & SKKMR', 'Kepala Satker Kepatuhan & M.R.', 'Pengajuan Awal'];
 
         // 2. Konfigurasi Tabel Log (Mendaftarkan kembali Lembur)
@@ -47,7 +45,6 @@ class SkkmrApproval extends Controller
                     foreach ($searchTahap as $st) {
                         if ($st === 'Pengajuan Awal') {
                             $sub->orWhere(function($qLevel) {
-                                // SKKMR menarik 'Pengajuan Awal' milik Manager (Level 2)
                                 $qLevel->where('log.tahap_persetujuan', 'Pengajuan Awal')
                                     ->where('p.level_id', 2);
                             });
@@ -65,7 +62,6 @@ class SkkmrApproval extends Controller
             $totalMenunggu += $countWait;
             $detailMenunggu[] = ['label' => $cfg['lb'], 'jumlah' => $countWait];
 
-            // Kunci ID Log ('id') untuk tombol aksi detail
             $columnId = 'id';
 
             $q = (clone $baseQuery)->select(
@@ -215,181 +211,177 @@ class SkkmrApproval extends Controller
     }
 
     public function updateStatus(Request $request, $sumber, $id_log)
-{
-    $request->validate([
-        'status' => 'required|in:disetujui,ditolak',
-        'catatan' => 'nullable|string'
-    ]);
-
-    $user = auth()->user();
-    $sumber = strtolower($sumber);
-
-    $tabel = match($sumber) {
-        'lembur' => 'log_persetujuan_lembur',
-        'pensiun' => 'log_persetujuan_pensiun',
-        'pangkat', 'pangkatgajitunjangan' => 'log_persetujuan_pangkatgajitunjangan',
-        default => null
-    };
-
-    if (!$tabel) return response()->json(['success' => false, 'message' => 'Tipe tidak valid'], 400);
-
-    $kolomStatus = 'status_persetujuan';
-    $kolomWaktu = 'updated_at';
-
-    $logLama = \DB::table($tabel)->where('id', $id_log)->first();
-    if (!$logLama) return response()->json(['success' => false, 'message' => 'Data tidak ditemukan'], 404);
-
-    $namaTahapAksi = 'Kepala SKK & SKKMR';
-    $teksDefault = ($request->status === 'disetujui') ? "Disetujui oleh " . $namaTahapAksi : "Ditolak oleh " . $namaTahapAksi;
-    $komentarFinal = $request->filled('catatan') ? $request->catatan : $teksDefault;
-
-    \DB::beginTransaction();
-    try {
-        // --- 4. UPDATE BARIS LOG SAAT INI ---
-        \DB::table($tabel)->where('id', $id_log)->update([
-            $kolomStatus => $request->status,
-            'nomor_urut_pegawai_penyetuju' => $user->nomor_urut_pegawai,
-            'komentar' => $komentarFinal,
-            $kolomWaktu => now(),
+    {
+        $request->validate([
+            'status' => 'required|in:disetujui,ditolak',
+            'catatan' => 'nullable|string'
         ]);
 
-        // --- 5. LOGIKA JIKA DITOLAK ---
-        if ($request->status === 'ditolak') {
-            if ($sumber === 'lembur') {
-                \DB::table('pengajuan_lembur')->where('id_lembur', $logLama->id_lembur)
-                    ->update(['status_lembur' => 'ditolak', 'updated_at' => now()]);
-            } elseif ($sumber === 'pensiun') {
-                \DB::table('pengajuan_pensiun')->where('id_pensiun', $logLama->id_pensiun)
-                    ->update(['status_pensiun' => 'ditolak', 'updated_at' => now()]);
+        $user = auth()->user();
+        $sumber = strtolower($sumber);
+
+        $tabel = match($sumber) {
+            'lembur' => 'log_persetujuan_lembur',
+            'pensiun' => 'log_persetujuan_pensiun',
+            'pangkat', 'pangkatgajitunjangan' => 'log_persetujuan_pangkatgajitunjangan',
+            default => null
+        };
+
+        if (!$tabel) return response()->json(['success' => false, 'message' => 'Tipe tidak valid'], 400);
+
+        $kolomStatus = 'status_persetujuan';
+        $kolomWaktu = 'updated_at';
+
+        $logLama = \DB::table($tabel)->where('id', $id_log)->first();
+        if (!$logLama) return response()->json(['success' => false, 'message' => 'Data tidak ditemukan'], 404);
+
+        $namaTahapAksi = 'Kepala SKK & SKKMR';
+        $teksDefault = ($request->status === 'disetujui') ? "Disetujui oleh " . $namaTahapAksi : "Ditolak oleh " . $namaTahapAksi;
+        $komentarFinal = $request->filled('catatan') ? $request->catatan : $teksDefault;
+
+        \DB::beginTransaction();
+        try {
+            // --- 4. UPDATE BARIS LOG SAAT INI ---
+            \DB::table($tabel)->where('id', $id_log)->update([
+                $kolomStatus => $request->status,
+                'nomor_urut_pegawai_penyetuju' => $user->nomor_urut_pegawai,
+                'komentar' => $komentarFinal,
+                $kolomWaktu => now(),
+            ]);
+
+            // --- 5. LOGIKA JIKA DITOLAK ---
+            if ($request->status === 'ditolak') {
+                if ($sumber === 'lembur') {
+                    \DB::table('pengajuan_lembur')->where('id_lembur', $logLama->id_lembur)
+                        ->update(['status_lembur' => 'ditolak', 'updated_at' => now()]);
+                } elseif ($sumber === 'pensiun') {
+                    \DB::table('pengajuan_pensiun')->where('id_pensiun', $logLama->id_pensiun)
+                        ->update(['status_pensiun' => 'ditolak', 'updated_at' => now()]);
+                }
+                // ➕ TAMBAHKAN SINKRONISASI PANGKAT (Ditolak)
+                elseif ($sumber === 'pangkat' || $sumber === 'pangkatgajitunjangan') {
+                    \DB::table('pengajuan_pangkatgajitunjangan')->where('id_kenaikan', $logLama->id_kenaikan)
+                        ->update(['status_kenaikan' => 'ditolak', 'updated_at' => now()]);
+                }
+
+                \DB::commit();
+                if ($request->ajax() || $request->wantsJson()) return response()->json(['success' => true]);
+                return redirect()->route('skkmr.dashboardskkmr')->with('error', 'Pengajuan telah ditolak.');
             }
-            // ➕ TAMBAHKAN SINKRONISASI PANGKAT (Ditolak)
-            elseif ($sumber === 'pangkat' || $sumber === 'pangkatgajitunjangan') {
-                \DB::table('pengajuan_pangkatgajitunjangan')->where('id_kenaikan', $logLama->id_kenaikan)
-                    ->update(['status_kenaikan' => 'ditolak', 'updated_at' => now()]);
+
+            // --- 6. LOGIKA DISETUJUI (ESTAFET FLOW) ---
+            if ($request->status === 'disetujui') {
+
+                // SINKRONISASI TABEL UTAMA (Status tetap diproses karena estafet berlanjut)
+                if ($sumber === 'lembur') {
+                    \DB::table('pengajuan_lembur')->where('id_lembur', $logLama->id_lembur)
+                        ->update(['status_lembur' => 'diproses', 'updated_at' => now()]);
+                } elseif ($sumber === 'pensiun') {
+                    \DB::table('pengajuan_pensiun')->where('id_pensiun', $logLama->id_pensiun)
+                        ->update(['status_pensiun' => 'diproses', 'updated_at' => now()]);
+                }
+                // ➕ TAMBAHKAN SINKRONISASI PANGKAT (Diproses)
+                elseif ($sumber === 'pangkat' || $sumber === 'pangkatgajitunjangan') {
+                    \DB::table('pengajuan_pangkatgajitunjangan')->where('id_kenaikan', $logLama->id_kenaikan)
+                        ->update(['status_kenaikan' => 'diproses', 'updated_at' => now()]);
+                }
+
+                // ... (Kode Ambil Data Pemohon dan Penentuan Flow tetap sama) ...
+                $pemohon = \DB::table('users')->where('nomor_urut_pegawai', $logLama->nomor_urut_pegawai)->first();
+                $isManagerPemohon = ($pemohon && $pemohon->level_id == 2);
+
+                if ($sumber === 'lembur') {
+                    $flow = $isManagerPemohon
+                        ? ['Pengajuan Awal', 'Kepala SKK & SKKMR', 'Direktur Kepatuhan', 'Direktur Operasional', 'HRO']
+                        : ['Pengajuan Awal', 'Manager', 'Kepala SKK & SKKMR', 'Direktur Kepatuhan', 'Direktur Operasional', 'HRO'];
+                } else {
+                    // Untuk Pensiun & Pangkat: Kepatuhan -> Utama -> HRO
+                    $flow = ['Pengajuan Awal', 'Kepala SKK & SKKMR', 'Direktur Kepatuhan', 'Direktur Utama', 'HRO'];
+                }
+
+                $tahapLama = $logLama->tahap_persetujuan;
+                $currentIndex = array_search($tahapLama, $flow);
+                $nextTahap = ($currentIndex !== false && isset($flow[$currentIndex + 1])) ? $flow[$currentIndex + 1] : 'Selesai';
+
+                $insertBase = [
+                    'nomor_urut_pegawai' => $logLama->nomor_urut_pegawai,
+                    $kolomWaktu => now()
+                ];
+
+                if ($sumber === 'pensiun') { $insertBase['id_pensiun'] = $logLama->id_pensiun; }
+                elseif ($sumber === 'lembur') { $insertBase['id_lembur'] = $logLama->id_lembur; }
+                else { $insertBase['id_kenaikan'] = $logLama->id_kenaikan; }
+
+                // INSERT BUKTI ACTION (Insert baris log SKKMR sendiri jika tahap awal)
+                if ($logLama->tahap_persetujuan === 'Pengajuan Awal') {
+                    \DB::table($tabel)->insert(array_merge($insertBase, [
+                        'tahap_persetujuan' => $namaTahapAksi,
+                        'nomor_urut_pegawai_penyetuju' => $user->nomor_urut_pegawai,
+                        $kolomStatus => 'disetujui',
+                        'komentar' => $komentarFinal,
+                    ]));
+
+                    if ($nextTahap === 'Kepala SKK & SKKMR') {
+                        $nextTahap = $flow[$currentIndex + 2] ?? 'Selesai';
+                    }
+                }
+
+                // INSERT ANTRIAN TAHAP BERIKUTNYA
+                if ($nextTahap !== 'Selesai') {
+                    \DB::table($tabel)->insert(array_merge($insertBase, [
+                        'tahap_persetujuan' => $nextTahap,
+                        'nomor_urut_pegawai_penyetuju' => null,
+                        $kolomStatus => 'diproses',
+                        'komentar' => 'Menunggu verifikasi ' . $nextTahap,
+                    ]));
+                }
             }
 
             \DB::commit();
             if ($request->ajax() || $request->wantsJson()) return response()->json(['success' => true]);
-            return redirect()->route('skkmr.dashboardskkmr')->with('error', 'Pengajuan telah ditolak.');
+            return redirect()->route('skkmr.dashboardskkmr')->with('success', 'Berhasil diproses.');
+
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            return response()->json(['success' => false, 'message' => 'Gagal: ' . $e->getMessage()], 500);
         }
-
-        // --- 6. LOGIKA DISETUJUI (ESTAFET FLOW) ---
-        if ($request->status === 'disetujui') {
-
-            // SINKRONISASI TABEL UTAMA (Status tetap diproses karena estafet berlanjut)
-            if ($sumber === 'lembur') {
-                \DB::table('pengajuan_lembur')->where('id_lembur', $logLama->id_lembur)
-                    ->update(['status_lembur' => 'diproses', 'updated_at' => now()]);
-            } elseif ($sumber === 'pensiun') {
-                \DB::table('pengajuan_pensiun')->where('id_pensiun', $logLama->id_pensiun)
-                    ->update(['status_pensiun' => 'diproses', 'updated_at' => now()]);
-            }
-            // ➕ TAMBAHKAN SINKRONISASI PANGKAT (Diproses)
-            elseif ($sumber === 'pangkat' || $sumber === 'pangkatgajitunjangan') {
-                \DB::table('pengajuan_pangkatgajitunjangan')->where('id_kenaikan', $logLama->id_kenaikan)
-                    ->update(['status_kenaikan' => 'diproses', 'updated_at' => now()]);
-            }
-
-            // ... (Kode Ambil Data Pemohon dan Penentuan Flow tetap sama) ...
-            $pemohon = \DB::table('users')->where('nomor_urut_pegawai', $logLama->nomor_urut_pegawai)->first();
-            $isManagerPemohon = ($pemohon && $pemohon->level_id == 2);
-
-            if ($sumber === 'lembur') {
-                $flow = $isManagerPemohon
-                    ? ['Pengajuan Awal', 'Kepala SKK & SKKMR', 'Direktur Kepatuhan', 'Direktur Operasional', 'HRO']
-                    : ['Pengajuan Awal', 'Manager', 'Kepala SKK & SKKMR', 'Direktur Kepatuhan', 'Direktur Operasional', 'HRO'];
-            } else {
-                // Untuk Pensiun & Pangkat: Kepatuhan -> Utama -> HRO
-                $flow = ['Pengajuan Awal', 'Kepala SKK & SKKMR', 'Direktur Kepatuhan', 'Direktur Utama', 'HRO'];
-            }
-
-            $tahapLama = $logLama->tahap_persetujuan;
-            $currentIndex = array_search($tahapLama, $flow);
-            $nextTahap = ($currentIndex !== false && isset($flow[$currentIndex + 1])) ? $flow[$currentIndex + 1] : 'Selesai';
-
-            $insertBase = [
-                'nomor_urut_pegawai' => $logLama->nomor_urut_pegawai,
-                $kolomWaktu => now()
-            ];
-
-            if ($sumber === 'pensiun') { $insertBase['id_pensiun'] = $logLama->id_pensiun; }
-            elseif ($sumber === 'lembur') { $insertBase['id_lembur'] = $logLama->id_lembur; }
-            else { $insertBase['id_kenaikan'] = $logLama->id_kenaikan; }
-
-            // INSERT BUKTI ACTION (Insert baris log SKKMR sendiri jika tahap awal)
-            if ($logLama->tahap_persetujuan === 'Pengajuan Awal') {
-                \DB::table($tabel)->insert(array_merge($insertBase, [
-                    'tahap_persetujuan' => $namaTahapAksi,
-                    'nomor_urut_pegawai_penyetuju' => $user->nomor_urut_pegawai,
-                    $kolomStatus => 'disetujui',
-                    'komentar' => $komentarFinal,
-                ]));
-
-                if ($nextTahap === 'Kepala SKK & SKKMR') {
-                    $nextTahap = $flow[$currentIndex + 2] ?? 'Selesai';
-                }
-            }
-
-            // INSERT ANTRIAN TAHAP BERIKUTNYA
-            if ($nextTahap !== 'Selesai') {
-                \DB::table($tabel)->insert(array_merge($insertBase, [
-                    'tahap_persetujuan' => $nextTahap,
-                    'nomor_urut_pegawai_penyetuju' => null,
-                    $kolomStatus => 'diproses',
-                    'komentar' => 'Menunggu verifikasi ' . $nextTahap,
-                ]));
-            }
-        }
-
-        \DB::commit();
-        if ($request->ajax() || $request->wantsJson()) return response()->json(['success' => true]);
-        return redirect()->route('skkmr.dashboardskkmr')->with('success', 'Berhasil diproses.');
-
-    } catch (\Exception $e) {
-        \DB::rollBack();
-        return response()->json(['success' => false, 'message' => 'Gagal: ' . $e->getMessage()], 500);
     }
-}
-
-
 
     public function lihatDokumen($id)
-{
-    // 1. Cari data di database (Pensiun atau Pangkat)
-    $file = \DB::table('file_persyaratanpensiun')->where('id', $id)->first()
-            ?? \DB::table('file_persyaratanpangkatgajitunjangan')->where('id', $id)->first();
+    {
+        // 1. Cari data di database (Pensiun atau Pangkat)
+        $file = \DB::table('file_persyaratanpensiun')->where('id', $id)->first()
+                ?? \DB::table('file_persyaratanpangkatgajitunjangan')->where('id', $id)->first();
 
-    if (!$file) {
-        abort(404, 'Data dokumen tidak ditemukan di database.');
-    }
-
-    // 2. Penentuan Path yang Akurat
-    $path = storage_path('app/' . $file->path_file_server);
-
-    // 🛡️ Cek fisik file (Safety Net)
-    if (!file_exists($path)) {
-        // Cek cadangan jika folder private-nya tidak tercatat di DB tapi ada di folder asli
-        $pathAlt = storage_path('app/private/' . $file->path_file_server);
-
-        if (file_exists($pathAlt)) {
-            $path = $pathAlt;
-        } else {
-            \Log::error("Berkas fisik tidak ditemukan di: " . $path);
-            abort(404, 'Berkas fisik tidak ditemukan di server.');
+        if (!$file) {
+            abort(404, 'Data dokumen tidak ditemukan di database.');
         }
+
+        // 2. Penentuan Path yang Akurat
+        $path = storage_path('app/' . $file->path_file_server);
+
+        // 🛡️ Cek fisik file (Safety Net)
+        if (!file_exists($path)) {
+            // Cek cadangan jika folder private-nya tidak tercatat di DB tapi ada di folder asli
+            $pathAlt = storage_path('app/private/' . $file->path_file_server);
+
+            if (file_exists($pathAlt)) {
+                $path = $pathAlt;
+            } else {
+                \Log::error("Berkas fisik tidak ditemukan di: " . $path);
+                abort(404, 'Berkas fisik tidak ditemukan di server.');
+            }
+        }
+
+        // 3. Ambil Mime Type Otomatis
+        $mimeType = \Illuminate\Support\Facades\File::mimeType($path) ?? 'application/pdf';
+
+        // 4. Return File dengan Header yang Benar
+        return response()->file($path, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'inline; filename="'.$file->nama_file_asli.'"'
+        ]);
     }
-
-    // 3. Ambil Mime Type Otomatis
-    $mimeType = \Illuminate\Support\Facades\File::mimeType($path) ?? 'application/pdf';
-
-    // 4. Return File dengan Header yang Benar
-    return response()->file($path, [
-        'Content-Type' => $mimeType,
-        'Content-Disposition' => 'inline; filename="'.$file->nama_file_asli.'"'
-    ]);
-}
-
-
 
 }
 

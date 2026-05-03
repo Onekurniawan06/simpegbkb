@@ -61,7 +61,6 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::get('/logout', [AuthController::class, 'logout']);
 
 // RUTE LUPA PASSWORD BARU DIMULAI DI SINI
-// Menggunakan middleware 'guest' agar hanya bisa diakses saat belum login
 
 // 1. Menampilkan form "Lupa Password" (view auth.forgot-password yang dibuat sebelumnya)
 Route::get('/forgot-password', function () {
@@ -73,7 +72,6 @@ Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink
     ->middleware('guest')->name('password.email');
 
 // 3. Menampilkan form "Reset Password" setelah user mengklik link di email
-// Anda perlu membuat view 'auth.reset-password'
 Route::get('/reset-password/{token}', function ($token) {
     return view('reset-password', ['token' => $token]);
 })->middleware('guest')->name('password.reset');

@@ -91,7 +91,6 @@ class DataPengajuanController extends Controller
             'Beranda' => route($dashboardRoute),
         ];
 
-        // Logika Breadcrumbs Level 2 & 3
         if ($type || $request->type) {
             // 1. Ambil nilai type asli (belum di-strtolower)
             $rawType = $type ?: $request->type;
@@ -108,7 +107,7 @@ class DataPengajuanController extends Controller
             $formattedType = $typeNames[$rawType] ?? ucfirst($rawType);
 
             $breadcrumbs[$pageTitle] = route($parentRouteName); // Level 2
-            $breadcrumbs['Pengajuan ' . $formattedType] = null; // Level 3 (Rapi!)
+            $breadcrumbs['Pengajuan ' . $formattedType] = null; // Level 3
         } else {
             $breadcrumbs[$pageTitle] = null; // Level 2 Aktif
         }
@@ -122,86 +121,83 @@ class DataPengajuanController extends Controller
             'breadcrumbs' => $breadcrumbs,
             'parentRouteName' => $parentRouteName,
             'layout' => $layout,
-            'isManager' => $isManager, // 🟢 Ganti variabel yang dikirim ke blade
+            'isManager' => $isManager,
             'isSKKMR' => $isSKKMR
         ]);
     }
 
     private function fetchSubmissions($user, $request): Collection
-{
-    $dariTanggal = $request->dari_tanggal;
-    $hinggaTanggal = $request->hingga_tanggal;
+    {
+        $dariTanggal = $request->dari_tanggal;
+        $hinggaTanggal = $request->hingga_tanggal;
 
-    $applyDateFilters = function ($query) use ($dariTanggal, $hinggaTanggal) {
-        if ($dariTanggal) $query->whereDate('created_at', '>=', $dariTanggal);
-        if ($hinggaTanggal) $query->whereDate('created_at', '<=', $hinggaTanggal);
-        return $query;
-    };
+        $applyDateFilters = function ($query) use ($dariTanggal, $hinggaTanggal) {
+            if ($dariTanggal) $query->whereDate('created_at', '>=', $dariTanggal);
+            if ($hinggaTanggal) $query->whereDate('created_at', '<=', $hinggaTanggal);
+            return $query;
+        };
 
-    // 1. Ambil Data (Pastikan nama kolom updated_at sudah sinkron)
-    $cutis = $applyDateFilters($user->cutis())->with(['logs' => function ($query) {
-        $query->orderByDesc('updated_at')->orderByDesc('id_cuti');
-    }])->get();
+        // 1. Ambil Data (Pastikan nama kolom updated_at sudah sinkron)
+        $cutis = $applyDateFilters($user->cutis())->with(['logs' => function ($query) {
+            $query->orderByDesc('updated_at')->orderByDesc('id_cuti');
+        }])->get();
 
-    $lemburs = $applyDateFilters($user->lemburs())->with(['logPersetujuanLembur' => function ($query) {
-        $query->orderByDesc('updated_at');
-    }])->get();
+        $lemburs = $applyDateFilters($user->lemburs())->with(['logPersetujuanLembur' => function ($query) {
+            $query->orderByDesc('updated_at');
+        }])->get();
 
-    $pensiuns = $applyDateFilters($user->pensiuns())->with(['logPersetujuanPensiun' => function ($query) {
-        // 🔄 DISESUAIKAN: Pakai updated_at (dengan 'd') kalau sudah di-ALTER
-        $query->orderByDesc('updated_at');
-    }])->get();
+        $pensiuns = $applyDateFilters($user->pensiuns())->with(['logPersetujuanPensiun' => function ($query) {
+            $query->orderByDesc('updated_at');
+        }])->get();
 
-    $pangkatgajitunjangans = $applyDateFilters($user->pangkatgajitunjangans())->with(['logPersetujuanPangkatgajitunjangan' => function ($query) {
-        $query->orderByDesc('updated_at');
-    }])->get();
+        $pangkatgajitunjangans = $applyDateFilters($user->pangkatgajitunjangans())->with(['logPersetujuanPangkatgajitunjangan' => function ($query) {
+            $query->orderByDesc('updated_at');
+        }])->get();
 
-    // 2. Mapping Data agar seragam
-    $processedCuti = $cutis->map(function ($item) {
-        $itemArray = $item->toArray();
-        $itemArray['type'] = 'Cuti';
-        $itemArray['id'] = $item->id_cuti;
-        return $itemArray;
-    });
+        // 2. Mapping Data agar seragam
+        $processedCuti = $cutis->map(function ($item) {
+            $itemArray = $item->toArray();
+            $itemArray['type'] = 'Cuti';
+            $itemArray['id'] = $item->id_cuti;
+            return $itemArray;
+        });
 
-    $processedLembur = $lemburs->map(function ($item) {
-        $itemArray = $item->toArray();
-        $itemArray['type'] = 'Lembur';
-        $itemArray['id'] = $item->id_lembur;
-        $itemArray['status_pengajuan'] = $item->status_lembur;
-        $itemArray['logs'] = $itemArray['log_persetujuan_lembur'] ?? [];
-        unset($itemArray['log_persetujuan_lembur']);
-        return $itemArray;
-    });
+        $processedLembur = $lemburs->map(function ($item) {
+            $itemArray = $item->toArray();
+            $itemArray['type'] = 'Lembur';
+            $itemArray['id'] = $item->id_lembur;
+            $itemArray['status_pengajuan'] = $item->status_lembur;
+            $itemArray['logs'] = $itemArray['log_persetujuan_lembur'] ?? [];
+            unset($itemArray['log_persetujuan_lembur']);
+            return $itemArray;
+        });
 
-    $processedPensiun = $pensiuns->map(function ($item) {
-        $itemArray = $item->toArray();
-        $itemArray['type'] = 'Pensiun';
-        $itemArray['id'] = $item->id_pensiun;
-        $itemArray['status_pengajuan'] = $item->status_pensiun;
-        $itemArray['logs'] = $itemArray['log_persetujuan_pensiun'] ?? [];
-        unset($itemArray['log_persetujuan_pensiun']);
-        return $itemArray;
-    });
+        $processedPensiun = $pensiuns->map(function ($item) {
+            $itemArray = $item->toArray();
+            $itemArray['type'] = 'Pensiun';
+            $itemArray['id'] = $item->id_pensiun;
+            $itemArray['status_pengajuan'] = $item->status_pensiun;
+            $itemArray['logs'] = $itemArray['log_persetujuan_pensiun'] ?? [];
+            unset($itemArray['log_persetujuan_pensiun']);
+            return $itemArray;
+        });
 
-    $processedPangkatGajiTunjangan = $pangkatgajitunjangans->map(function ($item) {
-        $itemArray = $item->toArray();
-        $itemArray['type'] = 'PangkatGajiTunjangan';
-        $itemArray['id'] = $item->id_kenaikan;
-        $itemArray['status_pengajuan'] = $item->status_kenaikan;
-        $itemArray['logs'] = $itemArray['log_persetujuan_pangkatgajitunjangan'] ?? [];
-        unset($itemArray['log_persetujuan_pangkatgajitunjangan']);
-        return $itemArray;
-    });
+        $processedPangkatGajiTunjangan = $pangkatgajitunjangans->map(function ($item) {
+            $itemArray = $item->toArray();
+            $itemArray['type'] = 'PangkatGajiTunjangan';
+            $itemArray['id'] = $item->id_kenaikan;
+            $itemArray['status_pengajuan'] = $item->status_kenaikan;
+            $itemArray['logs'] = $itemArray['log_persetujuan_pangkatgajitunjangan'] ?? [];
+            unset($itemArray['log_persetujuan_pangkatgajitunjangan']);
+            return $itemArray;
+        });
 
-    return collect()
-        ->merge($processedCuti)
-        ->merge($processedLembur)
-        ->merge($processedPensiun)
-        ->merge($processedPangkatGajiTunjangan);
-}
-
-
+        return collect()
+            ->merge($processedCuti)
+            ->merge($processedLembur)
+            ->merge($processedPensiun)
+            ->merge($processedPangkatGajiTunjangan);
+    }
 
     private function paginateSubmissions(Collection $submissions, int $perPage): LengthAwarePaginator
     {
@@ -341,348 +337,330 @@ class DataPengajuanController extends Controller
         ));
     }
 
-    public function getLemburLetterDetailsByNup($id_lembur) // 1. Ganti parameter jadi ID
-{
-    // 2. Ambil data spesifik berdasarkan ID agar tidak tertukar data lama
-    $lembur = PengajuanLembur::with([
-        'pegawai.pekerjaan.divisi',
-        'logPersetujuanLembur.penyetuju.pekerjaan',
-    ])
-    ->where('id_lembur', $id_lembur)
-    ->firstOrFail();
-
-    $manager = null;
-    $skk_mr = null;
-    $hro = null;
-    // Tambahkan Direksi karena di flow kita ada Direksi
-    $direksi = null;
-
-    // 3. Iterasi log (Gunakan data yang sudah disetujui saja)
-    foreach ($lembur->logPersetujuanLembur as $log) {
-        if ($log->penyetuju && $log->status_persetujuan === 'disetujui') {
-            // Gunakan ->pekerjaan tanpa ->first() jika relasi di model adalah HasOne/BelongsTo
-            $pekerjaanPenyetuju = $log->penyetuju->pekerjaan;
-
-            if ($pekerjaanPenyetuju) {
-                $jabatanName = strtolower($pekerjaanPenyetuju->jabatan);
-
-                if (str_contains($jabatanName, 'manager') && !$manager) {
-                    $manager = $log->penyetuju;
-                }
-                elseif ((str_contains($jabatanName, 'skk') || str_contains($jabatanName, 'kepatuhan')) && !$skk_mr) {
-                    $skk_mr = $log->penyetuju;
-                }
-                elseif (str_contains($jabatanName, 'direktur') && !$direksi) {
-                    $direksi = $log->penyetuju;
-                }
-                elseif ((str_contains($jabatanName, 'hro') || str_contains($jabatanName, 'human resource')) && !$hro) {
-                    $hro = $log->penyetuju;
-                }
-            }
-        }
-    }
-
-    // Mengembalikan ke view dengan tambahan variabel direksi jika diperlukan
-    return view('partials.lembur_letter_content', compact('lembur', 'manager', 'skk_mr', 'hro', 'direksi'));
-}
-
-
-    // 1. Ganti parameter dari $nup menjadi $id_lembur
-public function downloadLetterPdfLembur($id_lembur): Response
-{
-    try {
-        // 2. Ambil data spesifik berdasarkan ID Transaksi
+    public function getLemburLetterDetailsByNup($id_lembur)
+    {
+        // 2. Ambil data spesifik berdasarkan ID agar tidak tertukar data lama
         $lembur = PengajuanLembur::with([
-                'pegawai.pekerjaan.divisi',
-                'logPersetujuanLembur.penyetuju.pekerjaan.divisi'
-            ])
-            ->where('id_lembur', $id_lembur) // <--- Cari pakai ID
-            ->firstOrFail();
+            'pegawai.pekerjaan.divisi',
+            'logPersetujuanLembur.penyetuju.pekerjaan',
+        ])
+        ->where('id_lembur', $id_lembur)
+        ->firstOrFail();
 
-        $nup = $lembur->nomor_urut_pegawai; // Ambil NIP untuk nama file nanti
-
-        // 3. Pencarian Penyetuju (Gunakan status 'disetujui' agar valid)
         $manager = null;
         $skk_mr = null;
         $hro = null;
-        $direktur = null;
+        $direksi = null;
 
+        // 3. Iterasi log (Gunakan data yang sudah disetujui saja)
         foreach ($lembur->logPersetujuanLembur as $log) {
             if ($log->penyetuju && $log->status_persetujuan === 'disetujui') {
-                $pekerjaanPenyetuju = $log->penyetuju->pekerjaan->first();
-                if (!$pekerjaanPenyetuju) continue;
+                $pekerjaanPenyetuju = $log->penyetuju->pekerjaan;
 
-                $jabatanName = strtolower($pekerjaanPenyetuju->jabatan);
+                if ($pekerjaanPenyetuju) {
+                    $jabatanName = strtolower($pekerjaanPenyetuju->jabatan);
 
-                if (str_contains($jabatanName, 'manager') && !$manager) {
-                    $manager = $log->penyetuju;
-                }
-                // Sesuaikan keyword SKKMR agar lebih fleksibel
-                elseif ((str_contains($jabatanName, 'skk') || str_contains($jabatanName, 'kepatuhan')) && !$skk_mr) {
-                    $skk_mr = $log->penyetuju;
-                }
-                elseif ((str_contains($jabatanName, 'hro') || str_contains($jabatanName, 'human resource')) && !$hro) {
-                    $hro = $log->penyetuju;
-                }
-                elseif (str_contains($jabatanName, 'direktur operasional') && !$direktur) {
-                    $direktur = $log->penyetuju;
-                }
-            }
-        }
-
-        $data = compact('lembur', 'manager', 'skk_mr', 'hro', 'direktur');
-        $data['is_pdf'] = true;
-
-        $pdfContent = view('partials.lembur_letter_content', $data)->render();
-
-        if (class_exists('Barryvdh\DomPDF\Facade\Pdf')) {
-            $pdf = Pdf::loadHtml($pdfContent);
-            $pdf->setPaper('A4', 'portrait');
-
-            // Nama file sekarang lebih unik karena menyertakan ID Lembur
-            return $pdf->download('Surat_Lembur_' . $nup . '_' . $id_lembur . '.pdf');
-        } else {
-            return response('Library PDF tidak ditemukan.', 404);
-        }
-
-    } catch (\Exception $e) {
-        return response('Error: ' . $e->getMessage(), 500);
-    }
-}
-
-
-    // 1. Ganti parameter menjadi ID agar data surat tidak tertukar
-public function getPensiunLetterDetailsByNup($id_pensiun)
-{
-    // 2. Cari spesifik berdasarkan ID
-    $pensiun = PengajuanPensiun::with([
-        'pegawai.pekerjaan.divisi',
-        'logPersetujuanPensiun.penyetuju.pekerjaan',
-        'files'
-    ])
-    ->where('id_pensiun', $id_pensiun) // Pakai ID, bukan NUP
-    ->firstOrFail();
-
-    $skk_mr = null;
-    $direktur_kepatuhan = null;
-    $direktur_utama = null;
-    $hro = null;
-
-    // 3. Ambil tanda tangan dari log yang berstatus 'disetujui'
-    foreach ($pensiun->logPersetujuanPensiun as $log) {
-        if ($log->penyetuju && $log->status_persetujuan === 'disetujui') {
-            $pekerjaanPenyetuju = $log->penyetuju->pekerjaan->first();
-
-            if ($pekerjaanPenyetuju) {
-                $jabatanName = strtolower($pekerjaanPenyetuju->jabatan);
-
-                // Filter Pejabat (Sesuaikan keyword agar lebih fleksibel)
-                if ((str_contains($jabatanName, 'skk') || str_contains($jabatanName, 'kepatuhan')) && !$skk_mr) {
-                    $skk_mr = $log->penyetuju;
-                }
-                elseif (str_contains($jabatanName, 'direktur kepatuhan') && !$direktur_kepatuhan) {
-                    $direktur_kepatuhan = $log->penyetuju;
-                }
-                elseif (str_contains($jabatanName, 'direktur utama') && !$direktur_utama) {
-                    $direktur_utama = $log->penyetuju;
-                }
-                elseif ((str_contains($jabatanName, 'hro') || str_contains($jabatanName, 'human resource')) && !$hro) {
-                    $hro = $log->penyetuju;
+                    if (str_contains($jabatanName, 'manager') && !$manager) {
+                        $manager = $log->penyetuju;
+                    }
+                    elseif ((str_contains($jabatanName, 'skk') || str_contains($jabatanName, 'kepatuhan')) && !$skk_mr) {
+                        $skk_mr = $log->penyetuju;
+                    }
+                    elseif (str_contains($jabatanName, 'direktur') && !$direksi) {
+                        $direksi = $log->penyetuju;
+                    }
+                    elseif ((str_contains($jabatanName, 'hro') || str_contains($jabatanName, 'human resource')) && !$hro) {
+                        $hro = $log->penyetuju;
+                    }
                 }
             }
         }
+
+        return view('partials.lembur_letter_content', compact('lembur', 'manager', 'skk_mr', 'hro', 'direksi'));
     }
 
-    return view('partials.pensiun_letter_content', compact(
-        'pensiun', 'skk_mr', 'direktur_kepatuhan', 'direktur_utama', 'hro'
-    ));
-}
+    public function downloadLetterPdfLembur($id_lembur): Response
+    {
+        try {
+            // 2. Ambil data spesifik berdasarkan ID Transaksi
+            $lembur = PengajuanLembur::with([
+                    'pegawai.pekerjaan.divisi',
+                    'logPersetujuanLembur.penyetuju.pekerjaan.divisi'
+                ])
+                ->where('id_lembur', $id_lembur)
+                ->firstOrFail();
 
+            $nup = $lembur->nomor_urut_pegawai;
 
-    // 1. Ganti parameter menjadi $id_pensiun agar tidak tertukar data
-public function downloadLetterPdfPensiun($id_pensiun): Response
-{
-    try {
-        // 2. Cari spesifik berdasarkan ID Transaksi
+            // 3. Pencarian Penyetuju (Gunakan status 'disetujui' agar valid)
+            $manager = null;
+            $skk_mr = null;
+            $hro = null;
+            $direktur = null;
+
+            foreach ($lembur->logPersetujuanLembur as $log) {
+                if ($log->penyetuju && $log->status_persetujuan === 'disetujui') {
+                    $pekerjaanPenyetuju = $log->penyetuju->pekerjaan->first();
+                    if (!$pekerjaanPenyetuju) continue;
+
+                    $jabatanName = strtolower($pekerjaanPenyetuju->jabatan);
+
+                    if (str_contains($jabatanName, 'manager') && !$manager) {
+                        $manager = $log->penyetuju;
+                    }
+                    elseif ((str_contains($jabatanName, 'skk') || str_contains($jabatanName, 'kepatuhan')) && !$skk_mr) {
+                        $skk_mr = $log->penyetuju;
+                    }
+                    elseif ((str_contains($jabatanName, 'hro') || str_contains($jabatanName, 'human resource')) && !$hro) {
+                        $hro = $log->penyetuju;
+                    }
+                    elseif (str_contains($jabatanName, 'direktur operasional') && !$direktur) {
+                        $direktur = $log->penyetuju;
+                    }
+                }
+            }
+
+            $data = compact('lembur', 'manager', 'skk_mr', 'hro', 'direktur');
+            $data['is_pdf'] = true;
+
+            $pdfContent = view('partials.lembur_letter_content', $data)->render();
+
+            if (class_exists('Barryvdh\DomPDF\Facade\Pdf')) {
+                $pdf = Pdf::loadHtml($pdfContent);
+                $pdf->setPaper('A4', 'portrait');
+
+                return $pdf->download('Surat_Lembur_' . $nup . '_' . $id_lembur . '.pdf');
+            } else {
+                return response('Library PDF tidak ditemukan.', 404);
+            }
+
+        } catch (\Exception $e) {
+            return response('Error: ' . $e->getMessage(), 500);
+        }
+    }
+
+    public function getPensiunLetterDetailsByNup($id_pensiun)
+    {
+        // 2. Cari spesifik berdasarkan ID
         $pensiun = PengajuanPensiun::with([
             'pegawai.pekerjaan.divisi',
             'logPersetujuanPensiun.penyetuju.pekerjaan',
             'files'
         ])
-        ->where('id_pensiun', $id_pensiun) // <--- Kunci utama keakuratan data
+        ->where('id_pensiun', $id_pensiun)
         ->firstOrFail();
-
-        $nup = $pensiun->nomor_urut_pegawai;
 
         $skk_mr = null;
         $direktur_kepatuhan = null;
         $direktur_utama = null;
         $hro = null;
 
-        // 3. Ambil data tanda tangan hanya dari log yang sudah 'disetujui'
+        // 3. Ambil tanda tangan dari log yang berstatus 'disetujui'
         foreach ($pensiun->logPersetujuanPensiun as $log) {
             if ($log->penyetuju && $log->status_persetujuan === 'disetujui') {
                 $pekerjaanPenyetuju = $log->penyetuju->pekerjaan->first();
-                if (!$pekerjaanPenyetuju) continue;
 
-                $jabatanName = strtolower($pekerjaanPenyetuju->jabatan);
+                if ($pekerjaanPenyetuju) {
+                    $jabatanName = strtolower($pekerjaanPenyetuju->jabatan);
 
-                if ((str_contains($jabatanName, 'skk') || str_contains($jabatanName, 'kepatuhan')) && !$skk_mr) {
-                    $skk_mr = $log->penyetuju;
-                }
-                elseif (str_contains($jabatanName, 'direktur kepatuhan') && !$direktur_kepatuhan) {
-                    $direktur_kepatuhan = $log->penyetuju;
-                }
-                elseif (str_contains($jabatanName, 'direktur utama') && !$direktur_utama) {
-                    $direktur_utama = $log->penyetuju;
-                }
-                elseif ((str_contains($jabatanName, 'hro') || str_contains($jabatanName, 'human resource')) && !$hro) {
-                    $hro = $log->penyetuju;
-                }
-            }
-        }
-
-        // 4. Kirim data ke view
-        $data = compact('pensiun', 'skk_mr', 'direktur_kepatuhan', 'direktur_utama', 'hro');
-        $data['is_pdf'] = true;
-
-        $pdfContent = view('partials.pensiun_letter_content', $data)->render();
-
-        if (class_exists('Barryvdh\DomPDF\Facade\Pdf')) {
-            $pdf = Pdf::loadHtml($pdfContent);
-            $pdf->setPaper('A4', 'portrait');
-
-            // Nama file mengandung ID agar unik
-            return $pdf->download('Surat_Pensiun_' . $nup . '_' . $id_pensiun . '.pdf');
-        } else {
-            return response('Library PDF (DomPDF) tidak ditemukan.', 404);
-        }
-
-    } catch (\Exception $e) {
-        return response('Gagal mendownload PDF: ' . $e->getMessage(), 500);
-    }
-}
-
-
-    // 1. Ganti parameter menjadi $id_kenaikan agar data surat spesifik
-public function getPangkatgajitunjanganLetterDetailsByNup($id_kenaikan)
-{
-    // 2. Ambil data berdasarkan ID unik kenaikan pangkat
-    $pangkatgajitunjangan = PengajuanPangkatgajitunjangan::with([
-        'pegawai.pekerjaan.divisi',
-        'logPersetujuanPangkatgajitunjangan.penyetuju.pekerjaan',
-        'files'
-    ])
-    ->where('id_kenaikan', $id_kenaikan) // <--- Cari pakai ID, bukan NUP
-    ->firstOrFail();
-
-    $skk_mr = null;
-    $direktur_kepatuhan = null;
-    $direktur_utama = null;
-    $hro = null;
-
-    // 3. Ambil data penanda tangan hanya dari log yang sudah 'disetujui'
-    foreach ($pangkatgajitunjangan->logPersetujuanPangkatgajitunjangan as $log) {
-        if ($log->penyetuju && $log->status_persetujuan === 'disetujui') {
-            $pekerjaanPenyetuju = $log->penyetuju->pekerjaan->first();
-
-            if ($pekerjaanPenyetuju) {
-                $jabatanName = strtolower($pekerjaanPenyetuju->jabatan);
-
-                // Filter Pejabat (Keyword diperluas agar lebih fleksibel)
-                if ((str_contains($jabatanName, 'skk') || str_contains($jabatanName, 'kepatuhan')) && !$skk_mr) {
-                    $skk_mr = $log->penyetuju;
-                }
-                elseif (str_contains($jabatanName, 'direktur kepatuhan') && !$direktur_kepatuhan) {
-                    $direktur_kepatuhan = $log->penyetuju;
-                }
-                elseif (str_contains($jabatanName, 'direktur utama') && !$direktur_utama) {
-                    $direktur_utama = $log->penyetuju;
-                }
-                elseif ((str_contains($jabatanName, 'hro') || str_contains($jabatanName, 'human resource')) && !$hro) {
-                    $hro = $log->penyetuju;
+                    if ((str_contains($jabatanName, 'skk') || str_contains($jabatanName, 'kepatuhan')) && !$skk_mr) {
+                        $skk_mr = $log->penyetuju;
+                    }
+                    elseif (str_contains($jabatanName, 'direktur kepatuhan') && !$direktur_kepatuhan) {
+                        $direktur_kepatuhan = $log->penyetuju;
+                    }
+                    elseif (str_contains($jabatanName, 'direktur utama') && !$direktur_utama) {
+                        $direktur_utama = $log->penyetuju;
+                    }
+                    elseif ((str_contains($jabatanName, 'hro') || str_contains($jabatanName, 'human resource')) && !$hro) {
+                        $hro = $log->penyetuju;
+                    }
                 }
             }
         }
+
+        return view('partials.pensiun_letter_content', compact(
+            'pensiun', 'skk_mr', 'direktur_kepatuhan', 'direktur_utama', 'hro'
+        ));
     }
 
-    // 4. Mengembalikan ke view dengan data yang sudah pasti akurat
-    return view('partials.pangkatgajitunjangan_letter_content', compact(
-        'pangkatgajitunjangan',
-        'skk_mr',
-        'direktur_kepatuhan',
-        'direktur_utama',
-        'hro'
-    ));
-}
+    public function downloadLetterPdfPensiun($id_pensiun): Response
+    {
+        try {
+            // 2. Cari spesifik berdasarkan ID Transaksi
+            $pensiun = PengajuanPensiun::with([
+                'pegawai.pekerjaan.divisi',
+                'logPersetujuanPensiun.penyetuju.pekerjaan',
+                'files'
+            ])
+            ->where('id_pensiun', $id_pensiun) // <--- Kunci utama keakuratan data
+            ->firstOrFail();
 
+            $nup = $pensiun->nomor_urut_pegawai;
 
-    public function downloadLetterPdfPangkatGajiTunjangan($id): Response
-{
-    try {
-        // 2. Ambil data SPESIFIK berdasarkan ID unik kenaikan
+            $skk_mr = null;
+            $direktur_kepatuhan = null;
+            $direktur_utama = null;
+            $hro = null;
+
+            // 3. Ambil data tanda tangan hanya dari log yang sudah 'disetujui'
+            foreach ($pensiun->logPersetujuanPensiun as $log) {
+                if ($log->penyetuju && $log->status_persetujuan === 'disetujui') {
+                    $pekerjaanPenyetuju = $log->penyetuju->pekerjaan->first();
+                    if (!$pekerjaanPenyetuju) continue;
+
+                    $jabatanName = strtolower($pekerjaanPenyetuju->jabatan);
+
+                    if ((str_contains($jabatanName, 'skk') || str_contains($jabatanName, 'kepatuhan')) && !$skk_mr) {
+                        $skk_mr = $log->penyetuju;
+                    }
+                    elseif (str_contains($jabatanName, 'direktur kepatuhan') && !$direktur_kepatuhan) {
+                        $direktur_kepatuhan = $log->penyetuju;
+                    }
+                    elseif (str_contains($jabatanName, 'direktur utama') && !$direktur_utama) {
+                        $direktur_utama = $log->penyetuju;
+                    }
+                    elseif ((str_contains($jabatanName, 'hro') || str_contains($jabatanName, 'human resource')) && !$hro) {
+                        $hro = $log->penyetuju;
+                    }
+                }
+            }
+
+            // 4. Kirim data ke view
+            $data = compact('pensiun', 'skk_mr', 'direktur_kepatuhan', 'direktur_utama', 'hro');
+            $data['is_pdf'] = true;
+
+            $pdfContent = view('partials.pensiun_letter_content', $data)->render();
+
+            if (class_exists('Barryvdh\DomPDF\Facade\Pdf')) {
+                $pdf = Pdf::loadHtml($pdfContent);
+                $pdf->setPaper('A4', 'portrait');
+
+                // Nama file mengandung ID agar unik
+                return $pdf->download('Surat_Pensiun_' . $nup . '_' . $id_pensiun . '.pdf');
+            } else {
+                return response('Library PDF (DomPDF) tidak ditemukan.', 404);
+            }
+
+        } catch (\Exception $e) {
+            return response('Gagal mendownload PDF: ' . $e->getMessage(), 500);
+        }
+    }
+
+    public function getPangkatgajitunjanganLetterDetailsByNup($id_kenaikan)
+    {
+        // 2. Ambil data berdasarkan ID unik kenaikan pangkat
         $pangkatgajitunjangan = PengajuanPangkatgajitunjangan::with([
             'pegawai.pekerjaan.divisi',
             'logPersetujuanPangkatgajitunjangan.penyetuju.pekerjaan',
             'files'
         ])
-        ->where('id_kenaikan', $id) // <--- Kunci keakuratan data
+        ->where('id_kenaikan', $id_kenaikan) // <--- Cari pakai ID, bukan NUP
         ->firstOrFail();
-
-        $nup = $pangkatgajitunjangan->nomor_urut_pegawai;
 
         $skk_mr = null;
         $direktur_kepatuhan = null;
         $direktur_utama = null;
         $hro = null;
 
-        // 3. Cari penanda tangan hanya dari log yang sudah 'disetujui'
+        // 3. Ambil data penanda tangan hanya dari log yang sudah 'disetujui'
         foreach ($pangkatgajitunjangan->logPersetujuanPangkatgajitunjangan as $log) {
             if ($log->penyetuju && $log->status_persetujuan === 'disetujui') {
                 $pekerjaanPenyetuju = $log->penyetuju->pekerjaan->first();
-                if (!$pekerjaanPenyetuju) continue;
 
-                $jabatanName = strtolower($pekerjaanPenyetuju->jabatan);
+                if ($pekerjaanPenyetuju) {
+                    $jabatanName = strtolower($pekerjaanPenyetuju->jabatan);
 
-                if ((str_contains($jabatanName, 'skk') || str_contains($jabatanName, 'kepatuhan')) && !$skk_mr) {
-                    $skk_mr = $log->penyetuju;
-                }
-                elseif (str_contains($jabatanName, 'direktur kepatuhan') && !$direktur_kepatuhan) {
-                    $direktur_kepatuhan = $log->penyetuju;
-                }
-                elseif (str_contains($jabatanName, 'direktur utama') && !$direktur_utama) {
-                    $direktur_utama = $log->penyetuju;
-                }
-                elseif ((str_contains($jabatanName, 'hro') || str_contains($jabatanName, 'human resource')) && !$hro) {
-                    $hro = $log->penyetuju;
+                    if ((str_contains($jabatanName, 'skk') || str_contains($jabatanName, 'kepatuhan')) && !$skk_mr) {
+                        $skk_mr = $log->penyetuju;
+                    }
+                    elseif (str_contains($jabatanName, 'direktur kepatuhan') && !$direktur_kepatuhan) {
+                        $direktur_kepatuhan = $log->penyetuju;
+                    }
+                    elseif (str_contains($jabatanName, 'direktur utama') && !$direktur_utama) {
+                        $direktur_utama = $log->penyetuju;
+                    }
+                    elseif ((str_contains($jabatanName, 'hro') || str_contains($jabatanName, 'human resource')) && !$hro) {
+                        $hro = $log->penyetuju;
+                    }
                 }
             }
         }
 
-        // 4. Siapkan data untuk PDF
-        $data = compact('pangkatgajitunjangan', 'skk_mr', 'direktur_kepatuhan', 'direktur_utama', 'hro');
-        $data['is_pdf'] = true;
-
-        $pdfContent = view('partials.pangkatgajitunjangan_letter_content', $data)->render();
-
-        // 5. Logika Nama File Dinamis & Unik
-        $jenisPengajuan = trim($pangkatgajitunjangan->jenis_pengajuan ?? 'Pengajuan');
-        $cleanFileName = preg_replace('/[^A-Za-z0-9_]/', '', str_replace(' ', '_', $jenisPengajuan));
-
-        // Tambahkan $id agar nama file tidak bentrok jika ada pengajuan dengan jenis sama
-        $fileName = 'Surat_' . $cleanFileName . '_' . $nup . '_' . $id . '.pdf';
-
-        if (class_exists('Barryvdh\DomPDF\Facade\Pdf')) {
-            $pdf = Pdf::loadHtml($pdfContent);
-            $pdf->setPaper('A4', 'portrait');
-            return $pdf->download($fileName);
-        } else {
-            return response('Library PDF tidak ditemukan.', 404);
-        }
-
-    } catch (\Exception $e) {
-        return response('Gagal mengunduh PDF: ' . $e->getMessage(), 500);
+        // 4. Mengembalikan ke view dengan data yang sudah pasti akurat
+        return view('partials.pangkatgajitunjangan_letter_content', compact(
+            'pangkatgajitunjangan',
+            'skk_mr',
+            'direktur_kepatuhan',
+            'direktur_utama',
+            'hro'
+        ));
     }
-}
+
+    public function downloadLetterPdfPangkatGajiTunjangan($id): Response
+    {
+        try {
+            // 2. Ambil data SPESIFIK berdasarkan ID unik kenaikan
+            $pangkatgajitunjangan = PengajuanPangkatgajitunjangan::with([
+                'pegawai.pekerjaan.divisi',
+                'logPersetujuanPangkatgajitunjangan.penyetuju.pekerjaan',
+                'files'
+            ])
+            ->where('id_kenaikan', $id)
+            ->firstOrFail();
+
+            $nup = $pangkatgajitunjangan->nomor_urut_pegawai;
+
+            $skk_mr = null;
+            $direktur_kepatuhan = null;
+            $direktur_utama = null;
+            $hro = null;
+
+            // 3. Cari penanda tangan hanya dari log yang sudah 'disetujui'
+            foreach ($pangkatgajitunjangan->logPersetujuanPangkatgajitunjangan as $log) {
+                if ($log->penyetuju && $log->status_persetujuan === 'disetujui') {
+                    $pekerjaanPenyetuju = $log->penyetuju->pekerjaan->first();
+                    if (!$pekerjaanPenyetuju) continue;
+
+                    $jabatanName = strtolower($pekerjaanPenyetuju->jabatan);
+
+                    if ((str_contains($jabatanName, 'skk') || str_contains($jabatanName, 'kepatuhan')) && !$skk_mr) {
+                        $skk_mr = $log->penyetuju;
+                    }
+                    elseif (str_contains($jabatanName, 'direktur kepatuhan') && !$direktur_kepatuhan) {
+                        $direktur_kepatuhan = $log->penyetuju;
+                    }
+                    elseif (str_contains($jabatanName, 'direktur utama') && !$direktur_utama) {
+                        $direktur_utama = $log->penyetuju;
+                    }
+                    elseif ((str_contains($jabatanName, 'hro') || str_contains($jabatanName, 'human resource')) && !$hro) {
+                        $hro = $log->penyetuju;
+                    }
+                }
+            }
+
+            // 4. Siapkan data untuk PDF
+            $data = compact('pangkatgajitunjangan', 'skk_mr', 'direktur_kepatuhan', 'direktur_utama', 'hro');
+            $data['is_pdf'] = true;
+
+            $pdfContent = view('partials.pangkatgajitunjangan_letter_content', $data)->render();
+
+            // 5. Logika Nama File Dinamis & Unik
+            $jenisPengajuan = trim($pangkatgajitunjangan->jenis_pengajuan ?? 'Pengajuan');
+            $cleanFileName = preg_replace('/[^A-Za-z0-9_]/', '', str_replace(' ', '_', $jenisPengajuan));
+            $fileName = 'Surat_' . $cleanFileName . '_' . $nup . '_' . $id . '.pdf';
+
+            if (class_exists('Barryvdh\DomPDF\Facade\Pdf')) {
+                $pdf = Pdf::loadHtml($pdfContent);
+                $pdf->setPaper('A4', 'portrait');
+                return $pdf->download($fileName);
+            } else {
+                return response('Library PDF tidak ditemukan.', 404);
+            }
+
+        } catch (\Exception $e) {
+            return response('Gagal mengunduh PDF: ' . $e->getMessage(), 500);
+        }
+    }
 
 }
