@@ -27,7 +27,8 @@ class PengajuanCuti extends Model
         'jumlah_cuti',
         'jatah_periode_hari',
         'sisa_cuti',
-        'keterangan'
+        'keterangan',
+        'jalur_dokumen_pendukung'
     ];
     // Tambahkan mutator di sini
     protected function jatahPeriodeHari(): Attribute

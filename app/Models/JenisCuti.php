@@ -28,4 +28,8 @@ class JenisCuti extends Model
         'is_cuti_penting',
     ];
 
+    public function subJenisCuti()
+    {
+        return $this->hasMany(SubJenisCutiPenting::class, 'id_jenis_cuti', 'id');
+    }
 }

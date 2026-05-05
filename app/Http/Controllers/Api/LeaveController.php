@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\JenisCuti;
 use App\Models\PengajuanCuti;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -118,5 +119,15 @@ class LeaveController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    public function leaveTypes()
+    {
+        $leaveTypes = JenisCuti::with('subJenisCuti')->get();
+
+        return response()->json([
+            'message' => 'Jenis cuti berhasil didapatkan',
+            'data' => $leaveTypes
+        ]);
     }
 }
