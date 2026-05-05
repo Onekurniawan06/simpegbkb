@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Log;
-// Import kelas Attribute
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,12 +13,12 @@ use App\Models\LogPersetujuanCuti;
 class PengajuanCuti extends Model
 {
     protected $table = 'pengajuan_cuti';
-    protected $primaryKey = 'id_cuti'; // Ganti dari id ke id_cuti
+    protected $primaryKey = 'id_cuti';
     public $incrementing = true;
     protected $keyType = 'int';
 
     protected $fillable = [
-        'id_cuti', // Masukkan id_cuti ke fillable jika ingin diisi manual, tapi biasanya otomatis
+        'id_cuti',
         'nomor_urut_pegawai',
         'jenis_cuti',
         'tanggal_mulai',
@@ -28,21 +27,65 @@ class PengajuanCuti extends Model
         'jatah_periode_hari',
         'sisa_cuti',
         'keterangan',
-        'jalur_dokumen_pendukung'
+        'jalur_dokumen_pendukung',
+        'saldo_awal',        // WAJIB ADA
+        'saldo_akhir',       // WAJIB ADA (Sesuai nama di DB)
+        'status_pengajuan',  // WAJIB ADA
+        'keterangan'
     ];
-    // Tambahkan mutator di sini
+
+    public static function hitungSaldoAwal($nomor_pegawai, $nama_jenis_cuti)
+    {
+        $masterCuti = JenisCuti::where('nama_cuti', $nama_jenis_cuti)->first();
+        $jatahMaster = $masterCuti ? ($masterCuti->durasi_hari ?? 0) : 12;
+
+        if ($nama_jenis_cuti == 'Cuti Tahunan') {
+            $terakhir = self::where('nomor_urut_pegawai', $nomor_pegawai)
+                ->where('jenis_cuti', 'Cuti Tahunan')
+                // Ambil yang statusnya sudah disetujui (atau masih diproses)
+                ->whereIn('status_pengajuan', ['disetujui', 'diproses']) 
+                ->orderBy('id_cuti', 'desc')
+                ->first();
+
+            // KUNCINYA DI SINI: Harus ambil 'saldo_akhir' (sesuai nama di database kamu)
+            return $terakhir ? $terakhir->saldo_akhir : $jatahMaster;
+        }
+
+        return $jatahMaster;
+    }
+
+
+
+    // Tambahkan mutator untuk memastikan angka
     protected function jatahPeriodeHari(): Attribute
     {
         return Attribute::make(
-            set: fn (string $value) => (int) filter_var($value, FILTER_SANITIZE_NUMBER_INT),
+            set: fn ($value) => (int) filter_var($value, FILTER_SANITIZE_NUMBER_INT),
         );
     }
 
+    // --- LOGIKA SALDO BERANTAI ---
+
+    /**
+     * Fungsi untuk mengambil saldo terakhir yang valid (Approved/Pending)
+     */
+    public static function getSisaCutiTerakhir($nomor_pegawai)
+    {
+        $last = self::where('nomor_urut_pegawai', $nomor_pegawai)
+                    ->whereIn('status_pengajuan', ['disetujui', 'diproses', 'pending']) // Jangan ambil yang 'ditolak'
+                    ->orderBy('id_cuti', 'desc')
+                    ->first();
+
+        return $last ? $last->saldo_akhir : 12; // Default 12 jika belum pernah cuti
+    }
+
+    // --- RELASI & BOOTED ---
+
     protected static function booted()
     {
-        static::creating(function ($model) {
-            Log::debug('Mencoba menyimpan data PengajuanCuti:', $model->toArray());
-        });
+        // static::creating(function ($model) {
+        //     Log::debug('Mencoba menyimpan data PengajuanCuti:', $model->toArray());
+        // });
     }
 
     public function jenisCuti()
@@ -55,7 +98,7 @@ class PengajuanCuti extends Model
                     ->orderByDesc('updated_at');
     }
 
-    public function user()
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'nomor_urut_pegawai', 'nomor_urut_pegawai');
     }
@@ -64,37 +107,31 @@ class PengajuanCuti extends Model
     {
         return $this->belongsTo(Pegawai::class, 'nomor_urut_pegawai', 'nomor_urut_pegawai');
     }
+
     public function pekerjaan(): BelongsTo
     {
         return $this->belongsTo(Pekerjaan::class, 'nomor_urut_pegawai', 'nomor_urut_pegawai');
     }
 
     public static function isOverlapDivisi($idDivisi, $startDate, $endDate, $ignoreId = null)
-    {
-        // Gunakan relasi yang benar-benar menunjuk ke tabel 'pekerjaan'
-        $query = self::whereHas('user.pegawai.pekerjaan', function ($q) use ($idDivisi) {
-            // PENTING: Tambahkan nama tabel agar SQL tidak bingung
-            // Ganti 'pekerjaans' dengan nama asli tabel pekerjaan Anda (misal: 'pekerjaan')
-            $q->where('pekerjaan.id_divisi', $idDivisi);
-        })
-        ->where(function ($q) use ($startDate, $endDate) {
+{
+    return self::where(function ($q) use ($startDate, $endDate) {
             $q->where('tanggal_mulai', '<=', $endDate)
-            ->where('tanggal_selesai', '>=', $startDate);
+              ->where('tanggal_selesai', '>=', $startDate);
         })
-        // Pastikan status yang dicek adalah yang sudah disetujui atau sedang diproses
-        // (Opsional: sesuaikan dengan logika bisnis Anda)
-        ->whereHas('logs', function($q) {
-            $q->whereIn('status_pengajuan', ['disetujui', 'diproses']);
-        });
-
-        if ($ignoreId) {
-            // Gunakan primary key tabel pengajuan_cuti (contoh: id_pengajuan)
-            $query->where('id_pengajuan', '!=', $ignoreId);
-        }
-
-        return $query->exists();
-    }
+        // Pakai nama kolom yang benar sesuai tabelmu
+        ->whereIn('status_pengajuan', ['diproses', 'disetujui'])
+        // JANGAN tembak ke tabel pegawai, tapi tembak ke tabel pekerjaan lewat pegawai
+        ->whereHas('pegawai', function ($q) use ($idDivisi) {
+            $q->whereHas('pekerjaan', function ($sq) use ($idDivisi) {
+                $sq->where('id_divisi', $idDivisi);
+            });
+        })
+        ->when($ignoreId, function ($q) use ($ignoreId) {
+            return $q->where('id_cuti', '!=', $ignoreId);
+        })
+        ->exists();
+}
 
 
 }
-

@@ -13,25 +13,26 @@ class LogPersetujuanPensiun extends Model
     protected $table = 'log_persetujuan_pensiun';
     protected $primaryKey = 'id';
 
+    // 1. Standarisasi Timestamps
     public $timestamps = true;
-    const CREATED_AT = null;
-    const UPDATED_AT = 'update_at';
+    const CREATED_AT = null; 
+    const UPDATED_AT = 'updated_at';
 
     protected $fillable = [
-        'id_pensiun', // 🔄 Diubah dari id_pengajuan
+        'id_pensiun', 
         'nomor_urut_pegawai',
         'tahap_persetujuan',
         'nomor_urut_pegawai_penyetuju',
         'status_persetujuan',
         'komentar',
-        'update_at',
     ];
 
-    protected $casts = [
-        'status_persetujuan' => \App\Enums\StatusPersetujuan::class,
-    ];
+    // protected $casts = [
+    //     'status_persetujuan' => \App\Enums\StatusPersetujuan::class,
+    // ];
 
-    // ➕ Tambahkan relasi ke tabel utama pengajuan pensiun
+    // --- RELASI ---
+
     public function pengajuanPensiun(): BelongsTo
     {
         return $this->belongsTo(PengajuanPensiun::class, 'id_pensiun', 'id_pensiun');

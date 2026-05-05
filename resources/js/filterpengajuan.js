@@ -71,78 +71,82 @@ function closeModal() {
 }
 
 // Tambahkan parameter typeName di sini
-async function fetchAndOpenModal(employeenup, typeSegment, typeName) {
-    const apiUrl = `/${typeSegment}/${employeenup}/detail-surat`;
+// Ganti employeenup menjadi idTransaksi
+async function fetchAndOpenModal(idTransaksi, typeSegment, typeName) {
+    // 1. URL Detail Surat sekarang menggunakan ID, bukan NIP lagi
+    const apiUrl = `/${typeSegment}/${idTransaksi}/detail-surat`;
 
-    // --- Update Judul Modal Secara Dinamis ---
     const titleElement = document.getElementById('modal-title-text');
     if (titleElement && typeName) {
         let formattedTitle = typeName.replace(/([A-Z])/g, ' $1').trim();
-
-        // Tambahkan "Kenaikan" khusus untuk tipe PangkatGajiTunjangan
         if (typeName === 'PangkatGajiTunjangan') {
             formattedTitle = 'Kenaikan ' + formattedTitle;
         }
         titleElement.innerText = ' - ' + formattedTitle;
     }
+
     openModal();
     showSpinner();
+
     try {
         const response = await fetch(apiUrl);
-        if (!response.ok) {
-        }
+        if (!response.ok) throw new Error('Gagal mengambil data detail');
 
         const htmlContent = await response.text();
 
-        // Menggunakan variabel Anda yang benar: modalContentArea
         if (modalContentArea) {
-            // Konten surat akan menimpa pesan loading
             modalContentArea.innerHTML = htmlContent;
         }
 
-        // --- Logika Tambahan untuk Download PDF ---
+        // --- 2. Logika Download PDF (Gunakan ID agar tidak tertukar) ---
         if (typeof prepareDownloadUrl === 'function') {
             let type = typeSegment.split('-').pop();
             type = type.charAt(0).toUpperCase() + type.slice(1);
-            prepareDownloadUrl(type, employeenup);
+
+            // KIRIM idTransaksi KE FUNGSI DOWNLOAD, bukan NUP lagi
+            prepareDownloadUrl(type, idTransaksi);
         }
 
     } catch (error) {
         console.error(error);
         if (modalContentArea) {
+            modalContentArea.innerHTML = '<p class="text-red-500 text-center">Gagal memuat detail surat.</p>';
         }
-
     } finally {
         hideSpinner();
     }
 }
 
-function prepareDownloadUrl(type, employeenup) {
+
+// Ganti employeenup menjadi idTransaksi
+function prepareDownloadUrl(type, idTransaksi) {
     let downloadUrl;
     let fileName;
 
-    switch (type) {
+    // Normalisasi type agar tidak case-sensitive
+    const currentType = type.charAt(0).toUpperCase() + type.slice(1).toLowerCase();
+
+    switch (currentType) {
         case 'Cuti':
-            downloadUrl = `/download-surat-cuti/${employeenup}`;
-            fileName = `Surat_Pengajuan_Cuti.pdf`;
-            break;
-        case 'Pensiun':
-            downloadUrl = `/download-surat-pensiun/${employeenup}`;
-            fileName = `Surat_Pengajuan_Pensiun.pdf`;
+            // Sekarang URL menggunakan ID, bukan NIP lagi
+            downloadUrl = `/download-surat-cuti/${idTransaksi}`;
+            fileName = `Surat_Pengajuan_Cuti_${idTransaksi}.pdf`;
             break;
 
-        // Tambahkan case 'Pangkat' untuk mencegah error "Jenis pengajuan tidak dikenal: Pangkat"
+        case 'Pensiun':
+            downloadUrl = `/download-surat-pensiun/${idTransaksi}`;
+            fileName = `Surat_Pengajuan_Pensiun_${idTransaksi}.pdf`;
+            break;
+
         case 'Pangkat':
-        case 'PangkatGajiTunjangan':
-            // PERBAIKI URL INI agar sesuai dengan rute Laravel Anda
-            downloadUrl = `/download-surat-pangkat/${employeenup}`;
-            // Nama file di sini akan digantikan oleh nama file yang dikirim dari controller PHP
-            fileName = `Surat_Pengajuan_Kenaikan_${type}.pdf`;
+        case 'Pangkatgajitunjangan':
+            downloadUrl = `/download-surat-pangkat/${idTransaksi}`;
+            fileName = `Surat_Pengajuan_Kenaikan_Pangkat_${idTransaksi}.pdf`;
             break;
 
         case 'Lembur':
-            downloadUrl = `/download-surat-lembur/${employeenup}`;
-            fileName = `Surat_Pengajuan_Lembur.pdf`;
+            downloadUrl = `/download-surat-lembur/${idTransaksi}`;
+            fileName = `Surat_Pengajuan_Lembur_${idTransaksi}.pdf`;
             break;
 
         default:
@@ -151,11 +155,14 @@ function prepareDownloadUrl(type, employeenup) {
             break;
     }
 
-    if (btnDownload) {
+    if (btnDownload && downloadUrl) {
         btnDownload.setAttribute('data-download-url', downloadUrl);
         btnDownload.setAttribute('data-file-name', fileName);
+        // Tambahkan ini agar link-nya langsung berubah
+        btnDownload.href = downloadUrl;
     }
 }
+
 
 // FUNGSI INI YANG DIREVISI:
 async function downloadPDF() {

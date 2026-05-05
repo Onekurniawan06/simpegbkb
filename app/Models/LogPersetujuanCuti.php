@@ -29,6 +29,20 @@ class LogPersetujuanCuti extends Model
         return $this->belongsTo(PengajuanCuti::class, 'id_cuti', 'id_cuti');
     }
 
+    protected static function booted()
+    {
+        // Setiap kali baris Log baru dibuat (admin klik setuju/tolak)
+        static::created(function ($log) {
+            // Ambil data pengajuan yang terkait
+            $pengajuan = $log->pengajuan;
+
+            if ($pengajuan) {
+                // OTOMATIS update status di tabel pengajuan_cuti
+                $pengajuan->status_pengajuan = $log->status_pengajuan;
+                $pengajuan->save();
+            }
+        });
+    }
 
     /**
      * Relasi Kunci: Untuk mengetahui detail (nama, level) dari INDIVIDU PENYETUJU.

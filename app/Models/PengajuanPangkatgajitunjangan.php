@@ -11,10 +11,15 @@ class PengajuanPangkatgajitunjangan extends Model
 {
     // 1. Ganti primary key menjadi id_kenaikan
     protected $primaryKey = 'id_kenaikan';
+
     protected $table = 'pengajuan_pangkatgajitunjangan';
+
     public $timestamps = true;
+
     const CREATED_AT = 'created_at';
+
     const UPDATED_AT = null;
+
     protected $guarded = []; // Izinkan mass assignment untuk semua field
 
     public function files(): HasMany
@@ -25,8 +30,8 @@ class PengajuanPangkatgajitunjangan extends Model
 
     public function logPersetujuanPangkatgajitunjangan(): HasMany
     {
-        // 3. Ganti foreign key dan local key menjadi id_kenaikan
-        return $this->hasMany(LogPersetujuanPangkatgajitunjangan::class, 'id_kenaikan', 'id_kenaikan');
+        return $this->hasMany(LogPersetujuanPangkatgajitunjangan::class, 'id_kenaikan', 'id_kenaikan')
+                    ->orderBy('id', 'asc');
     }
 
     public function setTmtPegawaiAttribute($value)

@@ -11,11 +11,17 @@ class LogPersetujuanPangkatgajitunjangan extends Model
     use HasFactory;
 
     protected $table = 'log_persetujuan_pangkatgajitunjangan';
+
     protected $primaryKey = 'id';
-    public $timestamps = false;
+
+    public $timestamps = true;
+
+    const CREATED_AT = null;
+
+    const UPDATED_AT = 'updated_at';
 
     protected $fillable = [
-        'id_kenaikan', // 1. Diubah dari id_pengajuan
+        'id_kenaikan',
         'nomor_urut_pegawai',
         'tahap_persetujuan',
         'status_persetujuan',
@@ -24,9 +30,9 @@ class LogPersetujuanPangkatgajitunjangan extends Model
         'nomor_urut_pegawai_penyetuju',
     ];
 
-    protected $casts = [
-        'status_persetujuan' => \App\Enums\StatusPersetujuan::class,
-    ];
+    // protected $casts = [
+    //     'status_persetujuan' => \App\Enums\StatusPersetujuan::class,
+    // ];
 
     // 2. Tambahkan relasi balik ke model utama
     public function pengajuan(): BelongsTo

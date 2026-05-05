@@ -24,6 +24,7 @@ class PengajuanLembur extends Model
         'jam_mulai',
         'jam_selesai',
         'total_jam_lembur',
+        'status_lembur',
         'uraian_tugas',
     ];
 
@@ -54,16 +55,13 @@ class PengajuanLembur extends Model
         $query = self::whereHas('pegawai.pekerjaan', function ($q) use ($idDivisi) {
                 $q->where('id_divisi', $idDivisi);
             })
-            ->where('tanggal_lembur', $tanggalLembur) // Pastikan di tanggal yang sama
+            ->where('tanggal_lembur', $tanggalLembur)
+            ->where('status_lembur', '!=', 'ditolak')
             ->where(function ($q) use ($jamMulai, $jamSelesai) {
-                $q->where(function ($inner) use ($jamMulai, $jamSelesai) {
-                    // Cek apakah jam mulai baru berada di antara jam lembur yang sudah ada
-                    $inner->where('jam_mulai', '<', $jamSelesai)
-                    ->where('jam_selesai', '>', $jamMulai);
-                });
+                $q->where('jam_mulai', '<', $jamSelesai)
+                ->where('jam_selesai', '>', $jamMulai);
             });
 
-        // Abaikan ID ini jika sedang melakukan update
         if ($ignoreId) {
             $query->where('id_lembur', '!=', $ignoreId);
         }

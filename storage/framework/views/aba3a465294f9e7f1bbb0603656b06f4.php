@@ -217,10 +217,10 @@
                 </div>
 
                 
-                <?php if(isset($submission['display_info']['sisa_cuti']) && $submission['display_info']['sisa_cuti']): ?>
+                <?php if(isset($submission['display_info']['saldo_akhir']) && $submission['display_info']['saldo_akhir']): ?>
                 <div>
                     <p class="text-gray-500">Sisa Cuti (Hari)</p>
-                    <p class="font-medium text-gray-800 mt-1"><?php echo e($submission['display_info']['sisa_cuti']); ?></p>
+                    <p class="font-medium text-gray-800 mt-1"><?php echo e($submission['display_info']['saldo_akhir']); ?></p>
                 </div>
                 <?php endif; ?>
 

@@ -12,18 +12,14 @@ class PengajuanPensiun extends Model
 {
     use HasFactory;
 
-    // Nama tabel di database MySQL Anda
     protected $table = 'pengajuan_pensiun';
-
-    // Primary key untuk tabel ini
     protected $primaryKey = 'id_pensiun';
 
-    // Nonaktifkan timestamps karena skema tabel di gambar tidak memiliki 'created_at' dan 'updated_at'
+    // 1. Aktifkan Timestamps secara standar
     public $timestamps = true;
     const CREATED_AT = 'created_at';
-    const UPDATED_AT = null; // Ini mencegah Laravel mencari kolom updated_at
+    const UPDATED_AT = 'updated_at';
 
-    // Kolom-kolom yang dapat diisi secara massal (mass assignable fields)
     protected $fillable = [
         'nomor_urut_pegawai',
         'nama_pegawai',
@@ -36,16 +32,16 @@ class PengajuanPensiun extends Model
         'jenis_pengajuan',
         'masa_kerja',
         'tmt_pensiun',
-        'created_at', // Tambahkan ini agar bisa terbaca saat konversi array
+        'status_pensiun', 
+        'created_at',
     ];
-        // Tambahkan mutator untuk tmt_pegawai
+    
+    // Tambahkan mutator untuk tmt_pegawai
     public function setTmtPegawaiAttribute($value)
     {
-        // Konversi dari DD-MM-YYYY menjadi YYYY-MM-DD (format DB)
         $this->attributes['tmt_pegawai'] = Carbon::createFromFormat('d-m-Y', $value)->format('Y-m-d');
     }
 
-    // Tambahkan mutator untuk tmt_pensiun jika formatnya sama dari input
     public function setTmtPensiunAttribute($value)
     {
         $this->attributes['tmt_pensiun'] = Carbon::createFromFormat('d-m-Y', $value)->format('Y-m-d');
@@ -53,13 +49,12 @@ class PengajuanPensiun extends Model
 
     public function logPersetujuanPensiun(): HasMany
     {
-        // 🔄 Keduanya diganti menjadi id_pensiun
-        return $this->hasMany(LogPersetujuanPensiun::class, 'id_pensiun', 'id_pensiun');
+        return $this->hasMany(LogPersetujuanPensiun::class, 'id_pensiun', 'id_pensiun')
+                ->orderBy('id', 'asc'); // Agar stepper tracking berurutan
     }
 
     public function files(): HasMany
     {
-        // 🔄 Keduanya diganti menjadi id_pensiun
         return $this->hasMany(FilePersyaratanPensiun::class, 'id_pensiun', 'id_pensiun');
     }
 
@@ -82,10 +77,10 @@ class PengajuanPensiun extends Model
     {
         $query = self::whereHas('pegawai.pekerjaan', function ($q) use ($idDivisi) {
                 $q->where('id_divisi', $idDivisi);
-            });
+            })
+            ->where('status_pensiun', 'diproses');
 
         if ($ignoreId) {
-            // 🔄 Diubah menjadi id_pensiun
             $query->where('id_pensiun', '!=', $ignoreId);
         }
 

@@ -91,47 +91,82 @@
             </tr>
         </thead>
         <tbody>
-            @php
-                $list = [['nama' => 'Cuti Tahunan', 'kuota' => '12 Hari'], ['nama' => 'Cuti Besar', 'kuota' => '2 Bulan'], ['nama' => 'Cuti Menikah', 'kuota' => '5 Hari'], ['nama' => 'Cuti Melahirkan', 'kuota' => '3 Bulan'], ['nama' => 'Cuti Sakit', 'kuota' => '3 x'], ['nama' => 'Cuti Hari Raya Keagamaan', 'kuota' => '-'], ['nama' => 'Cuti Menunaikan Ibadah Keagamaan', 'kuota' => '14 Hari'], ['nama' => 'Cuti Alasan Penting dan Mendesak', 'kuota' => '2 Hari'], ['nama' => 'Izin Tidak Masuk Kerja', 'kuota' => '-']];
-            @endphp
-            @foreach($list as $i => $item)
-            <tr>
-                {{-- KIRI: DATA JENIS CUTI --}}
-                <td style="white-space: nowrap;">{{ $i+1 }}. {{ $item['nama'] }}</td>
-                <td class="text-center"><span class="checkmark" id="v_{{ Str::slug($item['nama'], '_') }}">{!! (isset($cuti) && $cuti->jenis_cuti == $item['nama']) ? '&#10003;' : '' !!}</span></td>
-                <td class="text-center">{{ $item['kuota'] }}</td>
-                {{-- Kolom Lama Cuti --}}
-                <td class="text-center" id="review_cuti_diambil_display">
-                    {{ (isset($cuti) && $cuti->jenis_cuti == $item['nama'] && $cuti->jumlah_cuti) ? $cuti->jumlah_cuti . ' Hari' : '' }}
-                </td>
+    @php
+        $list = [
+            ['nama' => 'Cuti Tahunan', 'kuota' => '12 Hari'], 
+            ['nama' => 'Cuti Besar', 'kuota' => '2 Bulan'], 
+            ['nama' => 'Cuti Menikah', 'kuota' => '5 Hari'], 
+            ['nama' => 'Cuti Melahirkan', 'kuota' => '3 Bulan'], 
+            ['nama' => 'Cuti Sakit', 'kuota' => '3 x'], 
+            ['nama' => 'Cuti Hari Raya Keagamaan', 'kuota' => '-'], 
+            ['nama' => 'Cuti Menunaikan Ibadah Keagamaan', 'kuota' => '14 Hari'], 
+            ['nama' => 'Cuti Alasan Penting dan Mendesak', 'kuota' => '2 Hari'], 
+            ['nama' => 'Izin Tidak Masuk Kerja', 'kuota' => '-']
+        ];
 
-                {{-- Kolom Sisa Cuti --}}
-                <td class="text-center" id="review_sisa_cuti_display">
-                    {{ ($i == 0 && isset($cuti) && $cuti->sisa_cuti !== null) ? $cuti->sisa_cuti . ' Hari' : '' }}
-                </td>
+        // Ambil data jika sudah ada di DB (untuk mode view/lacak)
+        $jenisCutiDb = $cuti->jenis_cuti ?? '';
+    @endphp
 
-                {{-- KANAN: MAPPING BARIS AGAR GARIS LURUS --}}
-                @if($i == 0)
-                    <td>1. Tgl Pengajuan</td><td>{{ (isset($cuti) && $cuti->created_at) ? \Carbon\Carbon::parse($cuti->created_at)->format('d/m/Y') : date('d/m/Y') }}</td>
-                @elseif($i == 1)
-                    <td>2. Lama Cuti</td><td><span id="review_jumlah_cuti_display">{{ $cuti->jumlah_cuti ?? '0' }}</span> Hari</td>
-                @elseif($i == 2)
-                    <td>3. TMT Cuti</td><td id="review_tmt_cuti_display" style="font-size: 7.5pt;">{{ (isset($cuti) && $cuti->tanggal_mulai) ? \Carbon\Carbon::parse($cuti->tanggal_mulai)->format('d/m/Y').' s/d '.\Carbon\Carbon::parse($cuti->tanggal_selesai)->format('d/m/Y') : '... s/d ...' }}</td>
-                @elseif($i == 3)
-                    <td colspan="2" class="bg-blue-grey font-bold">IV. ALASAN CUTI</td>
-                @elseif($i == 4)
-                    <td colspan="2" rowspan="2" id="review_alasan_cuti_display" style="height: 35px; vertical-align: top;">{{ $cuti->keterangan ?? '-' }}</td>
-                @elseif($i == 6)
-                    <td colspan="2" class="bg-blue-grey font-bold">V. YANG MENGAJUKAN</td>
-                @elseif($i == 7)
-                    <td colspan="2" rowspan="2" class="text-center" style="vertical-align: top; padding-top: 5px;">
-                        <p style="margin: 0; font-size: 8pt;">Hormat Saya,</p><div style="height: 25px;"></div>
-                        <p style="margin: 0; font-weight: bold; text-decoration: underline;">{{ $cuti->pegawai->nama ?? (auth()->user()->pegawai->nama ?? '-') }}</p>
-                    </td>
-                @endif
-            </tr>
-            @endforeach
-        </tbody>
+    @foreach($list as $i => $item)
+    @php
+        $isRowSelected = (isset($cuti) && $cuti->jenis_cuti == $item['nama']);
+    @endphp
+    <tr>
+        {{-- KIRI: DATA JENIS CUTI --}}
+        <td style="white-space: nowrap;">{{ $i+1 }}. {{ $item['nama'] }}</td>
+        
+        {{-- Kolom Centang --}}
+        <td class="text-center">
+            <span class="checkmark" id="v_{{ Str::slug($item['nama'], '_') }}">
+                {!! $isRowSelected ? '✓' : '' !!}
+            </span>
+        </td>
+
+        <td class="text-center">{{ $item['kuota'] }}</td>
+
+        {{-- Kolom Lama Cuti: Tambahkan class dan ID dinamis --}}
+<td class="text-center review-lama-cuti" id="lama_{{ Str::slug($item['nama'], '_') }}">
+    {{ (isset($cuti) && $cuti->jenis_cuti == $item['nama']) ? $cuti->jumlah_cuti . ' Hari' : '' }}
+</td>
+
+{{-- Kolom Sisa Cuti: Tambahkan class dan ID dinamis --}}
+<td class="text-center review-sisa-cuti" id="sisa_{{ Str::slug($item['nama'], '_') }}">
+    {{ (isset($cuti) && $cuti->jenis_cuti == $item['nama']) ? ($cuti->saldo_akhir ?? $cuti->sisa_cuti) . ' Hari' : '' }}
+</td>
+
+
+        {{-- KANAN: MAPPING BARIS DETAIL PERIODE (Sesuai Kode Asli Kamu) --}}
+        @if($i == 0)
+            <td>1. Tgl Pengajuan</td>
+            <td id="review_tgl_pengajuan">{{ (isset($cuti) && $cuti->created_at) ? \Carbon\Carbon::parse($cuti->created_at)->format('d/m/Y') : date('d/m/Y') }}</td>
+        @elseif($i == 1)
+            <td>2. Lama Cuti</td>
+            <td><span id="review_jumlah_cuti_display">{{ $cuti->jumlah_cuti ?? '0' }}</span> Hari</td>
+        @elseif($i == 2)
+            <td>3. TMT Cuti</td>
+            <td id="review_tmt_cuti_display" style="font-size: 7.5pt;">
+                {{ (isset($cuti) && $cuti->tanggal_mulai) ? \Carbon\Carbon::parse($cuti->tanggal_mulai)->format('d/m/Y').' s/d '.\Carbon\Carbon::parse($cuti->tanggal_selesai)->format('d/m/Y') : '... s/d ...' }}
+            </td>
+        @elseif($i == 3)
+            <td colspan="2" class="bg-blue-grey font-bold">IV. ALASAN CUTI</td>
+        @elseif($i == 4)
+            <td colspan="2" rowspan="2" id="review_alasan_cuti_display" style="height: 35px; vertical-align: top;">{{ $cuti->keterangan ?? '-' }}</td>
+        @elseif($i == 6)
+            <td colspan="2" class="bg-blue-grey font-bold">V. YANG MENGAJUKAN</td>
+        @elseif($i == 7)
+            <td colspan="2" rowspan="2" class="text-center" style="vertical-align: top; padding-top: 5px;">
+                <p style="margin: 0; font-size: 8pt;">Hormat Saya,</p>
+                <div style="height: 25px;"></div>
+                <p style="margin: 0; font-weight: bold; text-decoration: underline;">
+                    {{ $cuti->pegawai->nama ?? (auth()->user()->pegawai->nama ?? '-') }}
+                </p>
+            </td>
+        @endif
+    </tr>
+    @endforeach
+</tbody>
+
     </table>
 
     <div class="spacer"></div>
