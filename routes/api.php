@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\DeviceTokenController;
 use App\Http\Controllers\Api\LeaveController;
 use App\Http\Controllers\Api\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -22,4 +23,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/leaves', [LeaveController::class, 'index']);
     Route::post('/leaves', [LeaveController::class, 'store']);
     Route::get('/leave-types', [LeaveController::class, 'leaveTypes']);
+
+    Route::post('/device-tokens', [DeviceTokenController::class, 'store']);
 });
