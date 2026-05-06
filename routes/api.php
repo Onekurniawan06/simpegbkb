@@ -15,6 +15,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/profiles/{id}', [ProfileController::class, 'show']);
 
+    Route::get('/attendances/config', [AttendanceController::class, 'config']);
     Route::get('/attendances/today', [AttendanceController::class, 'today']);
     Route::get('/attendances', [AttendanceController::class, 'index']);
     Route::get('/attendances/{id}', [AttendanceController::class, 'show']);

@@ -135,4 +135,22 @@ class AttendanceController extends Controller
             ], 400);
         }
     }
+
+    public function config(Request $request)
+    {
+        $request->validate([
+            'employee_id' => 'required'
+        ]);
+
+        // Hardcoded location for Bank Kota Bogor
+        return response()->json([
+            'message' => 'Attendance config retrieved',
+            'data' => [
+                'allow_anywhere' => true,
+                'latitude' => -6.5830,
+                'longitude' => 106.7888,
+                'radius' => 100
+            ]
+        ]);
+    }
 }
