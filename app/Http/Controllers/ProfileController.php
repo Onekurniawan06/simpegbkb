@@ -18,20 +18,14 @@ use App\Models\Punishment;
 
 class ProfileController extends Controller
 {
-    /**
-     * Handle the form submission for Section 1: Data Pegawai.
-     * Mengelola pengiriman formulir untuk Bagian 1: Data Pegawai.
-     */
-
     public function showProfile(Request $request)
     {
         $user = Auth::user();
         $nomorUrutPegawai = $user->nomor_urut_pegawai;
         $formType = $request->query('form_type', 'edit');
 
-        // 1. Ambil data pendukung (Sudah benar)
+        // 1. Ambil data pendukung
         $detailPribadi = DB::table('detail_pribadi')->where('nomor_urut_pegawai', $nomorUrutPegawai)->first();
-        // dd($nomorUrutPegawai, $detailPribadi);
         $pekerjaanData = Pekerjaan::where('nomor_urut_pegawai', $nomorUrutPegawai)->first();
 
         if ($pekerjaanData) {
@@ -45,50 +39,24 @@ class ProfileController extends Controller
         $rewards = Reward::where('nomor_urut_pegawai', $nomorUrutPegawai)->get();
         $punishment = Punishment::where('nomor_urut_pegawai', $nomorUrutPegawai)->get();
 
-        // 2. LOGIKA DINAMIS: Ambil info dari mapping table
-        $mapping = DB::table('roles_mapping')
-            ->where('level_id', $user->level_id)
-            ->where(function($q) use ($user) {
-                $q->where('jabatan_id', $user->jabatan_id)->orWhereNull('jabatan_id');
-            })
-            ->first();
+        // 2. Gunakan Accessor dari Model untuk Layout (Sangat Bersih)
+        $layoutFile = $user->layout_file; // Otomatis menangani SKKMR, Direktur, Manager, dll.
 
-        // Tentukan Judul dan Layout berdasarkan role_name di DB
-        $roleDisplayName = $mapping ? str_replace('_', ' ', ucwords($mapping->role_name)) : 'Pegawai';
-        $pageTitle = 'Profil Data ' . $roleDisplayName;
-
-        // Gunakan route_name dari DB untuk breadcrumb
-        $dashboardRoute = $mapping->route_name ?? 'pegawai.dashboard';
-
-        if ($dashboardRoute === 'manager.dashboardmanager') {
-            // Ambil kode divisi dari data pekerjaan user
-            $divisiParams = ['divisi' => $pekerjaanData->kode_divisi ?? 'all'];
-            $berandaUrl = route($dashboardRoute, $divisiParams);
-        } else {
-            $berandaUrl = route($dashboardRoute);
-        }
+        // 3. Logika Judul & Dashboard Link (Gunakan Accessor Dashboard Link yang ada di model)
+        $pageTitle = 'Profil Data ' . $user->name; // Lebih personal
 
         $breadcrumbs = [
-            'Beranda' => $berandaUrl,
+            'Beranda' => $user->dashboard_link, // Memanggil getDashboardLinkAttribute() di model
             $pageTitle => null
         ];
-        //
-
-        // Oper variabel 'layout' ke view agar Blade tahu harus pakai sidebar mana
-        $layout = $mapping->role_name ?? 'pegawai';
-        // $dashboardRoute = $mapping->route_name ?? 'pegawai.dashboard';
 
         return view('profile', compact(
             'user', 'detailPribadi', 'formType', 'pageTitle',
             'breadcrumbs', 'istris', 'anaks', 'pekerjaanData',
             'rewards', 'punishment',
-            'layout',           // Untuk menentukan @extends
-            'dashboardRoute'    // TAMBAHKAN INI agar terbaca di Layout Sidebar
+            'layoutFile'
         ));
     }
-
-
-    // Catatan: Anda juga perlu menambahkan relasi 'pekerjaan' ke Model Pegawai
 
     // Function UpdateProfile
     public function updateProfile(Request $request)

@@ -79,7 +79,7 @@
                 <table class="w-full text-left border-collapse">
                     <thead class="sticky top-0 z-30 bg-white">
                         <tr class="text-gray-400 text-[10px] uppercase tracking-widest">
-                            <th class="py-4 pl-2 bg-white border-b border-gray-50 shadow-[0_1px_0_rgba(0,0,0,0.05)]">NUP</th>
+                            <th class="py-4 pl-2 bg-white border-b border-gray-50 shadow-[0_1px_0_rgba(0,0,0,0.05)]">Nomor Urut Pegawai</th>
                             <th class="py-4 bg-white border-b border-gray-50 shadow-[0_1px_0_rgba(0,0,0,0.05)]">Nama Pegawai</th>
 
                             {{-- Tampilkan Kolom Divisi Jika Direktur --}}
@@ -88,6 +88,7 @@
                             @endif
 
                             <th class="py-4 bg-white border-b border-gray-50 shadow-[0_1px_0_rgba(0,0,0,0.05)]">Jabatan</th>
+                            <th class="py-4 bg-white border-b border-gray-50 shadow-[0_1px_0_rgba(0,0,0,0.05)]">Pangkat / Grade</th>
                             <th class="py-4 bg-white border-b border-gray-50 shadow-[0_1px_0_rgba(0,0,0,0.05)]">Status</th>
                             <th class="py-4 text-center bg-white border-b border-gray-50 shadow-[0_1px_0_rgba(0,0,0,0.05)]">Aksi</th>
                         </tr>

@@ -162,7 +162,6 @@ class User extends Authenticatable
                             $user->level_id = $mapping->level_id;
                         }
                     } else {
-                        // Jika bukan manager, bisa diarahkan ke level lain (misal level 1 untuk pegawai)
                         $user->level_id = 1;
                     }
                 }
@@ -194,32 +193,39 @@ class User extends Authenticatable
 
     public function getLayoutFileAttribute()
     {
-        // 1. Ambil rute dasbor dinamis dari roles_mapping
+        // Ambil mapping dengan urutan jabatan_id yang terisi dulu (lebih spesifik)
         $mapping = \DB::table('roles_mapping')
             ->where('level_id', $this->level_id)
-            ->where('jabatan_id', $this->jabatan_id)
+            ->where(function($q) {
+                $q->where('jabatan_id', $this->jabatan_id)
+                ->orWhereNull('jabatan_id');
+            })
+            ->orderByRaw('jabatan_id IS NULL ASC') // Prioritaskan yang jabatan_id-nya ADA isinya
             ->first();
 
+        if (!$mapping) return 'layouts.app-pegawai';
+
         $routeName = strtolower($mapping->route_name ?? '');
+        $roleName = strtolower($mapping->role_name ?? '');
 
-        // 2. Logika untuk SKKMR
-        if (str_contains($routeName, 'skkmr')) {
-            return 'layouts.app-skkmr';
-        }
-
-        // 3. Logika untuk HRO (Tambahkan ini agar tidak melompat ke bawah)
-        if (str_contains($routeName, 'hro')) {
+        // Logika pengecekan (Tetap seperti sebelumnya)
+        if (str_contains($routeName, 'hro') || str_contains($roleName, 'hro') || str_contains($routeName, 'human')) {
             return 'layouts.app-hro';
         }
 
-        // 4. Logika untuk Manager (Level 2)
+        if (str_contains($routeName, 'skkmr') || str_contains($roleName, 'skkmr')) {
+            return 'layouts.app-skkmr';
+        }
+
+        if ($this->level_id == 3 || str_contains($routeName, 'direktur')) {
+            return 'layouts.app-direktur';
+        }
+
         if ($this->level_id == 2) {
             return 'layouts.app-manager';
         }
 
-        // 5. Default untuk Pegawai Biasa
         return 'layouts.app-pegawai';
     }
-
 
 }

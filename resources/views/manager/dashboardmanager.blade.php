@@ -39,7 +39,7 @@
                     <!-- Card 1: Menunggu Persetujuan -->
                     <div class="bg-white p-5 rounded-lg shadow-md flex items-center justify-between">
                         <div>
-                            <p class="text-sm font-medium text-gray-500">Total Pengajuan Menunggu Persetujuan</p>
+                            <p class="text-sm font-medium text-gray-500">Total Pengajuan Diproses</p>
                             <!-- Menampilkan hasil hitung -->
                             <p class="text-3xl font-semibold text-gray-900">{{ $totalMenunggu }}</p>
                             <p class="text-xs text-gray-400">Data Pengajuan</p>

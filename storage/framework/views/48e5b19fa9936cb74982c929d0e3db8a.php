@@ -244,50 +244,28 @@
                     </div>
                 <?php else: ?>
                     <!-- Blok Deskripsi & Detail Waktu Lembur -->
-                    <div class="ml-4 bg-blue-50/50 p-6 rounded-2xl border border-blue-100 space-y-5">
-                        <!-- 1. Uraian Tugas -->
-                        <div>
-                            <label class="block text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-2">Deskripsi Pengajuan Lembur</label>
-                            <p class="text-sm text-slate-700 leading-relaxed italic">
-                                "<?php echo e($data->uraian_tugas ?? 'Tidak ada deskripsi'); ?>"
-                            </p>
-                        </div>
-
-                        <!-- 2. Grid Detail Waktu (Sesuai Gambar Lu) -->
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-blue-100/50">
-                            <!-- Tanggal -->
+                    <div class="bg-blue-50/50 rounded-2xl border border-blue-100">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 px-4 py-3">
                             <div class="flex flex-col">
                                 <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Tanggal Lembur</span>
-                                <span class="text-sm font-semibold text-slate-700 mt-1">
-                                    <?php echo e(\Carbon\Carbon::parse($data->tanggal_lembur)->translatedFormat('d F Y') ?? '-'); ?>
-
-                                </span>
+                                <span class="text-sm font-semibold text-slate-700 mt-1"><?php echo e(\Carbon\Carbon::parse($data->tanggal_lembur)->translatedFormat('d F Y')); ?></span>
                             </div>
-
-                            <!-- Jam Mulai -->
                             <div class="flex flex-col">
                                 <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Jam Mulai</span>
-                                <span class="text-sm font-semibold text-emerald-600 mt-1">
-                                    <?php echo e($data->jam_mulai ? date('H:i', strtotime($data->jam_mulai)) : '-'); ?> WIB
-                                </span>
+                                <span class="text-sm font-semibold text-emerald-600"><?php echo e($data->jam_mulai ? date('H:i', strtotime($data->jam_mulai)) : '-'); ?> WIB</span>
                             </div>
-
-                            <!-- Jam Selesai -->
                             <div class="flex flex-col">
                                 <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Jam Selesai</span>
-                                <span class="text-sm font-semibold text-rose-600 mt-1">
-                                    <?php echo e($data->jam_selesai ? date('H:i', strtotime($data->jam_selesai)) : '-'); ?> WIB
-                                </span>
+                                <span class="text-sm font-semibold text-rose-600 mt-1"><?php echo e($data->jam_selesai ? date('H:i', strtotime($data->jam_selesai)) : '-'); ?> WIB</span>
                             </div>
-
-                            <!-- Total Jam -->
-                            <div class="flex flex-col bg-blue-600/5 p-2 rounded-xl border border-blue-200/50">
+                            <div class="flex flex-col">
                                 <span class="text-[9px] font-bold text-blue-500 uppercase tracking-wider">Total Lembur</span>
-                                <span class="text-sm font-bold text-blue-700 mt-1">
-                                    <?php echo e($data->total_jam_lembur ?? '0 jam 0 menit'); ?>
-
-                                </span>
+                                <span class="text-sm font-bold text-blue-700 mt-1"><?php echo e($data->total_jam_lembur ?? '0'); ?></span>
                             </div>
+                        </div>
+                        <div class="border-t border-blue-100/50 px-4 py-3">
+                            <label class="block text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-2">Deskripsi Pengajuan Lembur</label>
+                            <p class="text-sm text-slate-700 leading-relaxed italic">"<?php echo e($data->uraian_tugas ?? 'Tidak ada deskripsi'); ?>"</p>
                         </div>
                     </div>
                 <?php endif; ?>
@@ -309,74 +287,71 @@
             <!-- pb-10 saja biar margin bawah nggak terlalu jauh -->
             <div class="flex-1 overflow-y-auto custom-scroll-container p-3 pb-5">
                 <form id="formApproval" action="<?php echo e(route('manager.updateStatus', [$sumber, $id_log])); ?>" method="POST" class="flex flex-col">
-                    <?php echo csrf_field(); ?>
-                    <?php echo method_field('PUT'); ?>
+                <?php echo csrf_field(); ?>
+                <?php echo method_field('PUT'); ?>
 
-                    
-                    <?php if($sumber === 'lembur'): ?>
-                        <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm space-y-3">
-                            <div class="flex justify-between items-center">
-                                <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest">Verifikasi Waktu Lembur</label>
-                                <!-- Button Ubah / Batal -->
-                                <button type="button" id="btnEditTime" onclick="toggleEditTime()"
-                                    class="text-[11px] font-extrabold text-indigo-600 hover:text-indigo-800 uppercase tracking-widest bg-indigo-50 px-3 py-1.5 rounded-lg transition-all active:scale-95">
-                                    Ubah
-                                </button>
+                
+                <?php if($sumber === 'lembur'): ?>
+                    <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm space-y-3 mb-3">
+                        <div class="flex justify-between items-center">
+                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest">Verifikasi Waktu Lembur</label>
+                            <button type="button" id="btnEditTime" onclick="toggleEditTime()"
+                                class="text-[11px] font-extrabold text-indigo-600 hover:text-indigo-800 uppercase tracking-widest bg-indigo-50 px-3 py-1.5 rounded-lg transition-all active:scale-95">
+                                Ubah
+                            </button>
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <span class="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Jam Mulai</span>
+                                <input type="time" name="jam_mulai" id="input_jam_mulai"
+                                    value="<?php echo e(isset($data->jam_mulai) ? date('H:i', strtotime($data->jam_mulai)) : '00:00'); ?>"
+                                    disabled
+                                    class="w-full p-3 text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none bg-slate-50 font-medium text-slate-500 disabled:opacity-70 transition-all">
                             </div>
-
-                            <div class="grid grid-cols-2 gap-4">
-                                <div class="space-y-2">
-                                    <span class="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Jam Mulai</span>
-                                    <input type="time" name="jam_mulai" id="input_jam_mulai"
-                                        value="<?php echo e(isset($data->jam_mulai) ? date('H:i', strtotime($data->jam_mulai)) : '00:00'); ?>"
-                                        disabled
-                                        class="w-full p-3 text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none bg-slate-50 font-medium text-slate-500 disabled:opacity-70 transition-all">
-                                </div>
-                                <div class="space-y-2">
-                                    <span class="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Jam Selesai</span>
-                                    <input type="time" name="jam_selesai" id="input_jam_selesai"
-                                        value="<?php echo e(isset($data->jam_selesai) ? date('H:i', strtotime($data->jam_selesai)) : '00:00'); ?>"
-                                        disabled
-                                        class="w-full p-3 text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none bg-slate-50 font-medium text-slate-500 disabled:opacity-70 transition-all">
-                                </div>
-                            </div>
-
-                            <div class="pt-2">
-                                <span class="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Total Jam Lembur</span>
-                                <!-- PENTING: Gunakan readonly agar tetap terkirim ke server (tidak disabled) -->
-                                <input type="text" name="total_jam_lembur" id="input_total_jam"
-                                    value="<?php echo e($data->total_jam_lembur ?? '0 jam 0 menit'); ?>" readonly
-                                    class="w-full mt-2 p-4 text-sm bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-400 outline-none transition-all">
+                            <div class="space-y-2">
+                                <span class="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Jam Selesai</span>
+                                <input type="time" name="jam_selesai" id="input_jam_selesai"
+                                    value="<?php echo e(isset($data->jam_selesai) ? date('H:i', strtotime($data->jam_selesai)) : '00:00'); ?>"
+                                    disabled
+                                    class="w-full p-3 text-sm border border-slate-200 rounded-xl focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none bg-slate-50 font-medium text-slate-500 disabled:opacity-70 transition-all">
                             </div>
                         </div>
 
-                    
-                    <?php elseif($sumber === 'cuti'): ?>
-                        <div class="space-y-1">
-                            <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest">Catatan Penyetuju Cuti</label>
-                            <textarea name="catatan" rows="5"
-                                class="w-full p-5 text-sm bg-white border border-slate-200 rounded-3xl text-slate-700 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none transition resize-none placeholder-slate-400 shadow-sm"
-                                placeholder="Wajib memberikan alasan atau catatan..."
-                                
-                                <?php if($data->status !== 'diproses'): echo 'disabled'; endif; ?>><?php echo e($data->komentar ?? ''); ?></textarea>
+                        <div class="pt-2">
+                            <span class="text-[11px] text-slate-400 font-bold uppercase tracking-tighter">Total Jam Lembur</span>
+                            <input type="text" name="total_jam_lembur" id="input_total_jam"
+                                value="<?php echo e($data->total_jam_lembur ?? '0 jam 0 menit'); ?>" readonly
+                                class="w-full mt-2 p-4 text-sm bg-slate-50 border border-slate-100 rounded-xl font-bold text-slate-400 outline-none transition-all">
                         </div>
-                    <?php endif; ?>
-
-                    <input type="hidden" name="status" id="status_input">
-
-                    <!-- 3. ACTION BUTTONS -->
-                    <div class="grid grid-cols-1 gap-3 pt-4">
-                        <button type="button" onclick="handleApproval('disetujui')" <?php if($data->status !== 'diproses'): echo 'disabled'; endif; ?>
-                            class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 disabled:text-slate-400 text-white text-xs font-semibold rounded-xl transition-all shadow-lg shadow-indigo-200 uppercase">
-                            Setujui Pengajuan
-                        </button>
-
-                        <button type="button" onclick="handleApproval('ditolak')" <?php if($data->status !== 'diproses'): echo 'disabled'; endif; ?>
-                            class="w-full py-4 bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 disabled:border-slate-100 disabled:text-slate-300 text-xs font-semibold rounded-xl transition-all shadow-sm uppercase">
-                            Tolak Pengajuan
-                        </button>
                     </div>
-                </form>
+                <?php endif; ?>
+
+                
+                <div class="space-y-1">
+                    <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest">Catatan Penyetuju</label>
+                    <textarea name="catatan" rows="4"
+                        class="w-full p-3 text-sm bg-white border border-slate-200 rounded-2xl text-slate-700 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none transition resize-none placeholder-slate-400 shadow-sm"
+                        placeholder="Wajib memberikan alasan atau catatan..."
+                        <?php if($data->status !== 'diproses'): echo 'disabled'; endif; ?>><?php echo e($data->komentar ?? ''); ?></textarea>
+                </div>
+
+                <input type="hidden" name="status" id="status_input">
+
+                <!-- 3. ACTION BUTTONS -->
+                <div class="grid grid-cols-1 gap-3 pt-2">
+                    <button type="button" onclick="handleApproval('disetujui')" <?php if($data->status !== 'diproses'): echo 'disabled'; endif; ?>
+                        class="w-full py-4 bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-200 disabled:text-slate-400 text-white text-xs font-semibold rounded-xl transition-all shadow-lg shadow-indigo-200 uppercase">
+                        Setujui Pengajuan
+                    </button>
+
+                    <button type="button" onclick="handleApproval('ditolak')" <?php if($data->status !== 'diproses'): echo 'disabled'; endif; ?>
+                        class="w-full py-4 bg-white border border-rose-200 text-rose-600 hover:bg-rose-50 disabled:border-slate-100 disabled:text-slate-300 text-xs font-semibold rounded-xl transition-all shadow-sm uppercase">
+                        Tolak Pengajuan
+                    </button>
+                </div>
+            </form>
+
             </div>
         </div>
     </div>

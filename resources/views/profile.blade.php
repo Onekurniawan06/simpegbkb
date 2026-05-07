@@ -1,17 +1,4 @@
 {{-- Di bagian paling atas file profile.blade.php --}}
-@php
-    $layoutLower = strtolower($layout);
-
-    // Logika penentuan file layout
-    if (str_contains($layoutLower, 'hro') || str_contains($layoutLower, 'human')) {
-        $layoutFile = 'layouts.app-hro';
-    } elseif (str_contains($layoutLower, 'manajer') || str_contains($layoutLower, 'kepala')) {
-        $layoutFile = 'layouts.app-manager';
-    } else {
-        $layoutFile = 'layouts.app-pegawai';
-    }
-@endphp
-
 @extends($layoutFile)
 
 @section('content')

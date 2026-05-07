@@ -10,78 +10,67 @@ use Illuminate\Support\Facades\DB;
 class SkkmrDashboard extends Controller
 {
     public function FormDashboarSkkmr()
-    {
-        $totalMenunggu = 0;
-        $totalDisetujui = 0;
-        $totalDitolak = 0;
+{
+    $user = auth()->user();
 
-        $detailMenunggu = [];
-        $detailDisetujui = [];
-        $detailDitolak = [];
+    // 1. NORMALISASI JABATAN (Gunakan LIKE yang lebih fleksibel agar kena semua variasi nama)
+    // Kita cari yang mengandung kata 'SKK' atau 'Kepatuhan'
+    $jabatanKeywords = ['SKK', 'Kepatuhan'];
 
-        $user = auth()->user();
-        $namaJabatan = DB::table('jabatan')->where('jabatan_id', $user->jabatan_id)->value('nama_jabatan') ?? '';
-        $isSKK = str_contains(strtolower($namaJabatan), 'skk') || str_contains(strtolower($namaJabatan), 'kepatuhan');
+    // 2. Konfigurasi Tabel
+    $config = [
+        ['label' => 'Lembur',  'main' => 'pengajuan_lembur', 'log' => 'log_persetujuan_lembur', 'pk' => 'id_lembur',  'st_main' => 'status_lembur',    'st_log' => 'status_persetujuan'],
+        ['label' => 'Pensiun', 'main' => 'pengajuan_pensiun', 'log' => 'log_persetujuan_pensiun', 'pk' => 'id_pensiun', 'st_main' => 'status_pensiun',   'st_log' => 'status_persetujuan'],
+        ['label' => 'Pangkat', 'main' => 'pengajuan_pangkatgajitunjangan', 'log' => 'log_persetujuan_pangkatgajitunjangan', 'pk' => 'id_kenaikan', 'st_main' => 'status_kenaikan', 'st_log' => 'status_persetujuan'],
+    ];
 
-        if ($isSKK) {
+    $totalMenunggu = 0; $totalDisetujui = 0; $totalDitolak = 0;
+    $detailMenunggu = []; $detailDisetujui = []; $detailDitolak = [];
 
-            $tables = [
-                ['name' => 'log_persetujuan_lembur', 'col' => 'status_persetujuan', 'label' => 'Lembur'],
-                ['name' => 'log_persetujuan_pensiun', 'col' => 'status_persetujuan', 'label' => 'Pensiun'],
-                ['name' => 'log_persetujuan_pangkatgajitunjangan', 'col' => 'status_persetujuan', 'label' => 'Pangkat/Gaji'],
-                ['name' => 'log_persetujuan_cuti', 'col' => 'status_pengajuan', 'label' => 'Cuti'],
-            ];
+    foreach ($config as $cfg) {
+        // --- A. HITUNG MENUNGGU (Antrean Meja SKKMR) ---
+        $countWait = DB::table($cfg['log'] . ' as log')
+            ->join('users as u', 'log.nomor_urut_pegawai', '=', 'u.nomor_urut_pegawai')
+            ->where(function($query) {
+                $query->where(function($q) {
+                    // 1. Ambil yang ada kata SKK atau Kepatuhan
+                    $q->where('tahap_persetujuan', 'LIKE', '%SKK%')
+                    ->orWhere('tahap_persetujuan', 'LIKE', '%Kepatuhan%');
+                })
+                ->where('tahap_persetujuan', 'NOT LIKE', '%Direktur%')
 
-            foreach ($tables as $table) {
-                // Base query TANPA join tabel users yang mengikat level_akses statis
-                $baseQuery = DB::table($table['name'] . ' as log')
-                    ->join('pegawai as p', 'log.nomor_urut_pegawai', '=', 'p.nomor_urut_pegawai')
-                    ->join('pekerjaan as pek', 'p.nomor_urut_pegawai', '=', 'pek.nomor_urut_pegawai');
+                // 2. ATAU: Ambil 'Pengajuan Awal' milik Manager (Level 2)
+                ->orWhere(function($q) {
+                    $q->where('tahap_persetujuan', 'Pengajuan Awal')
+                    ->where('u.level_id', 2);
+                });
+            })
+            ->where('log.' . $cfg['st_log'], 'diproses')
+            ->whereNull('log.nomor_urut_pegawai_penyetuju')
+            ->count();
 
-                // 1. Menunggu (Status Diproses)
-                $countWait = (clone $baseQuery)
-                    ->where('log.' . $table['col'], 'diproses')
-                    ->count();
+        // --- B. HITUNG DISETUJUI & DITOLAK (Dari Tabel Utama) ---
+        $countApprove = DB::table($cfg['main'])->where($cfg['st_main'], 'disetujui')->count();
+        $countReject = DB::table($cfg['main'])->where($cfg['st_main'], 'ditolak')->count();
 
-                // 2. Disetujui (Status Disetujui + Bukan Pengajuan Awal)
-                $countApprove = (clone $baseQuery)
-                    ->where('log.' . $table['col'], 'disetujui')
-                    ->where('log.tahap_persetujuan', '!=', 'Pengajuan Awal')
-                    ->count();
+        // Akumulasi
+        $totalMenunggu += $countWait;
+        $totalDisetujui += $countApprove;
+        $totalDitolak += $countReject;
 
-                // 3. Ditolak (Status Ditolak + Bukan Pengajuan Awal)
-                $countReject = (clone $baseQuery)
-                    ->where('log.' . $table['col'], 'ditolak')
-                    ->where('log.tahap_persetujuan', '!=', 'Pengajuan Awal')
-                    ->count();
-
-                // Akumulasi total
-                $totalMenunggu += $countWait;
-                $totalDisetujui += $countApprove;
-                $totalDitolak += $countReject;
-
-                // Masukkan ke detail per kategori
-                $detailMenunggu[] = ['label' => $table['label'], 'jumlah' => $countWait];
-                $detailDisetujui[] = ['label' => $table['label'], 'jumlah' => $countApprove];
-                $detailDitolak[] = ['label' => $table['label'], 'jumlah' => $countReject];
-            }
-        }
-
-        $daftar_berita = Berita::where('tanggal_posting', '>=', now()->subHours(72))
-            ->orderBy('tanggal_posting', 'desc')
-            ->paginate(5);
-
-        $total_belum_dibaca = Berita::where('tanggal_posting', '>=', now()->subDay())->count();
-
-        return view('skkmr.dashboardskkmr', compact(
-            'totalMenunggu',
-            'totalDisetujui',
-            'totalDitolak',
-            'detailMenunggu',
-            'detailDisetujui',
-            'detailDitolak',
-            'daftar_berita',
-            'total_belum_dibaca'
-        ));
+        $detailMenunggu[]  = ['label' => $cfg['label'], 'jumlah' => $countWait];
+        $detailDisetujui[] = ['label' => $cfg['label'], 'jumlah' => $countApprove];
+        $detailDitolak[]   = ['label' => $cfg['label'], 'jumlah' => $countReject];
     }
+
+    $daftar_berita = Berita::orderBy('tanggal_posting', 'desc')->paginate(5);
+    $total_belum_dibaca = Berita::where('tanggal_posting', '>=', now()->subDay())->count();
+
+    return view('skkmr.dashboardskkmr', compact(
+        'totalMenunggu', 'totalDisetujui', 'totalDitolak',
+        'detailMenunggu', 'detailDisetujui', 'detailDitolak',
+        'daftar_berita', 'total_belum_dibaca'
+    ));
+}
+
 }

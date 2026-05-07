@@ -8,53 +8,49 @@
 <?php endif; ?>
 
 <div class="rounded-l-md shadow-lg">
-    
+    <div class="w-full p-4 text-white rounded-l-md shadow-sm border border-white/10 relative overflow-hidden group cursor-default" 
+        style="background: linear-gradient(135deg, #ea580c, #f59e0b);">
+        
+        <!-- ORNAMEN KIRI (Besar & Kecil) -->
+        <div class="absolute -left-6 -bottom-6 w-24 h-24 bg-white opacity-15 rounded-full transition-all duration-700 ease-in-out group-hover:opacity-25 group-hover:scale-110 z-0"></div>
+        <div class="absolute left-8 -top-2 w-10 h-10 bg-white opacity-10 rounded-full transition-all duration-500 ease-in-out group-hover:opacity-15 group-hover:-translate-y-1 z-0"></div>
 
-    <!-- Tab Content Container -->
-        <!-- Content for 'Data Pengajuan' (Visible by default) -->
+        <!-- ORNAMEN KANAN (Besar & Kecil) -->
+        <div class="absolute -right-4 -top-4 w-24 h-24 bg-white opacity-15 rounded-full transition-all duration-700 ease-in-out group-hover:opacity-25 group-hover:scale-110 z-0"></div>
+        <div class="absolute right-10 -bottom-6 w-16 h-16 bg-white opacity-10 rounded-full transition-all duration-500 ease-in-out group-hover:opacity-15 group-hover:translate-y-1 z-0"></div>
 
-    <!-- Card Statistik: Pengajuan Menunggu Persetujuan -->
-    <div class="bg-amber-600 rounded-l-md p-3 text-white shadow-xl relative overflow-hidden group hover:shadow-2xl transition-all duration-300">
-        <!-- Ornamen Background (Lingkaran Dekoratif) -->
-        <div class="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full group-hover:scale-110 transition-transform duration-500"></div>
-        <div class="absolute -right-5 -bottom-5 w-24 h-24 bg-white/5 rounded-full group-hover:scale-125 transition-transform duration-700"></div>
+        <div class="flex justify-between items-center relative z-10">
+            <div class="flex flex-col gap-3">
+                <!-- SATU KALIMAT GABUNGAN: Angka dikecilkan (text-3xl) -->
+                <div class="flex items-center gap-2.5">
+                    <span class="text-3xl font-black leading-none drop-shadow-sm"><?php echo e($totalMenunggu); ?></span>
+                    <p class="text-[11px] font-bold uppercase tracking-[0.12em] text-orange-50 leading-tight">
+                        <?php echo e(__('Data Pengajuan Pegawai')); ?>
 
-        <div class="relative z-10">
-            <div class="flex justify-between items-start">
-                <div>
-                    <h2 class="text-sm font-bold uppercase tracking-[0.15em] text-indigo-100 opacity-90 mb-1">Pengajuan Menunggu Persetujuan</h2>
-                    <div class="flex items-baseline gap-2 mb-5">
-                        <span class="text-4xl font-black"><?php echo e($totalMenunggu); ?></span>
-                        <span class="text-xs font-medium text-indigo-200 uppercase tracking-widest">Data Pengajuan</span>
-                    </div>
+                    </p>
                 </div>
 
-                <!-- Icon Kanan yang sudah dirapikan -->
-                <div class="bg-white/20 p-3 rounded-xl backdrop-blur-md border border-white/30 shadow-inner">
-                    <svg xmlns="http://www.w3.org" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
+                <!-- BAGIAN BADGES: Lebih rapat dan kecil -->
+                <div class="flex flex-wrap gap-2">
+                    <?php $__currentLoopData = $detailMenunggu; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $detail): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <?php if($detail['jumlah'] > 0): ?>
+                            <div class="bg-white/15 backdrop-blur-md border border-white/10 px-2.5 py-1 rounded-lg flex items-center gap-2 hover:bg-white/25 transition-all">
+                                <span class="text-[10px] font-black text-orange-100 uppercase tracking-tighter"><?php echo e($detail['label']); ?></span>
+                                <span class="text-md font-bold border-l border-white/20 pl-2 ml-1"><?php echo e($detail['jumlah']); ?></span>
+                            </div>
+                        <?php endif; ?>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
                 </div>
             </div>
 
-            <!-- List Badge Dinamis -->
-            <div class="flex flex-wrap gap-3">
-                <?php $__currentLoopData = $detailMenunggu; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $detail): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                    <?php if($detail['jumlah'] > 0): ?>
-                    <div class="bg-white/10 backdrop-blur-sm border border-white/20 px-4 py-2 rounded-xl flex items-center gap-3 hover:bg-white/20 transition-colors cursor-default">
-                        <div class="flex flex-col">
-                            <span class="text-[9px] font-black text-indigo-100 uppercase tracking-tighter leading-none mb-1"><?php echo e($detail['label']); ?></span>
-                            <span class="text-lg font-bold leading-none"><?php echo e($detail['jumlah']); ?></span>
-                        </div>
-                    </div>
-                    <?php endif; ?>
-                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+            <!-- Ikon Kanan: Ukuran lebih kecil (h-4 w-4) -->
+            <div class="bg-white/15 p-2 rounded-lg backdrop-blur-md border border-white/20 shadow-sm">
+                <svg xmlns="http://w3.org" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
             </div>
         </div>
     </div>
-
-    <!-- TOMBOL BACK TO TOP (Ditempatkan di sini, akan melayang di atas mainContent) -->
-    
 </div>
 
 

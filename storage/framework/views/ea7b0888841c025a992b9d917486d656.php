@@ -23,12 +23,11 @@
 
             <!-- 1. Stats Cards Section -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 ml-2 mr-2">
-
                 <!-- Card 1: Menunggu Persetujuan -->
                 <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200 flex items-center justify-between">
                     <div>
                         <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Menunggu Persetujuan</p>
-                        <p class="text-2xl font-bold text-gray-800 mt-1">0 <span class="text-xs text-gray-400 font-medium">Data</span></p>
+                        <p class="text-2xl font-bold text-gray-800 mt-1"><?php echo e(number_format($totalMenunggu)); ?> <span class="text-xs text-gray-400 font-medium">Data</span></p>
                     </div>
                     <div class="p-2.5 bg-yellow-50 rounded-lg border border-yellow-100">
                         <svg xmlns="http://w3.org" class="h-5 w-5 text-yellow-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -41,7 +40,7 @@
                 <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200 flex items-center justify-between">
                     <div>
                         <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Total Disetujui</p>
-                        <p class="text-2xl font-bold text-gray-800 mt-1">0 <span class="text-xs text-gray-400 font-medium">Data</span></p>
+                        <p class="text-2xl font-bold text-gray-800 mt-1"><?php echo e(number_format($totalDisetujui)); ?> <span class="text-xs text-gray-400 font-medium">Data</span></p>
                     </div>
                     <div class="p-2.5 bg-green-50 rounded-lg border border-green-100">
                         <svg xmlns="http://w3.org" class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -54,7 +53,7 @@
                 <div class="bg-white p-4 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow duration-200 flex items-center justify-between">
                     <div>
                         <p class="text-[10px] font-bold uppercase tracking-wider text-gray-400">Total Ditolak</p>
-                        <p class="text-2xl font-bold text-gray-800 mt-1">0 <span class="text-xs text-gray-400 font-medium">Data</span></p>
+                        <p class="text-2xl font-bold text-gray-800 mt-1"><?php echo e(number_format($totalDitolak)); ?> <span class="text-xs text-gray-400 font-medium">Data</span></p>
                     </div>
                     <div class="p-2.5 bg-red-50 rounded-lg border border-red-100">
                         <svg xmlns="http://w3.org" class="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -62,7 +61,6 @@
                         </svg>
                     </div>
                 </div>
-
             </div>
 
             <!-- 2. Garis batas horizontal antara card dan informasi -->

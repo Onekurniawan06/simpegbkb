@@ -40,23 +40,25 @@ class SkkmrApproval extends Controller
                 ->where('p.nomor_urut_pegawai', '!=', $user->nomor_urut_pegawai);
 
             // KUNCI 2: Pencarian Tahap Persetujuan
-            $baseQuery->where(function($queryGroup) use ($searchTahap, $cfg) {
+            $baseQuery->where(function($queryGroup) use ($searchTahap) {
+                // 1. Grup Utama: Harus salah satu dari daftar $searchTahap
                 $queryGroup->where(function($sub) use ($searchTahap) {
                     foreach ($searchTahap as $st) {
                         if ($st === 'Pengajuan Awal') {
+                            // KHUSUS Pengajuan Awal: WAJIB Level 2 (Manager)
                             $sub->orWhere(function($qLevel) {
                                 $qLevel->where('log.tahap_persetujuan', 'Pengajuan Awal')
                                     ->where('p.level_id', 2);
                             });
                         } else {
+                            // Untuk tahap lain (misal: Kepala SKK), ambil secara normal
                             $sub->orWhere('log.tahap_persetujuan', 'LIKE', $st);
                         }
                     }
                 });
-
-                $queryGroup->orWhere('log.tahap_persetujuan', 'Pengajuan Awal');
-                $queryGroup->where('log.tahap_persetujuan', 'NOT LIKE', '%Direktur%');
             });
+            // 2. Tambahan Pagar: Pastikan tidak mengambil jatah Direktur
+            $baseQuery->where('log.tahap_persetujuan', 'NOT LIKE', '%Direktur%');
 
             $countWait = (clone $baseQuery)->count();
             $totalMenunggu += $countWait;

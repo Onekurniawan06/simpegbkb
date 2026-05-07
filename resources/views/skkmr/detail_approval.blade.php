@@ -222,7 +222,7 @@
                                                 {{ str_replace('_', ' ', $file->tipe_dokumen) }}
                                             </td>
                                             <td class="px-6 py-4 text-right">
-                                                <button type="button" 
+                                                <button type="button"
                                                     onclick="openPdfModal('{{ route('skkmr.lihatDokumen', $file->id) }}', '{{ str_replace('_', ' ', $file->tipe_dokumen) }}')"
                                                     class="text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 px-3 py-1.5 rounded-lg transition shadow-sm inline-block">
                                                     Lihat Dokumen
@@ -243,12 +243,8 @@
 
                 @elseif($sumber == 'lembur')
                     <!-- Blok Deskripsi & Detail Waktu Lembur -->
-                    <div class="ml-2 bg-blue-50/50 p-3 rounded-2xl border border-blue-100 space-y-5">
-                        <div>
-                            <label class="block text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-2">Deskripsi Pengajuan Lembur</label>
-                            <p class="text-sm text-slate-700 leading-relaxed italic">"{{ $data->uraian_tugas ?? 'Tidak ada deskripsi' }}"</p>
-                        </div>
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-blue-100/50">
+                    <div class="bg-blue-50/50 rounded-2xl border border-blue-100">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 px-4 py-3">
                             <div class="flex flex-col">
                                 <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Tanggal Lembur</span>
                                 <span class="text-sm font-semibold text-slate-700 mt-1">{{ \Carbon\Carbon::parse($data->tanggal_lembur)->translatedFormat('d F Y') }}</span>
@@ -265,6 +261,10 @@
                                 <span class="text-[9px] font-bold text-blue-500 uppercase tracking-wider">Total Lembur</span>
                                 <span class="text-sm font-bold text-blue-700 mt-1">{{ $data->total_jam_lembur ?? '0' }}</span>
                             </div>
+                        </div>
+                        <div class="border-t border-blue-100/50 px-4 py-3">
+                            <label class="block text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-2">Deskripsi Pengajuan Lembur</label>
+                            <p class="text-sm text-slate-700 leading-relaxed italic">"{{ $data->uraian_tugas ?? 'Tidak ada deskripsi' }}"</p>
                         </div>
                     </div>
 
@@ -358,11 +358,11 @@
                     @endif
 
                     {{-- KOTAK CATATAN (Muncul untuk semua jenis pengajuan) --}}
-                    <div class="flex flex-col">
+                    <div class="flex flex-col mt-3">
                         <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Catatan Persetujuan</label>
                         <textarea name="catatan" rows="4"
                             class="w-full p-5 text-sm bg-white border border-slate-200 rounded-3xl text-slate-700 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none transition resize-none placeholder-slate-400 shadow-sm"
-                            placeholder="Berikan alasan atau instruksi tambahan"
+                            placeholder="Wajib Berikan alasan atau instruksi tambahan..."
                             @if($data->status !== 'diproses') readonly @endif>{{ $data->komentar ?? '' }}</textarea>
                     </div>
                     <input type="hidden" name="status" id="status_input">
@@ -471,7 +471,7 @@
             // Set Judul & URL
             title.innerText = docName ? docName.toUpperCase() : "LIHAT DOKUMEN";
             iframe.src = url;
-            
+
             // Tampilkan Modal
             modal.classList.remove('hidden');
             modal.classList.add('flex'); // Pakai flex supaya items-center & justify-center jalan
