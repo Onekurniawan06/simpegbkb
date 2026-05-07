@@ -5,9 +5,9 @@ namespace App\Http\Controllers;
 use Exception;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth; // <-- Tambahkan baris ini
-use App\Models\Pegawai; // Pastikan ini mengarah ke model yang benar
-use Illuminate\Support\Facades\DB; // Pastikan Anda mengimpor facade DB di atas
+use Illuminate\Support\Facades\Auth;
+use App\Models\Pegawai;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Storage;
 use App\Models\KeluargaPegawai;
@@ -109,9 +109,6 @@ class ProfileController extends Controller
                     // Penamaan file
                     $prefix = strtoupper(str_replace('dokumen_', '', $inputName));
                     $fileName = $prefix . '_' . $nomorUrut . '_' . time() . '.' . $file->getClientOriginalExtension();
-
-                    // SIMPAN KE: storage/app/public/uploads/{folder}
-                    // Gunakan path relatif dari 'root' disk public
                     $path = $file->storeAs('uploads/' . $folder, $fileName, 'public');
 
                     if ($path) {
@@ -148,14 +145,10 @@ class ProfileController extends Controller
 
         } catch (Exception $e) {
             DB::rollBack();
-
-            // Hapus file fisik jika DB gagal (Perbaikan Path Delete)
             foreach ($uploadedFiles as $inputName => $fileName) {
                 $folder = $documentConfig[$inputName];
-                // Karena root disk public adalah public/uploads, cukup hapus path relatifnya
                 \Storage::disk('public')->delete($folder . '/' . $fileName);
             }
-
             \Log::error("Error Update Profile: " . $e->getMessage());
             return redirect()->back()->withInput()->with('error', 'Gagal: ' . $e->getMessage());
         }
@@ -172,7 +165,6 @@ class ProfileController extends Controller
         $user = Auth::user();
         $detailPribadi = $user->detailPribadi;
 
-        // Pastikan record detail_pribadi sudah ada, jika belum bisa dibuat baru
         if (!$detailPribadi) {
             return back()->with('error', 'Data detail pribadi tidak ditemukan.');
         }
@@ -195,7 +187,6 @@ class ProfileController extends Controller
         return back()->with('success', 'Foto selfie berhasil diperbarui!');
     }
 
-    // Function Update Keluarga
     public function updateKeluarga(Request $request)
     {
         $user = Auth::user();
@@ -204,17 +195,15 @@ class ProfileController extends Controller
         }
         $nomorUrut = trim($user->nomor_urut_pegawai);
 
-        // Validasi KHUSUS untuk keluarga (tidak ada 'tempat_lahir' yang wajib)
+        // Validasi KHUSUS untuk keluarga
         $request->validate([
             'nomor_urut_pegawai' => 'required|in:' . $nomorUrut,
             'nama_istri'         => 'nullable|array',
             'nama_anak'          => 'nullable|array',
         ]);
 
-        // Kita tetap pakai transaksi di sini untuk keamanan
         DB::beginTransaction();
         try {
-            // Logika penyimpanan keluarga yang sudah digabung sebelumnya
             KeluargaPegawai::where('nomor_urut_pegawai', $nomorUrut)->delete();
 
             // Simpan Istri
@@ -249,7 +238,6 @@ class ProfileController extends Controller
         }
     }
 
-    // Fungsi baru untuk memperbarui data pekerjaan
     public function updatePekerjaan(Request $request)
     {
         $user = Auth::user();
@@ -268,12 +256,8 @@ class ProfileController extends Controller
         DB::beginTransaction();
         try {
             // 2. Gunakan updateOrInsert:
-            // Parameter 1 (array): Kriteria pencarian data yang sudah ada
-            // Parameter 2 (array): Kolom yang akan di-update jika ditemukan, atau di-insert jika tidak ada
             Pekerjaan::updateOrInsert(
-                // Mencari baris dengan nomor_urut_pegawai yang sesuai
                 ['nomor_urut_pegawai' => $nomorUrut],
-                // Memperbarui kolom-kolom ini
                 [
                     'golongan_pajak' => $request->golongan_pajak,
                     'no_rekening' => $request->no_rekening,

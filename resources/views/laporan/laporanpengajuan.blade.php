@@ -46,7 +46,7 @@
     <!-- Filter & Table Container -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-100 flex flex-col h-full overflow-hidden">
 
-        <!-- Bagian Form Filter (Tinggi tetap sesuai konten) -->
+        <!-- Bagian Form Filter -->
         <form action="" method="GET" class="p-3 border-b bg-white shadow-sm rounded-t-lg flex-none">
             <div class="flex items-end gap-2 flex-wrap md:flex-nowrap">
                 <!-- Pencarian -->
@@ -68,7 +68,7 @@
                     </select>
                 </div>
 
-                <!-- ➕ Filter Divisi -->
+                <!-- Filter Divisi -->
                 <div class="w-36">
                     <label class="text-[10px] font-bold text-gray-400 uppercase mb-0.5 block ml-1">Divisi</label>
                     <select name="divisi_filter" class="text-[11px] border border-gray-200 rounded-md px-2 w-full h-8 outline-none bg-white cursor-pointer">
@@ -278,13 +278,6 @@
     </div>
 </div>
 
-
-
-{{-- <!-- TOMBOL BACK TO TOP (Ditempatkan di sini, akan melayang di atas mainContent) -->
-<button id="backToTop" style="display: none;" class="fixed bottom-10 right-10 bg-blue-300 text-white p-3 rounded-full shadow-2xl hover:bg-blue-600 transition-all duration-300 z-50 flex items-center justify-center" title="Kembali ke atas">
-    <x-heroicon-o-chevron-up id="arrowIcon" class="h-6 w-6 " />
-</button> --}}
-
 {{-- Skrip JavaScript yang menargetkan #mainContent --}}
 @push('scripts')
 <script>
@@ -298,8 +291,7 @@
         }
 
         function toggleBackToTop() {
-            // Cek posisi scroll dari elemen target
-            if (scrollableElement.scrollTop > 100) { // Nilai diubah menjadi 100
+            if (scrollableElement.scrollTop > 100) {
                 backToTopButton.style.display = 'flex';
             } else {
                 backToTopButton.style.display = 'none';

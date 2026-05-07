@@ -52,7 +52,6 @@
 
 </head>
 <body class="flex flex-col min-h-screen bg-moving">
-    <!-- Menghapus overflow-hidden dari app-container -->
     <div id="app-container" class="flex h-screen">
         <!-- Sidebar - Dimulai dengan lebar default W-72 -->
         <aside id="sidebar" class="w-68 bg-gray-800 text-white flex flex-col shadow-lg transition-all duration-300 ease-in-out rounded-r-md">
@@ -61,24 +60,29 @@
                     <img src="<?php echo e(asset('images/logoputih.png')); ?>" alt="Logo Bank Kota Bogor" class="h-11 w-auto">
                 </div>
             </div>
-
-            <!-- Menghapus overflow-y-auto dari sidebar-content -->
             <nav id="sidebar-content" class="flex-1 px-2 py-4 space-y-2">
-                <!-- Judul Navigasi Dinamis Berdasarkan Jabatan -->
-                    <?php
-                        // Ambil nama jabatan asli dari database untuk ditampilkan jika perlu
-                        $namaJabatanHRO = auth()->user()->jabatan->nama_jabatan ?? 'Human Resources Officer';
-                    ?>
+                <?php
+                    // Mengambil nama jabatan secara dinamis dari user yang sedang login
+                    $namaJabatanAsli = auth()->user()->jabatan->nama_jabatan ?? 'Jabatan Tidak Ditemukan';
 
-                    <div class="flex flex-col pt-3 pb-3">
-                        <span class="text-[10px] font-bold uppercase tracking-[0.15em] text-amber-400 opacity-80">
-                            Akses Level
-                        </span>
-                        <span class="text-xs font-extrabold uppercase tracking-wider text-white mt-0.5 break-words leading-tight">
-                            
-                            Human Resources Officer (HRO)
-                        </span>
-                    </div>
+                    // Normalisasi: jika mengandung "skk" atau "kepatuhan", kita seragamkan tulisannya
+                    if (str_contains(strtolower($namaJabatanAsli), 'hro') || str_contains(strtolower($namaJabatanAsli), 'human')) {
+                        $jabatanTampil = 'Human Resource Officer (HRO)';
+                    } else {
+                        $jabatanTampil = $namaJabatanAsli;
+                    }
+                ?>
+
+                <!-- Informasi Akses Level -->
+                <div class="flex flex-col px-4 py-2.5 bg-emerald-900/40 rounded-xl border border-emerald-800/50 mb-2 shadow-inner">
+                    <span class="text-[10px] font-bold uppercase tracking-[0.15em] text-amber-500">
+                        Akses Level
+                    </span>
+                    <span class="text-sm font-bold uppercase tracking-wide text-white mt-0.5 break-words leading-tight">
+                        <?php echo e($jabatanTampil); ?>
+
+                    </span>
+                </div>
 
                 <!-- Garis Pemisah Tipis agar Rapi -->
                 <div class="h-[1px] w-full bg-white shadow-md"></div>
@@ -153,7 +157,6 @@
                 <!-- Bagian Absensi Saya -->
                 <div class="text-xs font-semibold uppercase tracking-wider text-white pt-3 sidebar-text">Absensi</div>
                     <div class="relative group">
-                    <!-- Tombol Induk (Area hover yang memicu flyout) -->
                     <a href="#" class="flex items-center justify-between p-3 text-xs font-medium rounded-lg hover:bg-amber-500 hover:text-white transition duration-150 cursor-pointer">
                         <span class="flex items-center">
                             <!-- Icon Utama -->
@@ -165,7 +168,6 @@
                     </a>
                 </div>
 
-                <!-- Bagian Laporan -->
                 <!-- BAGIAN LAPORAN -->
                 <div class="text-xs font-semibold uppercase tracking-wider text-white pt-3 sidebar-text">Laporan</div>
                 <div class="relative group" id="laporan-menu-container">

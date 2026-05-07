@@ -311,7 +311,6 @@
                                 @foreach ($breadcrumbs as $title => $url)
                                     <li class="inline-flex items-center">
                                         @if(!$loop->first)
-                                            <!-- Mengurangi margin pemisah agar lebih rapat dan pas -->
                                             <span class="mx-1.5 text-emerald-300">/</span>
                                         @endif
 
@@ -356,7 +355,6 @@
 
     </div>
 
-    {{-- Tautan JavaScript yang benar --}}
     <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
     <script>
         function updateJam() {
@@ -367,11 +365,7 @@
 
             document.getElementById('jam-dinamis').innerText = `${jam}:${menit}:${detik}`;
         }
-
-        // Jalankan fungsi setiap 1 detik
         setInterval(updateJam, 1000);
-
-        // Jalankan langsung saat halaman dimuat
         updateJam();
     </script>
 

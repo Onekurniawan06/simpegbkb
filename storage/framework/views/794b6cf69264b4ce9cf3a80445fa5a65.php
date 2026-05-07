@@ -3,8 +3,7 @@
     <div class="bg-white rounded-l-md shadow-md border border-gray-200 overflow-hidden">
 
         <!-- Header: Solid Midnight Blue (Tetap) -->
-        <div class="px-8 py-6 text-white shrink-0 shadow-sm" 
-     style="background: linear-gradient(to right, #f97316, #fdba74);">
+        <div class="px-8 py-6 text-white shrink-0 shadow-sm" style="background: linear-gradient(to right, #f97316, #fdba74);">
         <h2 class="text-xl font-bold tracking-tight" style="color: white !important;"><?php echo e(__('Ubah Kata Sandi')); ?></h2>
         <p class="text-orange-50 text-sm mt-1 opacity-90">Sistem keamanan akun Anda adalah prioritas utama kami.</p>
     </div>

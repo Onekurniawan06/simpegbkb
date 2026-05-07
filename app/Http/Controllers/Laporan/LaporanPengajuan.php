@@ -161,7 +161,6 @@ class LaporanPengajuan extends Controller
                 ->join('pegawai as p', 'main.nomor_urut_pegawai', '=', 'p.nomor_urut_pegawai')
                 ->join('pekerjaan as pek', 'p.nomor_urut_pegawai', '=', 'pek.nomor_urut_pegawai')
                 ->join('divisi as d', 'pek.id_divisi', '=', 'd.id_divisi')
-                // KUNCI: Hanya data yang pernah di-approve oleh atasan ini
                 ->whereExists(function ($query) use ($cfg, $user) {
                     $query->select(\DB::raw(1))
                         ->from($cfg['log'] . ' as log')
