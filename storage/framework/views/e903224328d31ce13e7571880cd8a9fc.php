@@ -2,148 +2,158 @@
 
 
 
-<script src="https://unpkg.com" defer></script>
-
 <div x-data="{
     search: '',
     status: '',
-    
     filterRow(nama, nup, statusRow) {
         const keyword = this.search.toLowerCase();
         const matchSearch = nama.toLowerCase().includes(keyword) || nup.toString().includes(keyword);
         const matchStatus = this.status === '' || statusRow === this.status;
         return matchSearch && matchStatus;
     }
-}" class="h-full w-full bg-gray-100 rounded-tl-md shadow-lg flex flex-col overflow-hidden">
+}" class="h-full w-full bg-[#f8fafc] rounded-xl shadow-2xl flex flex-col overflow-hidden border border-gray-200">
 
-    <!-- HEADER & STATISTIK (Tetap di Atas) -->
-    <div class="p-3 pb-2 pr-0">
-        <div class="mb-4 text-gray-800">
-            <h5 class="text-[11px] font-bold uppercase tracking-widest opacity-50">Total Pegawai</h5>
-            <h2 class="text-3xl font-black leading-none"><?php echo e($pegawaiDivisi->total()); ?> <span class="text-xs font-normal opacity-40">Pegawai</span></h2>
+    
+    <?php
+        $statusConfigs = [
+            'Pegawai Tetap' => ['bg' => 'bg-orange-50', 'text' => 'text-orange-700', 'border' => 'border-orange-200', 'dot' => 'bg-orange-500'],
+            'Pegawai Kontrak' => ['bg' => 'bg-amber-50', 'text' => 'text-amber-700', 'border' => 'border-amber-200', 'dot' => 'bg-amber-400'],
+            'Pegawai Harian Lepas' => ['bg' => 'bg-purple-50', 'text' => 'text-purple-700', 'border' => 'border-purple-200', 'dot' => 'bg-purple-500'],
+            'Pegawai Bulanan' => ['bg' => 'bg-emerald-50', 'text' => 'text-emerald-700', 'border' => 'border-emerald-200', 'dot' => 'bg-emerald-500'],
+            'Pegawai Alih Daya' => ['bg' => 'bg-blue-50', 'text' => 'text-blue-700', 'border' => 'border-blue-200', 'dot' => 'bg-blue-500']
+        ];
+    ?>
+
+    <!-- HEADER & STATISTIK -->
+    <div class="p-6 bg-white border-b border-gray-100 flex-none">
+        <div class="flex flex-col md:flex-row md:items-end justify-between mb-6 gap-4">
+            <div>
+                <h2 class="text-3xl font-extrabold text-slate-800 tracking-tight">
+                    <?php echo e($pegawaiDivisi->total()); ?> <span class="text-slate-400 font-light text-xl">Pegawai</span>
+                </h2>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="relative group">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fa fa-search text-slate-400 group-focus-within:text-blue-500 transition-colors"></i>
+                    </div>
+                    <input x-model="search" type="text" placeholder="Cari Nama atau NUP..."
+                        class="block w-full md:w-72 pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm transition-all focus:bg-white focus:ring-4 focus:ring-blue-50 focus:border-blue-400 outline-none">
+                </div>
+
+                
+                <select x-model="status" class="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm text-slate-600 outline-none hover:bg-white focus:ring-4 focus:ring-blue-50 transition-all cursor-pointer">
+                    <option value="">Semua Status</option>
+                    <?php $__currentLoopData = $statusConfigs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $label => $config): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                        <option value="<?php echo e($label); ?>"><?php echo e($label); ?></option>
+                    <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                </select>
+
+                <template x-if="search.length > 0 || status !== ''">
+                    <button @click="search = ''; status = ''" class="px-3 py-2 text-xs font-bold text-red-500 hover:bg-red-50 rounded-lg transition-colors">
+                        Reset
+                    </button>
+                </template>
+            </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-5 gap-3 pr-3 text-[11px]">
-            <?php
-                $statusConfigs = [
-                    'Pegawai Tetap' => 'border-orange-500',
-                    'Pegawai Kontrak' => 'border-yellow-400',
-                    'Pegawai Harian Lepas' => 'border-purple-500',
-                    'Pegawai Bulanan' => 'border-emerald-500',
-                    'Pegawai Alih Daya' => 'border-sky-500'
-                ];
-            ?>
-            <?php $__currentLoopData = $statusConfigs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $label => $borderClass): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-            <div class="bg-white p-3 rounded-xl border-l-4 <?php echo e($borderClass); ?> shadow-sm">
-                <span class="text-[10px] font-bold text-gray-400 uppercase leading-none"><?php echo e($label); ?></span>
-                <div class="flex items-baseline gap-1 mt-1">
-                    <span class="text-xl font-bold text-gray-700"><?php echo e($stats[$label] ?? 0); ?></span>
-                    <span class="text-[9px] text-gray-400">Orang</span>
+        <!-- STATS CARDS -->
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+            <?php $__currentLoopData = $statusConfigs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $label => $style): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+            <div class="bg-white p-4 rounded-2xl border <?php echo e($style['border']); ?> shadow-sm hover:shadow-md transition-shadow">
+                <div class="flex items-center gap-2 mb-2">
+                    <span class="w-2 h-2 rounded-full <?php echo e($style['dot']); ?>"></span>
+                    <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-none"><?php echo e($label); ?></span>
+                </div>
+                <div class="flex items-baseline gap-1">
+                    <span class="text-2xl font-black text-slate-800"><?php echo e($stats[$label] ?? 0); ?></span>
+                    <span class="text-[10px] text-slate-400 font-medium">Orang</span>
                 </div>
             </div>
             <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
         </div>
     </div>
 
-    <!-- CONTAINER UTAMA TABEL -->
-    <div class="flex-1 pl-0 pr-0 overflow-hidden mt-2">
-        <div class="bg-white border border-gray-200 border-r-0 border-b-0 h-full flex flex-col overflow-hidden">
+    <!-- AREA DATA TABEL DENGAN CUSTOM SCROLL -->
+    <div class="custom-scroll-area flex flex-col overflow-hidden">
+        <div class="flex-1 overflow-y-auto custom-scroll-container">
+            <table class="w-full text-left border-separate border-spacing-0">
+                <thead class="sticky top-0 z-30">
+                    <tr class="bg-white/95 backdrop-blur-md shadow-[0_1px_0_rgba(0,0,0,0.05)]">
+                        <th class="py-4 px-6 text-slate-500 text-[10px] uppercase font-bold tracking-widest border-b border-slate-100">Nomor Urut Pegawai</th>
+                        <th class="py-4 px-6 text-slate-500 text-[10px] uppercase font-bold tracking-widest border-b border-slate-100">Nama Pegawai</th>
+                        <th class="py-4 px-6 text-slate-500 text-[10px] uppercase font-bold tracking-widest border-b border-slate-100">Jabatan & Grade</th>
+                        <th class="py-4 px-6 text-slate-500 text-[10px] uppercase font-bold tracking-widest border-b border-slate-100">Status</th>
+                        <th class="py-4 px-6 text-center text-slate-500 text-[10px] uppercase font-bold tracking-widest border-b border-slate-100">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-50 bg-white">
+                    <?php $__currentLoopData = $pegawaiDivisi; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $p): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                    <tr x-show="filterRow('<?php echo e($p->nama); ?>', '<?php echo e($p->nomor_urut_pegawai); ?>', '<?php echo e($p->status_pegawai); ?>')"
+                        x-transition.opacity.duration.250ms
+                        class="hover:bg-blue-50/40 transition-colors group">
 
-            <!-- FILTER BAR (SEARCH NAMA/NUP & STATUS) -->
-            <div class="p-3 border-b border-gray-50 flex flex-wrap gap-3">
-                <div class="relative w-full md:w-64">
-                    <input x-model="search" type="text" placeholder="Cari Nama atau NUP..."
-                        class="w-full pl-4 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-lg text-xs outline-none focus:ring-1 focus:ring-blue-400 transition-all">
-                    <i class="fa fa-search absolute left-3 top-2.5 text-gray-300"></i>
-                </div>
+                        <td class="py-4 px-6">
+                            <span class="font-mono text-xs text-slate-400 group-hover:text-blue-600 transition-colors">#<?php echo e($p->nomor_urut_pegawai); ?></span>
+                        </td>
+                        <td class="py-4 px-6">
+                            <div class="flex flex-col">
+                                <span class="font-bold text-slate-700 text-sm tracking-tight"><?php echo e($p->nama); ?></span>
+                                <?php if(auth()->user()->level_id == 3): ?>
+                                    <span class="text-[10px] text-slate-400 italic font-medium"><?php echo e($p->divisi); ?></span>
+                                <?php endif; ?>
+                            </div>
+                        </td>
+                        <td class="py-4 px-6">
+                            <div class="text-sm text-slate-600 font-medium"><?php echo e($p->jabatan); ?></div>
+                            <div class="text-[10px] text-slate-400 font-medium"><?php echo e($p->pangkat); ?> • Grade <?php echo e($p->grade); ?></div>
+                        </td>
+                        <td class="py-4 px-6">
+                            <?php $currStyle = $statusStyles[$p->status_pegawai] ?? ['bg' => 'bg-gray-50', 'text' => 'text-gray-600', 'border' => 'border-gray-200']; ?>
+                            <span class="<?php echo e($currStyle['bg']); ?> <?php echo e($currStyle['text']); ?> text-[9px] px-2.5 py-1 rounded-md font-bold uppercase border <?php echo e($currStyle['border']); ?>">
+                                <?php echo e($p->status_pegawai); ?>
 
-                <select x-model="status" class="bg-gray-50 border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-500 outline-none hover:bg-gray-100 transition-colors">
-                    <option value="">Semua Status Pegawai</option>
-                    <?php $__currentLoopData = $statusConfigs; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $label => $class): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                        <option value="<?php echo e($label); ?>"><?php echo e($label); ?></option>
+                            </span>
+                        </td>
+                        <td class="py-4 px-6 text-center">
+                            <a href="<?php echo e(route('manager.pegawai.detail', $p->nomor_urut_pegawai)); ?>"
+                               class="inline-flex items-center gap-2 bg-white text-slate-700 border border-slate-200 px-4 py-2 rounded-xl text-xs font-bold hover:bg-[#001A4E] hover:text-white hover:border-[#001A4E] transition-all shadow-sm active:scale-95">
+                                Lihat Detail
+                            </a>
+                        </td>
+                    </tr>
                     <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                </select>
+                </tbody>
+            </table>
 
-                
-                <template x-if="search.length > 0 || status !== ''">
-                    <button @click="search = ''; status = ''" class="text-[10px] text-red-500 font-bold hover:underline">
-                        Reset Filter
-                    </button>
-                </template>
-            </div>
-
-            <!-- AREA DATA SCROLLABLE -->
-            <div class="flex-1 overflow-y-auto custom-scroll-container px-3">
-                <table class="w-full text-left border-collapse">
-                    <thead class="sticky top-0 z-30 bg-white">
-                        <tr class="text-gray-400 text-[10px] uppercase tracking-widest">
-                            <th class="py-4 pl-2 bg-white border-b border-gray-50 shadow-[0_1px_0_rgba(0,0,0,0.05)]">Nomor Urut Pegawai</th>
-                            <th class="py-4 bg-white border-b border-gray-50 shadow-[0_1px_0_rgba(0,0,0,0.05)]">Nama Pegawai</th>
-
-                            
-                            <?php if(auth()->user()->level_id == 3): ?>
-                                <th class="py-4 bg-white border-b border-gray-50 shadow-[0_1px_0_rgba(0,0,0,0.05)]">Divisi</th>
-                            <?php endif; ?>
-
-                            <th class="py-4 bg-white border-b border-gray-50 shadow-[0_1px_0_rgba(0,0,0,0.05)]">Jabatan</th>
-                            <th class="py-4 bg-white border-b border-gray-50 shadow-[0_1px_0_rgba(0,0,0,0.05)]">Pangkat / Grade</th>
-                            <th class="py-4 bg-white border-b border-gray-50 shadow-[0_1px_0_rgba(0,0,0,0.05)]">Status</th>
-                            <th class="py-4 text-center bg-white border-b border-gray-50 shadow-[0_1px_0_rgba(0,0,0,0.05)]">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php $__currentLoopData = $pegawaiDivisi; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $p): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                        
-                        <tr x-show="filterRow('<?php echo e($p->nama); ?>', '<?php echo e($p->nomor_urut_pegawai); ?>', '<?php echo e($p->status_pegawai); ?>')"
-                            x-transition:enter="transition ease-out duration-200"
-                            x-transition:enter-start="opacity-0 transform scale-95"
-                            x-transition:enter-end="opacity-100 transform scale-100"
-                            class="hover:bg-blue-50/30 transition-colors border-b border-gray-50 group">
-
-                            <td class="py-3 pl-2 text-gray-400 text-[12px] font-medium"><?php echo e($p->nomor_urut_pegawai); ?></td>
-                            <td class="py-3 font-bold text-gray-700 text-[12px]"><?php echo e($p->nama); ?></td>
-                            <td class="py-3 text-gray-500 text-[12px]"><?php echo e($p->jabatan); ?></td>
-                            <td class="py-3 text-gray-500 text-[12px]"><?php echo e($p->pangkat); ?> / <?php echo e($p->grade); ?></td>
-                            <td class="py-3">
-                                <span class="bg-orange-50 text-orange-600 text-[10px] px-2 py-1 rounded font-bold uppercase border border-orange-100">
-                                    <?php echo e($p->status_pegawai); ?>
-
-                                </span>
-                            </td>
-                            <td class="py-3 text-center">
-                                
-                                <a href="<?php echo e(route('manager.pegawai.detail', $p->nomor_urut_pegawai)); ?>"
-                                class="bg-[#001A4E] text-white px-3 py-1.5 rounded-lg text-[10px] font-bold hover:bg-blue-900 transition-all shadow-sm">
-                                    Lihat Detail
-                                </a>
-                            </td>
-                        </tr>
-                        <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-                    </tbody>
-                </table>
-
-                
-                <div x-cloak
-                    x-show="(search !== '' || status !== '') && $el.parentElement.querySelectorAll('tbody tr[x-show]:not([style*=\'display: none\'])').length === 0"
-                    class="py-20 text-center text-gray-300 flex flex-col items-center w-full">
-                    <i class="fa fa-user-slash text-4xl mb-2 opacity-20"></i>
-                    <p class="text-xs font-medium">Data pegawai tidak ditemukan untuk filter ini...</p>
-                    <button @click="search = ''; status = ''" class="mt-3 text-[10px] text-blue-500 hover:underline">
-                        Reset Filter
-                    </button>
+            <!-- EMPTY STATE -->
+            <div x-cloak x-show="(search !== '' || status !== '') && $el.parentElement.querySelectorAll('tbody tr[x-show]:not([style*=\'display: none\'])').length === 0"
+                 class="py-24 text-center">
+                <div class="bg-slate-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
+                    <i class="fa fa-user-slash text-2xl text-slate-200"></i>
                 </div>
+                <h3 class="text-slate-800 font-bold">Data Tidak Ditemukan</h3>
+                <p class="text-slate-400 text-xs mt-1">Coba sesuaikan kata kunci atau filter status</p>
             </div>
+        </div>
+    </div>
 
-            <!-- FOOTER PAGINATION (Tetap di Dasar) -->
-            <div class="p-4 pr-10 border-t border-gray-100 bg-white">
-                <div class="flex justify-end pagination-custom no-info">
-                    <?php echo e($pegawaiDivisi->links()); ?>
+    <!-- FOOTER PAGINATION -->
+    <div class="p-4 px-8 border-t border-slate-100 bg-white flex-none">
+        <div class="flex justify-between items-center">
+            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                Page <?php echo e($pegawaiDivisi->currentPage()); ?> of <?php echo e($pegawaiDivisi->lastPage()); ?>
 
-                </div>
+            </span>
+            <div class="pagination-custom no-info">
+                <?php echo e($pegawaiDivisi->links()); ?>
+
             </div>
         </div>
     </div>
 </div>
+
 
 <?php $__env->stopSection(); ?>
 

@@ -55,9 +55,9 @@
     <!-- Menghapus overflow-hidden dari app-container -->
     <div id="app-container" class="flex h-screen">
         <!-- Sidebar - Dimulai dengan lebar default W-72 -->
-        <aside id="sidebar" class="w-72 bg-emerald-950 text-white flex flex-col shadow-2xl transition-all duration-300 ease-in-out rounded-r-2xl border-r border-emerald-800/30 h-screen overflow-hidden">
+        <aside id="sidebar" class="w-72 bg-[#001A4E] text-white flex flex-col shadow-2xl transition-all duration-300 ease-in-out rounded-r-2xl border-r border-white/10 h-screen overflow-hidden">
             <!-- Header Logo -->
-            <div class="p-4 flex items-center justify-between h-20 border-b border-emerald-800/30">
+            <div class="p-4 flex items-center justify-between h-20 border-b border-white/10">
                 <div class="flex justify-center items-center w-full">
                     <img src="{{ asset('images/logoputih.png') }}" alt="Logo Bank Kota Bogor" class="h-9 w-auto object-contain filter drop-shadow-md">
                 </div>
@@ -66,10 +66,7 @@
             <!-- Konten Navigasi -->
             <nav id="sidebar-content" class="flex-1 px-3 py-3 space-y-1 overflow-y-auto scrollbar-none">
                 @php
-                    // Mengambil nama jabatan secara dinamis dari user yang sedang login
                     $namaJabatanAsli = auth()->user()->jabatan->nama_jabatan ?? 'Jabatan Tidak Ditemukan';
-
-                    // Normalisasi: jika mengandung "skk" atau "kepatuhan", kita seragamkan tulisannya
                     if (str_contains(strtolower($namaJabatanAsli), 'skk') || str_contains(strtolower($namaJabatanAsli), 'kepatuhan')) {
                         $jabatanTampil = 'Kepala Satker Kepatuhan & M.R.';
                     } else {
@@ -78,46 +75,46 @@
                 @endphp
 
                 <!-- Informasi Akses Level -->
-                <div class="flex flex-col px-4 py-2.5 bg-emerald-900/40 rounded-xl border border-emerald-800/50 mb-2 shadow-inner">
-                    <span class="text-[10px] font-bold uppercase tracking-[0.15em] text-amber-500">
+                <div class="flex flex-col px-4 py-3 bg-white/5 rounded-xl border border-white/10 mb-3 shadow-inner">
+                    <span class="text-[10px] font-bold uppercase tracking-[0.15em] text-blue-400">
                         Akses Level
                     </span>
-                    <span class="text-sm font-bold uppercase tracking-wide text-white mt-0.5 break-words leading-tight">
+                    <span class="text-sm font-bold uppercase tracking-wide text-white mt-1 break-words leading-tight">
                         {{ $jabatanTampil }}
                     </span>
                 </div>
 
                 <!-- Menu Dashboard Utama -->
                 <a href="{{ auth()->user()->dashboard_link }}"
-                    class="flex items-center justify-between p-2.5 text-xs font-semibold rounded-xl hover:bg-amber-500 hover:text-white transition-all duration-200 group">
+                    class="flex items-center justify-between p-3 text-xs font-semibold rounded-xl hover:bg-blue-600 text-blue-100 hover:text-white transition-all duration-200 group">
                     <span class="flex items-center">
-                        <svg xmlns="http://w3.org" class="h-5 w-5 mr-3 text-amber-500 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <svg xmlns="http://w3.org" class="h-5 w-5 mr-3 text-blue-400 group-hover:text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2-2m0 0l7-7 7 7M19 10v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
                         </svg>
-                        <span class="sidebar-text whitespace-nowrap">Dashboard</span>
+                        <span class="sidebar-text whitespace-nowrap">Dashboard Utama</span>
                     </span>
                 </a>
 
                 <!-- Menu Manajemen Pengajuan -->
                 <div class="relative group">
-                    <button class="w-full flex items-center justify-between p-2.5 text-xs font-semibold rounded-xl hover:bg-amber-500 hover:text-white transition-all duration-200 cursor-pointer group">
+                    <button class="w-full flex items-center justify-between p-3 text-xs font-semibold rounded-xl hover:bg-blue-600 text-blue-100 hover:text-white transition-all duration-200 cursor-pointer group">
                         <span class="flex items-center">
-                            <svg xmlns="http://w3.org" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 mr-3 text-amber-500 group-hover:text-white transition-colors">
+                            <svg xmlns="http://w3.org" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 mr-3 text-blue-400 group-hover:text-white transition-colors">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6.429 9.75 2.25 12l4.179 2.25m0-4.5 5.571 3 5.571-3m-11.142 0L2.25 7.5 12 2.25l9.75 5.25-4.179 2.25m0 0L21.75 12l-4.179 2.25m0 0 4.179 2.25L12 21.75 2.25 16.5l4.179-2.25m11.142 0-5.571 3-5.571-3" />
                             </svg>
                             <span class="sidebar-text whitespace-nowrap">Manajemen Pengajuan</span>
                         </span>
-                        <svg xmlns="http://w3.org" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 text-white/50 group-hover:text-white transform group-hover:rotate-45 transition-transform duration-200">
+                        <svg xmlns="http://w3.org" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-4 w-4 text-white/30 group-hover:text-white transform group-hover:rotate-45 transition-transform duration-200">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v6m3-3H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                     </button>
 
                     <!-- Submenu Dropdown -->
-                    <div class="max-h-0 overflow-hidden group-hover:max-h-40 transition-all duration-300 ease-in-out bg-emerald-900/30 rounded-lg mx-1 border border-emerald-800/30">
-                        <a href="{{ route('skkmr.pengajuanskkmr') }}" class="block p-2 text-xs font-semibold text-white/80 hover:bg-amber-500/10 hover:text-amber-500 transition-colors border-b border-emerald-800/20 pl-11">
+                    <div class="max-h-0 overflow-hidden group-hover:max-h-40 transition-all duration-300 ease-in-out bg-white/5 rounded-lg mx-1 border border-white/5 mt-1">
+                        <a href="{{ route('skkmr.pengajuanskkmr') }}" class="block p-2 text-[11px] font-medium text-blue-100/70 hover:bg-blue-500/20 hover:text-blue-400 transition-colors border-b border-white/5 pl-11">
                             Pengajuan Saya
                         </a>
-                        <a href="{{ route('skkmr.manajemenpengajuan') }}" class="block p-2 text-xs font-semibold text-white/80 hover:bg-amber-500/10 hover:text-amber-500 transition-colors pl-11">
+                        <a href="{{ route('skkmr.manajemenpengajuan') }}" class="block p-2 text-[11px] font-medium text-blue-100/70 hover:bg-blue-500/20 hover:text-blue-400 transition-colors pl-11">
                             Approval Pengajuan
                         </a>
                     </div>
@@ -125,27 +122,26 @@
 
                 <!-- Menu Data Pegawai -->
                 <div class="relative group">
-                    <a href="#" class="flex items-center justify-between p-2.5 text-xs font-semibold rounded-xl hover:bg-amber-500 hover:text-white transition-all duration-200 cursor-pointer">
+                    <a href="{{ route('pegawai.data') }}" class="flex items-center justify-between p-3 text-xs font-semibold rounded-xl hover:bg-blue-600 text-blue-100 hover:text-white transition-all duration-200 cursor-pointer">
                         <span class="flex items-center overflow-hidden">
-                            <svg xmlns="http://w3.org" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 mr-3 text-amber-500 group-hover:text-white transition-colors shrink-0">
+                            <svg xmlns="http://w3.org" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 mr-3 text-blue-400 group-hover:text-white transition-colors shrink-0">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 0 1-2.25 2.25M16.5 7.5V18a2.25 2.25 0 0 0 2.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 0 0 2.25 2.25h13.5M6 7.5h3v3H6v-3Z" />
                             </svg>
-                            <span class="sidebar-text whitespace-nowrap overflow-hidden text-ellipsis">Data Pegawai
-                            </span>
+                            <span class="sidebar-text whitespace-nowrap overflow-hidden text-ellipsis text-white">Data Pegawai</span>
                         </span>
                     </a>
                 </div>
 
                 <!-- Divider Sub-Judul -->
-                <div class="px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-[0.15em] text-emerald-400/70 sidebar-text">
+                <div class="px-3 pt-5 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-blue-400/50 sidebar-text">
                     Menu Operasional
                 </div>
 
                 <!-- Menu Absensi -->
                 <div class="relative group">
-                    <a href="#" class="flex items-center justify-between p-2.5 text-xs font-semibold rounded-xl hover:bg-amber-500 hover:text-white transition-all duration-200 cursor-pointer">
-                        <span class="flex items-center">
-                            <svg xmlns="http://w3.org" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 mr-3 text-amber-500 group-hover:text-white transition-colors">
+                    <a href="#" class="flex items-center justify-between p-3 text-xs font-semibold rounded-xl hover:bg-blue-600 text-blue-100 hover:text-white transition-all duration-200 cursor-pointer">
+                        <span class="flex items-center text-white">
+                            <svg xmlns="http://w3.org" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 mr-3 text-blue-400 group-hover:text-white transition-colors">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
                             </svg>
                             <span class="sidebar-text whitespace-nowrap">Data Absensi Saya</span>
@@ -153,30 +149,28 @@
                     </a>
                 </div>
 
-                <!-- Divider Sub-Judul -->
-                <div class="px-3 pt-3 pb-1 text-[10px] font-bold uppercase tracking-[0.15em] text-emerald-400/70 sidebar-text">
+                        {{-- Menu Laporan --}}
+                <div class="px-3 pt-5 pb-2 text-[10px] font-black uppercase tracking-[0.2em] text-blue-400/50 sidebar-text">
                     Laporan
                 </div>
 
                 <!-- Menu Laporan Absensi Pegawai -->
-                <a href="#" class="flex items-center justify-between p-2.5 text-xs font-semibold rounded-xl hover:bg-amber-500 hover:text-white transition-all duration-200 cursor-pointer group">
+                <a href="#" class="flex items-center justify-between p-3 text-xs font-semibold rounded-xl hover:bg-blue-600 text-blue-100 hover:text-white transition-all duration-200 cursor-pointer group">
                     <span class="flex items-center overflow-hidden">
-                        <svg xmlns="http://w3.org" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 mr-3 text-amber-500 group-hover:text-white transition-colors shrink-0">
+                        <svg xmlns="http://w3.org" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 mr-3 text-blue-400 group-hover:text-white transition-colors shrink-0">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 0 1 2.25-2.25h13.5A2.25 2.25 0 0 1 21 7.5v11.25m-18 0A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75m-18 0v-7.5A2.25 2.25 0 0 1 5.25 9h13.5A2.25 2.25 0 0 1 21 11.25v7.5m-9-6h.008v.008H12v-.008ZM12 15h.008v.008H12V15Zm0 2.25h.008v.008H12v-.008ZM9.75 15h.008v.008H9.75V15Zm0 2.25h.008v.008H9.75v-.008ZM7.5 15h.008v.008H7.5V15Zm0 2.25h.008v.008H7.5v-.008Zm6.75-4.5h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V15Zm0 2.25h.008v.008h-.008v-.008Zm2.25-4.5h.008v.008H16.5v-.008Zm0 2.25h.008v.008H16.5V15Z" />
                         </svg>
-                        <span class="sidebar-text whitespace-nowrap overflow-hidden text-ellipsis">Absensi Pegawai
-                        </span>
+                        <span class="sidebar-text whitespace-nowrap overflow-hidden text-ellipsis text-white">Absensi Pegawai</span>
                     </span>
                 </a>
 
                 <!-- Menu Laporan Pengajuan Pegawai -->
-                <a href="{{ route('laporan.index') }}" class="flex items-center justify-between p-2.5 text-xs font-semibold rounded-xl hover:bg-amber-500 hover:text-white transition-all duration-200 cursor-pointer group">
+                <a href="{{ route('laporan.index') }}" class="flex items-center justify-between p-3 text-xs font-semibold rounded-xl hover:bg-blue-600 text-blue-100 hover:text-white transition-all duration-200 cursor-pointer group">
                     <span class="flex items-center overflow-hidden">
-                        <svg xmlns="http://w3.org" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 mr-3 text-amber-500 group-hover:text-white transition-colors shrink-0">
+                        <svg xmlns="http://w3.org" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="h-5 w-5 mr-3 text-blue-400 group-hover:text-white transition-colors shrink-0">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25M9 16.5v.75m3-3v3M15 12v5.25m-4.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
                         </svg>
-                        <span class="sidebar-text whitespace-nowrap overflow-hidden text-ellipsis">Pengajuan Pegawai
-                        </span>
+                        <span class="sidebar-text whitespace-nowrap overflow-hidden text-ellipsis text-white">Pengajuan Pegawai</span>
                     </span>
                 </a>
             </nav>

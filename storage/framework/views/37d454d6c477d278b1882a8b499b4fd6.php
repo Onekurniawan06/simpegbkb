@@ -44,7 +44,7 @@
     <!-- Filter & Table Container -->
     <div class="bg-white rounded-lg shadow-sm border border-gray-100 flex flex-col h-full overflow-hidden">
 
-        <!-- Bagian Form Filter (Tinggi tetap sesuai konten) -->
+        <!-- Bagian Form Filter -->
         <form action="" method="GET" class="p-3 border-b bg-white shadow-sm rounded-t-lg flex-none">
             <div class="flex items-end gap-2 flex-wrap md:flex-nowrap">
                 <!-- Pencarian -->
@@ -66,7 +66,7 @@
                     </select>
                 </div>
 
-                <!-- ➕ Filter Divisi -->
+                <!-- Filter Divisi -->
                 <div class="w-36">
                     <label class="text-[10px] font-bold text-gray-400 uppercase mb-0.5 block ml-1">Divisi</label>
                     <select name="divisi_filter" class="text-[11px] border border-gray-200 rounded-md px-2 w-full h-8 outline-none bg-white cursor-pointer">
@@ -288,10 +288,6 @@
 </div>
 
 
-
-
-
-
 <?php $__env->startPush('scripts'); ?>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -304,8 +300,7 @@
         }
 
         function toggleBackToTop() {
-            // Cek posisi scroll dari elemen target
-            if (scrollableElement.scrollTop > 100) { // Nilai diubah menjadi 100
+            if (scrollableElement.scrollTop > 100) {
                 backToTopButton.style.display = 'flex';
             } else {
                 backToTopButton.style.display = 'none';
