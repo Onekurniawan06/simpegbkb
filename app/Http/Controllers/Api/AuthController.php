@@ -31,6 +31,7 @@ class AuthController extends Controller
             ->where('nomor_urut_pegawai', $userAuth->nomor_urut_pegawai)
             ->with('divisi')
             ->with('jabatan')
+            ->with('level')
             ->first();
 
         return response()->json([

@@ -95,7 +95,7 @@ class PengajuanCuti extends Model
 
     public function logs(): HasMany {
         return $this->hasMany(LogPersetujuanCuti::class, 'id_cuti', 'id_cuti')
-                    ->orderByDesc('updated_at');
+                    ->orderBy('id');
     }
 
     public function user(): BelongsTo

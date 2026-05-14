@@ -50,6 +50,10 @@ class User extends Authenticatable
         'remember_token',
     ];
 
+    protected $appends = [
+        'role',
+    ];
+
     /**
      * Get the attributes that should be cast.
      *
@@ -61,6 +65,28 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];
+    }
+
+    public function getRoleAttribute()
+    {
+        $role = 'pegawai';
+        if ((int) $this->jabatan_id === 12) {
+            $role = 'direkturUtama';
+        } elseif ((int) $this->jabatan_id === 11) {
+            $role = 'direkturOperasional';
+        } elseif ((int) $this->jabatan_id === 10) {
+            $role = 'direkturKepatuhan';
+        } elseif ((int) $this->jabatan_id === 16) {
+            $role = 'hro';
+        } elseif ((int) $this->jabatan_id === 19) {
+            $role = 'kepalaSKAudit';
+        } elseif ((int) $this->jabatan_id === 18) {
+            $role = 'kepalaSKKMR';
+        } elseif ((int) $this->level_id === 2) {
+            $role = 'manajer';
+        }
+
+        return $role;
     }
 
     public function pegawai()
