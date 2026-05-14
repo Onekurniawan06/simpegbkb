@@ -32,4 +32,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/approvals/manager/latest', [LeaveController::class, 'managerApprovalsLatest']);
     Route::get('/approvals/manager/summary', [LeaveController::class, 'managerApprovalsSummary']);
     Route::patch('/approvals/manager/{source}/{logId}', [LeaveController::class, 'managerUpdateApproval']);
+
+    Route::get('/approvals/{level}', [LeaveController::class, 'approvals']);
+    Route::get('/approvals/{level}/latest', [LeaveController::class, 'approvalsLatest']);
+    Route::get('/approvals/{level}/summary', [LeaveController::class, 'approvalsSummary']);
+    Route::patch('/approvals/{level}/{source}/{logId}', [LeaveController::class, 'updateApproval']);
 });

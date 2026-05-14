@@ -440,8 +440,128 @@ class LeaveController extends Controller
 
     public function managerUpdateApproval(Request $request, string $source, int $logId)
     {
+        return $this->updateApproval($request, 'manager', $source, $logId);
+    }
+
+    public function approvals(Request $request, string $level)
+    {
         $user = $request->user();
-        if (!$this->isManagerUser($user)) {
+        $level = $this->normalizeApprovalLevel($level);
+
+        if (!$this->isApprovalUser($user, $level)) {
+            return response()->json([
+                'message' => 'Akses ditolak',
+                'data' => [],
+            ], 403);
+        }
+
+        $request->validate([
+            'source' => 'nullable|in:cuti,lembur',
+            'status' => 'nullable|in:pending,processed,all',
+            'per_page' => 'nullable|integer|min:1|max:100',
+        ]);
+
+        $source = $request->input('source');
+        $status = strtolower((string) $request->input('status', 'all'));
+        $perPage = (int) $request->input('per_page', 20);
+
+        $finalQuery = $this->buildApprovalsUnionQueryForLevel($user, $level, $source, $status);
+        if (!$finalQuery) {
+            return response()->json([
+                'message' => 'Data approval retrieved',
+                'data' => [],
+                'summary' => $this->buildApprovalsSummaryForLevel($user, $level),
+                'meta' => [
+                    'current_page' => 1,
+                    'last_page' => 1,
+                    'per_page' => $perPage,
+                    'total' => 0,
+                ],
+            ]);
+        }
+
+        $paginator = DB::table(DB::raw("({$finalQuery->toSql()}) as combined"))
+            ->mergeBindings($finalQuery)
+            ->orderBy('tanggal', 'desc')
+            ->paginate($perPage);
+
+        return response()->json([
+            'message' => 'Data approval retrieved',
+            'data' => $paginator->items(),
+            'summary' => $this->buildApprovalsSummaryForLevel($user, $level),
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
+        ]);
+    }
+
+    public function approvalsLatest(Request $request, string $level)
+    {
+        $user = $request->user();
+        $level = $this->normalizeApprovalLevel($level);
+
+        if (!$this->isApprovalUser($user, $level)) {
+            return response()->json([
+                'message' => 'Akses ditolak',
+                'data' => [],
+            ], 403);
+        }
+
+        $request->validate([
+            'source' => 'nullable|in:cuti,lembur',
+            'limit' => 'nullable|integer|min:1|max:10',
+        ]);
+
+        $source = $request->input('source');
+        $limit = (int) $request->input('limit', 3);
+
+        $finalQuery = $this->buildPendingApprovalsUnionQueryForLevel($user, $level, $source);
+        if (!$finalQuery) {
+            return response()->json([
+                'message' => 'Data approval retrieved',
+                'data' => [],
+            ]);
+        }
+
+        $items = DB::table(DB::raw("({$finalQuery->toSql()}) as combined"))
+            ->mergeBindings($finalQuery)
+            ->orderBy('tanggal', 'desc')
+            ->limit($limit)
+            ->get();
+
+        return response()->json([
+            'message' => 'Data approval retrieved',
+            'data' => $items,
+        ]);
+    }
+
+    public function approvalsSummary(Request $request, string $level)
+    {
+        $user = $request->user();
+        $level = $this->normalizeApprovalLevel($level);
+
+        if (!$this->isApprovalUser($user, $level)) {
+            return response()->json([
+                'message' => 'Akses ditolak',
+                'data' => [],
+            ], 403);
+        }
+
+        return response()->json([
+            'message' => 'Approval summary retrieved',
+            'data' => $this->buildApprovalsSummaryForLevel($user, $level),
+        ]);
+    }
+
+    public function updateApproval(Request $request, string $level, string $source, int $logId)
+    {
+        $user = $request->user();
+        $level = $this->normalizeApprovalLevel($level);
+
+        if (!$this->isApprovalUser($user, $level)) {
             return response()->json([
                 'message' => 'Akses ditolak',
                 'data' => [],
@@ -469,7 +589,7 @@ class LeaveController extends Controller
 
         $validated = $request->validate($rules);
 
-        $result = DB::transaction(function () use ($validated, $user, $source, $logId) {
+        $result = DB::transaction(function () use ($validated, $user, $level, $source, $logId) {
             $tabelLog = $source === 'cuti' ? 'log_persetujuan_cuti' : 'log_persetujuan_lembur';
             $kolomStatus = $source === 'cuti' ? 'status_pengajuan' : 'status_persetujuan';
 
@@ -497,10 +617,18 @@ class LeaveController extends Controller
             $pemohonDivisi = DB::table('pegawai as p')
                 ->join('pekerjaan as pek', 'p.nomor_urut_pegawai', '=', 'pek.nomor_urut_pegawai')
                 ->where('p.nomor_urut_pegawai', $logLama->nomor_urut_pegawai)
-                ->select('pek.id_divisi', 'pek.jabatan')
+                ->select('pek.id_divisi', 'pek.jabatan', 'p.level_id')
                 ->first();
 
-            if (!$pemohonDivisi || (int) $pemohonDivisi->id_divisi !== (int) $user->id_divisi) {
+            if (!$pemohonDivisi) {
+                return [
+                    'ok' => false,
+                    'code' => 404,
+                    'message' => 'Data pemohon tidak ditemukan',
+                ];
+            }
+
+            if ($level === 'manager' && (int) $pemohonDivisi->id_divisi !== (int) $user->id_divisi) {
                 return [
                     'ok' => false,
                     'code' => 403,
@@ -516,16 +644,18 @@ class LeaveController extends Controller
                 ];
             }
 
-            $role = DB::table('roles_mapping')
-                ->where('jabatan_id', $user->jabatan_id)
-                ->where('level_id', $user->level_id)
-                ->first();
+            $pemohonUser = DB::table('users')->where('nomor_urut_pegawai', $logLama->nomor_urut_pegawai)->first();
+            $isManagerPemohon = (int) ($pemohonUser->level_id ?? ($pemohonDivisi->level_id ?? 1)) === 2;
 
-            $namaTahapAksi = $role->role_name ?? 'Manager';
-            if (str_contains(strtolower($namaTahapAksi), 'manajer') || str_contains(strtolower($namaTahapAksi), 'manager')) {
-                $namaTahapAksi = 'Manager';
+            if (!$this->isLogStageAllowedForLevel($level, $source, (string) ($logLama->tahap_persetujuan ?? ''), $isManagerPemohon)) {
+                return [
+                    'ok' => false,
+                    'code' => 403,
+                    'message' => 'Akses ditolak',
+                ];
             }
 
+            $namaTahapAksi = $this->resolveTahapAksiName($user, $level);
             $teksDefault = ($validated['status'] === 'disetujui')
                 ? 'Disetujui oleh ' . $namaTahapAksi
                 : 'Ditolak oleh ' . $namaTahapAksi;
@@ -600,18 +730,16 @@ class LeaveController extends Controller
                 ];
             }
 
-            $pemohonUser = DB::table('users')->where('nomor_urut_pegawai', $logLama->nomor_urut_pegawai)->first();
-            $isManagerPemohon = ($pemohonUser && (int) ($pemohonUser->level_id ?? 1) === 2);
             $jabatanPemohonLower = strtolower((string) ($pemohonDivisi->jabatan ?? ''));
 
             if ($source === 'lembur') {
                 $isAudit = str_contains($jabatanPemohonLower, 'audit') || str_contains($jabatanPemohonLower, 'skai');
                 if ($isAudit) {
-                    $flow = ['Pengajuan Awal', 'Kepala SK Audit', 'Kepala SKK & SKKMR', 'Direktur Operasional', 'HRO'];
+                    $flow = ['Pengajuan Awal', 'Kepala SK Audit', 'Kepala SKK & SKKMR', 'Direktur Kepatuhan', 'Direktur Operasional', 'HRO'];
                 } elseif ($isManagerPemohon) {
-                    $flow = ['Pengajuan Awal', 'Kepala SKK & SKKMR', 'Direktur Operasional', 'HRO'];
+                    $flow = ['Pengajuan Awal', 'Kepala SKK & SKKMR', 'Direktur Kepatuhan', 'Direktur Operasional', 'HRO'];
                 } else {
-                    $flow = ['Pengajuan Awal', 'Manager', 'Kepala SKK & SKKMR', 'Direktur Operasional', 'HRO'];
+                    $flow = ['Pengajuan Awal', 'Manager', 'Kepala SKK & SKKMR', 'Direktur Kepatuhan', 'Direktur Operasional', 'HRO'];
                 }
             } else {
                 $flow = $isManagerPemohon ? ['Pengajuan Awal', 'Direktur Operasional', 'HRO'] : ['Pengajuan Awal', 'Manager', 'Direktur Operasional', 'HRO'];
@@ -649,8 +777,7 @@ class LeaveController extends Controller
                     'komentar' => $komentarFinal,
                 ]));
 
-                $isNextSelf = ($nextTahap === 'Manager' && $namaTahapAksi === 'Manager');
-                if ($isNextSelf) {
+                if ($nextTahap === $namaTahapAksi) {
                     $nextTahap = $flow[$currentIndex + 2] ?? 'Selesai';
                 }
             }
@@ -712,6 +839,617 @@ class LeaveController extends Controller
             'message' => $result['message'],
             'data' => $result['data'],
         ], 200);
+    }
+
+    private function normalizeApprovalLevel(string $level): string
+    {
+        $level = strtolower(trim($level));
+        $allowed = [
+            'manager',
+            'skkmr',
+            'audit',
+            'direktur-operasional',
+            'direktur-kepatuhan',
+            'hro',
+        ];
+
+        return in_array($level, $allowed, true) ? $level : 'unknown';
+    }
+
+    private function isApprovalUser($user, string $level): bool
+    {
+        if ($level === 'unknown') {
+            return false;
+        }
+
+        if ($level === 'manager') {
+            return $this->isManagerUser($user);
+        }
+
+        $mapping = DB::table('roles_mapping')
+            ->where('jabatan_id', $user->jabatan_id)
+            ->where('level_id', $user->level_id)
+            ->first();
+
+        $roleName = strtolower((string) ($mapping->role_name ?? ''));
+        $routeName = strtolower((string) ($mapping->route_name ?? ''));
+        $jabatanId = (int) ($user->jabatan_id ?? 0);
+
+        return match ($level) {
+            'hro' => $jabatanId === 16 || str_contains($roleName, 'hro') || str_contains($roleName, 'human resources') || str_contains($routeName, 'hro'),
+            'direktur-operasional' => $jabatanId === 11 || str_contains($roleName, 'direktur operasional'),
+            'direktur-kepatuhan' => $jabatanId === 10 || str_contains($roleName, 'direktur kepatuhan'),
+            'audit' => $jabatanId === 19 || str_contains($roleName, 'audit') || str_contains($roleName, 'skai'),
+            'skkmr' => $jabatanId === 18 || str_contains($roleName, 'kepala skk') || str_contains($roleName, 'kepatuhan'),
+            default => false,
+        };
+    }
+
+    private function resolveTahapAksiName($user, string $level): string
+    {
+        $mapping = DB::table('roles_mapping')
+            ->where('jabatan_id', $user->jabatan_id)
+            ->where('level_id', $user->level_id)
+            ->first();
+
+        $roleName = (string) ($mapping->role_name ?? '');
+        $lower = strtolower($roleName);
+
+        if ($level === 'manager') {
+            return 'Manager';
+        }
+        if ($level === 'skkmr') {
+            return 'Kepala SKK & SKKMR';
+        }
+        if ($level === 'audit') {
+            return 'Kepala SK Audit';
+        }
+        if ($level === 'hro') {
+            return 'HRO';
+        }
+        if ($level === 'direktur-operasional') {
+            return 'Direktur Operasional';
+        }
+        if ($level === 'direktur-kepatuhan') {
+            return 'Direktur Kepatuhan';
+        }
+
+        if ($roleName !== '') {
+            if (str_contains($lower, 'direktur operasional')) {
+                return 'Direktur Operasional';
+            }
+            if (str_contains($lower, 'direktur kepatuhan')) {
+                return 'Direktur Kepatuhan';
+            }
+            if (str_contains($lower, 'direktur utama')) {
+                return 'Direktur Utama';
+            }
+            if (str_contains($lower, 'hro') || str_contains($lower, 'human resources')) {
+                return 'HRO';
+            }
+            if (str_contains($lower, 'skk') || str_contains($lower, 'kepatuhan')) {
+                return 'Kepala SKK & SKKMR';
+            }
+            if (str_contains($lower, 'audit') || str_contains($lower, 'skai')) {
+                return 'Kepala SK Audit';
+            }
+        }
+
+        return 'Penyetuju';
+    }
+
+    private function isLogStageAllowedForLevel(string $level, string $source, string $tahap, bool $isManagerPemohon): bool
+    {
+        $tahapLower = strtolower($tahap);
+
+        if ($level === 'manager') {
+            if ($tahapLower === 'pengajuan awal') {
+                return !$isManagerPemohon;
+            }
+            return str_contains($tahapLower, 'manager') || str_contains($tahapLower, 'manajer') || str_contains($tahapLower, 'audit') || str_contains($tahapLower, 'skai');
+        }
+
+        if ($level === 'skkmr') {
+            if ($source !== 'lembur') {
+                return false;
+            }
+            if ($tahapLower === 'pengajuan awal') {
+                return $isManagerPemohon;
+            }
+            return str_contains($tahapLower, 'kepala skk') || str_contains($tahapLower, 'kepatuhan');
+        }
+
+        if ($level === 'audit') {
+            if ($source !== 'lembur') {
+                return false;
+            }
+            return str_contains($tahapLower, 'audit');
+        }
+
+        if ($level === 'direktur-operasional') {
+            if ($tahapLower === 'pengajuan awal') {
+                return $source === 'cuti' && $isManagerPemohon;
+            }
+            return str_contains($tahapLower, 'direktur operasional');
+        }
+
+        if ($level === 'direktur-kepatuhan') {
+            if ($source !== 'lembur') {
+                return false;
+            }
+            return str_contains($tahapLower, 'direktur kepatuhan');
+        }
+
+        if ($level === 'hro') {
+            return str_contains($tahapLower, 'hro') || str_contains($tahapLower, 'human resources');
+        }
+
+        return false;
+    }
+
+    private function buildPendingApprovalsUnionQueryForLevel($user, string $level, ?string $source)
+    {
+        $queries = [];
+
+        if ((!$source || $source === 'cuti') && $this->levelAllowsSource($level, 'cuti')) {
+            $queries[] = $this->buildPendingApprovalsQuery($user, $level, 'cuti');
+        }
+
+        if ((!$source || $source === 'lembur') && $this->levelAllowsSource($level, 'lembur')) {
+            $queries[] = $this->buildPendingApprovalsQuery($user, $level, 'lembur');
+        }
+
+        if (empty($queries)) {
+            return null;
+        }
+
+        $finalQuery = array_shift($queries);
+        foreach ($queries as $u) {
+            $finalQuery->unionAll($u);
+        }
+
+        return $finalQuery;
+    }
+
+    private function buildProcessedApprovalsUnionQueryForLevel($user, string $level, ?string $source)
+    {
+        $queries = [];
+
+        if ((!$source || $source === 'cuti') && $this->levelAllowsSource($level, 'cuti')) {
+            $queries[] = $this->buildProcessedApprovalsQuery($user, $level, 'cuti');
+        }
+
+        if ((!$source || $source === 'lembur') && $this->levelAllowsSource($level, 'lembur')) {
+            $queries[] = $this->buildProcessedApprovalsQuery($user, $level, 'lembur');
+        }
+
+        if (empty($queries)) {
+            return null;
+        }
+
+        $finalQuery = array_shift($queries);
+        foreach ($queries as $u) {
+            $finalQuery->unionAll($u);
+        }
+
+        return $finalQuery;
+    }
+
+    private function buildApprovalsUnionQueryForLevel($user, string $level, ?string $source, string $status)
+    {
+        $status = strtolower($status);
+
+        if ($status === 'pending') {
+            return $this->buildPendingApprovalsUnionQueryForLevel($user, $level, $source);
+        }
+
+        if ($status === 'processed') {
+            return $this->buildProcessedApprovalsUnionQueryForLevel($user, $level, $source);
+        }
+
+        if ($status === 'all') {
+            $pending = $this->buildPendingApprovalsUnionQueryForLevel($user, $level, $source);
+            $processed = $this->buildProcessedApprovalsUnionQueryForLevel($user, $level, $source);
+
+            if (!$pending) {
+                return $processed;
+            }
+
+            if (!$processed) {
+                return $pending;
+            }
+
+            $pending->unionAll($processed);
+            return $pending;
+        }
+
+        return null;
+    }
+
+    private function buildApprovalsSummaryForLevel($user, string $level): array
+    {
+        $pendingBySource = [];
+        $processedBySource = [];
+
+        foreach (['cuti', 'lembur'] as $source) {
+            if (!$this->levelAllowsSource($level, $source)) {
+                continue;
+            }
+
+            $pendingBySource[$source] = $this->buildPendingCountQuery($user, $level, $source)
+                ->distinct()
+                ->count($source === 'cuti' ? 'pc.id_cuti' : 'pl.id_lembur');
+
+            $processedBase = $this->buildProcessedCountQuery($user, $level, $source);
+            $processedTotal = (clone $processedBase)
+                ->distinct()
+                ->count($source === 'cuti' ? 'pc.id_cuti' : 'pl.id_lembur');
+
+            $processedDisetujui = (clone $processedBase)
+                ->where($source === 'cuti' ? 'log.status_pengajuan' : 'log.status_persetujuan', 'disetujui')
+                ->distinct()
+                ->count($source === 'cuti' ? 'pc.id_cuti' : 'pl.id_lembur');
+
+            $processedDitolak = (clone $processedBase)
+                ->where($source === 'cuti' ? 'log.status_pengajuan' : 'log.status_persetujuan', 'ditolak')
+                ->distinct()
+                ->count($source === 'cuti' ? 'pc.id_cuti' : 'pl.id_lembur');
+
+            $processedBySource[$source] = [
+                'total' => $processedTotal,
+                'disetujui' => $processedDisetujui,
+                'ditolak' => $processedDitolak,
+            ];
+        }
+
+        $pendingTotal = array_sum($pendingBySource);
+        $processedTotal = array_sum(array_map(fn ($v) => (int) ($v['total'] ?? 0), $processedBySource));
+
+        return [
+            'pending' => [
+                'total' => $pendingTotal,
+                'by_source' => $pendingBySource,
+            ],
+            'processed' => [
+                'total' => $processedTotal,
+                'by_source' => $processedBySource,
+            ],
+        ];
+    }
+
+    private function levelAllowsSource(string $level, string $source): bool
+    {
+        if ($source === 'cuti') {
+            return in_array($level, ['manager', 'direktur-operasional', 'hro'], true);
+        }
+
+        if ($source === 'lembur') {
+            return in_array($level, ['manager', 'skkmr', 'audit', 'direktur-operasional', 'direktur-kepatuhan', 'hro'], true);
+        }
+
+        return false;
+    }
+
+    private function buildPendingApprovalsQuery($user, string $level, string $source)
+    {
+        if ($source === 'cuti') {
+            $base = DB::table('log_persetujuan_cuti as log')
+                ->join('pengajuan_cuti as pc', 'log.id_cuti', '=', 'pc.id_cuti')
+                ->join('pegawai as p', 'log.nomor_urut_pegawai', '=', 'p.nomor_urut_pegawai')
+                ->join('pekerjaan as pek', 'p.nomor_urut_pegawai', '=', 'pek.nomor_urut_pegawai')
+                ->join('divisi as d', 'pek.id_divisi', '=', 'd.id_divisi')
+                ->where('log.status_pengajuan', 'diproses')
+                ->whereNull('log.nomor_urut_pegawai_penyetuju')
+                ->where('p.nomor_urut_pegawai', '!=', $user->nomor_urut_pegawai);
+
+            if ($level === 'manager') {
+                $base->where('pek.id_divisi', $user->id_divisi);
+            }
+
+            $this->applyTahapFilter($base, $level, $source, 'log', 'p');
+
+            $base->whereIn('log.id', function ($sub) use ($user, $level, $source) {
+                $sub->from('log_persetujuan_cuti as l2')
+                    ->join('pegawai as p2', 'l2.nomor_urut_pegawai', '=', 'p2.nomor_urut_pegawai')
+                    ->join('pekerjaan as pek2', 'p2.nomor_urut_pegawai', '=', 'pek2.nomor_urut_pegawai')
+                    ->where('l2.status_pengajuan', 'diproses')
+                    ->whereNull('l2.nomor_urut_pegawai_penyetuju')
+                    ->where('p2.nomor_urut_pegawai', '!=', $user->nomor_urut_pegawai);
+
+                if ($level === 'manager') {
+                    $sub->where('pek2.id_divisi', $user->id_divisi);
+                }
+
+                $this->applyTahapFilter($sub, $level, $source, 'l2', 'p2');
+
+                $sub->groupBy('l2.id_cuti')
+                    ->selectRaw('MAX(l2.id)');
+            });
+
+            return $base->select(
+                DB::raw("'cuti' as sumber"),
+                'pc.id_cuti as submission_id',
+                'log.id as log_id',
+                'log.updated_at as tanggal',
+                'log.tahap_persetujuan',
+                'log.status_pengajuan as status',
+                'p.nomor_urut_pegawai',
+                'p.nama',
+                'd.nama_divisi',
+                'pek.jabatan',
+                'pc.jenis_cuti',
+                'pc.tanggal_mulai',
+                'pc.tanggal_selesai',
+                'pc.jumlah_cuti',
+                DB::raw('null as tanggal_lembur'),
+                DB::raw('null as jam_mulai'),
+                DB::raw('null as jam_selesai'),
+                DB::raw('null as total_jam_lembur')
+            );
+        }
+
+        $base = DB::table('log_persetujuan_lembur as log')
+            ->join('pengajuan_lembur as pl', 'log.id_lembur', '=', 'pl.id_lembur')
+            ->join('pegawai as p', 'log.nomor_urut_pegawai', '=', 'p.nomor_urut_pegawai')
+            ->join('pekerjaan as pek', 'p.nomor_urut_pegawai', '=', 'pek.nomor_urut_pegawai')
+            ->join('divisi as d', 'pek.id_divisi', '=', 'd.id_divisi')
+            ->where('log.status_persetujuan', 'diproses')
+            ->whereNull('log.nomor_urut_pegawai_penyetuju')
+            ->where('p.nomor_urut_pegawai', '!=', $user->nomor_urut_pegawai);
+
+        if ($level === 'manager') {
+            $base->where('pek.id_divisi', $user->id_divisi);
+        }
+
+        $this->applyTahapFilter($base, $level, $source, 'log', 'p');
+
+        $base->whereIn('log.id', function ($sub) use ($user, $level, $source) {
+            $sub->from('log_persetujuan_lembur as l2')
+                ->join('pegawai as p2', 'l2.nomor_urut_pegawai', '=', 'p2.nomor_urut_pegawai')
+                ->join('pekerjaan as pek2', 'p2.nomor_urut_pegawai', '=', 'pek2.nomor_urut_pegawai')
+                ->where('l2.status_persetujuan', 'diproses')
+                ->whereNull('l2.nomor_urut_pegawai_penyetuju')
+                ->where('p2.nomor_urut_pegawai', '!=', $user->nomor_urut_pegawai);
+
+            if ($level === 'manager') {
+                $sub->where('pek2.id_divisi', $user->id_divisi);
+            }
+
+            $this->applyTahapFilter($sub, $level, $source, 'l2', 'p2');
+
+            $sub->groupBy('l2.id_lembur')
+                ->selectRaw('MAX(l2.id)');
+        });
+
+        return $base->select(
+            DB::raw("'lembur' as sumber"),
+            'pl.id_lembur as submission_id',
+            'log.id as log_id',
+            'log.updated_at as tanggal',
+            'log.tahap_persetujuan',
+            'log.status_persetujuan as status',
+            'p.nomor_urut_pegawai',
+            'p.nama',
+            'd.nama_divisi',
+            'pek.jabatan',
+            DB::raw('null as jenis_cuti'),
+            DB::raw('null as tanggal_mulai'),
+            DB::raw('null as tanggal_selesai'),
+            DB::raw('null as jumlah_cuti'),
+            'pl.tanggal_lembur',
+            'pl.jam_mulai',
+            'pl.jam_selesai',
+            'pl.total_jam_lembur'
+        );
+    }
+
+    private function buildProcessedApprovalsQuery($user, string $level, string $source)
+    {
+        if ($source === 'cuti') {
+            $base = DB::table('log_persetujuan_cuti as log')
+                ->join('pengajuan_cuti as pc', 'log.id_cuti', '=', 'pc.id_cuti')
+                ->join('pegawai as p', 'log.nomor_urut_pegawai', '=', 'p.nomor_urut_pegawai')
+                ->join('pekerjaan as pek', 'p.nomor_urut_pegawai', '=', 'pek.nomor_urut_pegawai')
+                ->join('divisi as d', 'pek.id_divisi', '=', 'd.id_divisi')
+                ->where('log.nomor_urut_pegawai_penyetuju', $user->nomor_urut_pegawai)
+                ->whereIn('log.status_pengajuan', ['disetujui', 'ditolak']);
+
+            if ($level === 'manager') {
+                $base->where('pek.id_divisi', $user->id_divisi);
+            }
+
+            $this->applyTahapFilter($base, $level, $source, 'log', 'p');
+
+            return $base->select(
+                DB::raw("'cuti' as sumber"),
+                'pc.id_cuti as submission_id',
+                'log.id as log_id',
+                'log.updated_at as tanggal',
+                'log.tahap_persetujuan',
+                'log.status_pengajuan as status',
+                'p.nomor_urut_pegawai',
+                'p.nama',
+                'd.nama_divisi',
+                'pek.jabatan',
+                'pc.jenis_cuti',
+                'pc.tanggal_mulai',
+                'pc.tanggal_selesai',
+                'pc.jumlah_cuti',
+                DB::raw('null as tanggal_lembur'),
+                DB::raw('null as jam_mulai'),
+                DB::raw('null as jam_selesai'),
+                DB::raw('null as total_jam_lembur')
+            );
+        }
+
+        $base = DB::table('log_persetujuan_lembur as log')
+            ->join('pengajuan_lembur as pl', 'log.id_lembur', '=', 'pl.id_lembur')
+            ->join('pegawai as p', 'log.nomor_urut_pegawai', '=', 'p.nomor_urut_pegawai')
+            ->join('pekerjaan as pek', 'p.nomor_urut_pegawai', '=', 'pek.nomor_urut_pegawai')
+            ->join('divisi as d', 'pek.id_divisi', '=', 'd.id_divisi')
+            ->where('log.nomor_urut_pegawai_penyetuju', $user->nomor_urut_pegawai)
+            ->whereIn('log.status_persetujuan', ['disetujui', 'ditolak']);
+
+        if ($level === 'manager') {
+            $base->where('pek.id_divisi', $user->id_divisi);
+        }
+
+        $this->applyTahapFilter($base, $level, $source, 'log', 'p');
+
+        return $base->select(
+            DB::raw("'lembur' as sumber"),
+            'pl.id_lembur as submission_id',
+            'log.id as log_id',
+            'log.updated_at as tanggal',
+            'log.tahap_persetujuan',
+            'log.status_persetujuan as status',
+            'p.nomor_urut_pegawai',
+            'p.nama',
+            'd.nama_divisi',
+            'pek.jabatan',
+            DB::raw('null as jenis_cuti'),
+            DB::raw('null as tanggal_mulai'),
+            DB::raw('null as tanggal_selesai'),
+            DB::raw('null as jumlah_cuti'),
+            'pl.tanggal_lembur',
+            'pl.jam_mulai',
+            'pl.jam_selesai',
+            'pl.total_jam_lembur'
+        );
+    }
+
+    private function buildPendingCountQuery($user, string $level, string $source)
+    {
+        if ($source === 'cuti') {
+            $q = DB::table('log_persetujuan_cuti as log')
+                ->join('pengajuan_cuti as pc', 'log.id_cuti', '=', 'pc.id_cuti')
+                ->join('pegawai as p', 'log.nomor_urut_pegawai', '=', 'p.nomor_urut_pegawai')
+                ->join('pekerjaan as pek', 'p.nomor_urut_pegawai', '=', 'pek.nomor_urut_pegawai')
+                ->where('log.status_pengajuan', 'diproses')
+                ->whereNull('log.nomor_urut_pegawai_penyetuju')
+                ->where('p.nomor_urut_pegawai', '!=', $user->nomor_urut_pegawai);
+
+            if ($level === 'manager') {
+                $q->where('pek.id_divisi', $user->id_divisi);
+            }
+
+            $this->applyTahapFilter($q, $level, $source, 'log', 'p');
+            return $q;
+        }
+
+        $q = DB::table('log_persetujuan_lembur as log')
+            ->join('pengajuan_lembur as pl', 'log.id_lembur', '=', 'pl.id_lembur')
+            ->join('pegawai as p', 'log.nomor_urut_pegawai', '=', 'p.nomor_urut_pegawai')
+            ->join('pekerjaan as pek', 'p.nomor_urut_pegawai', '=', 'pek.nomor_urut_pegawai')
+            ->where('log.status_persetujuan', 'diproses')
+            ->whereNull('log.nomor_urut_pegawai_penyetuju')
+            ->where('p.nomor_urut_pegawai', '!=', $user->nomor_urut_pegawai);
+
+        if ($level === 'manager') {
+            $q->where('pek.id_divisi', $user->id_divisi);
+        }
+
+        $this->applyTahapFilter($q, $level, $source, 'log', 'p');
+        return $q;
+    }
+
+    private function buildProcessedCountQuery($user, string $level, string $source)
+    {
+        if ($source === 'cuti') {
+            $q = DB::table('log_persetujuan_cuti as log')
+                ->join('pengajuan_cuti as pc', 'log.id_cuti', '=', 'pc.id_cuti')
+                ->join('pegawai as p', 'log.nomor_urut_pegawai', '=', 'p.nomor_urut_pegawai')
+                ->join('pekerjaan as pek', 'p.nomor_urut_pegawai', '=', 'pek.nomor_urut_pegawai')
+                ->where('log.nomor_urut_pegawai_penyetuju', $user->nomor_urut_pegawai)
+                ->whereIn('log.status_pengajuan', ['disetujui', 'ditolak']);
+
+            if ($level === 'manager') {
+                $q->where('pek.id_divisi', $user->id_divisi);
+            }
+
+            $this->applyTahapFilter($q, $level, $source, 'log', 'p');
+            return $q;
+        }
+
+        $q = DB::table('log_persetujuan_lembur as log')
+            ->join('pengajuan_lembur as pl', 'log.id_lembur', '=', 'pl.id_lembur')
+            ->join('pegawai as p', 'log.nomor_urut_pegawai', '=', 'p.nomor_urut_pegawai')
+            ->join('pekerjaan as pek', 'p.nomor_urut_pegawai', '=', 'pek.nomor_urut_pegawai')
+            ->where('log.nomor_urut_pegawai_penyetuju', $user->nomor_urut_pegawai)
+            ->whereIn('log.status_persetujuan', ['disetujui', 'ditolak']);
+
+        if ($level === 'manager') {
+            $q->where('pek.id_divisi', $user->id_divisi);
+        }
+
+        $this->applyTahapFilter($q, $level, $source, 'log', 'p');
+        return $q;
+    }
+
+    private function applyTahapFilter($query, string $level, string $source, string $logAlias, string $pegawaiAlias): void
+    {
+        if ($level === 'manager') {
+            $searchTahap = ['%Manager%', 'Pengajuan Awal', '%Audit%'];
+
+            $query->where(function ($q) use ($searchTahap, $logAlias) {
+                foreach ($searchTahap as $st) {
+                    if (str_contains($st, '%')) {
+                        $q->orWhere("{$logAlias}.tahap_persetujuan", 'LIKE', $st);
+                    } else {
+                        $q->orWhere("{$logAlias}.tahap_persetujuan", $st);
+                    }
+                }
+            });
+            return;
+        }
+
+        if ($level === 'skkmr') {
+            $query->where(function ($q) use ($logAlias, $pegawaiAlias) {
+                $q->orWhere("{$logAlias}.tahap_persetujuan", 'LIKE', 'Kepala SKK & SKKMR')
+                    ->orWhere("{$logAlias}.tahap_persetujuan", 'LIKE', 'Kepala Satker Kepatuhan & M.R.')
+                    ->orWhere(function ($sub) use ($logAlias, $pegawaiAlias) {
+                        $sub->where("{$logAlias}.tahap_persetujuan", 'Pengajuan Awal')
+                            ->where("{$pegawaiAlias}.level_id", 2);
+                    });
+            });
+
+            $query->where("{$logAlias}.tahap_persetujuan", 'NOT LIKE', '%Direktur%');
+            return;
+        }
+
+        if ($level === 'audit') {
+            $query->where("{$logAlias}.tahap_persetujuan", 'LIKE', '%Audit%');
+            return;
+        }
+
+        if ($level === 'direktur-operasional') {
+            $query->where(function ($q) use ($logAlias, $pegawaiAlias, $source) {
+                $q->orWhere("{$logAlias}.tahap_persetujuan", 'LIKE', '%Direktur Operasional%');
+                if ($source === 'cuti') {
+                    $q->orWhere(function ($sub) use ($logAlias, $pegawaiAlias) {
+                        $sub->where("{$logAlias}.tahap_persetujuan", 'Pengajuan Awal')
+                            ->where("{$pegawaiAlias}.level_id", 2);
+                    });
+                }
+            });
+            return;
+        }
+
+        if ($level === 'direktur-kepatuhan') {
+            $query->where("{$logAlias}.tahap_persetujuan", 'LIKE', '%Direktur Kepatuhan%');
+            return;
+        }
+
+        if ($level === 'hro') {
+            $query->where(function ($q) use ($logAlias) {
+                $q->orWhere("{$logAlias}.tahap_persetujuan", 'HRO')
+                    ->orWhere("{$logAlias}.tahap_persetujuan", 'LIKE', '%HRO%')
+                    ->orWhere("{$logAlias}.tahap_persetujuan", 'LIKE', '%Human Resources%');
+            });
+            return;
+        }
+
+        $query->whereRaw('1 = 0');
     }
 
     private function isManagerUser($user): bool
