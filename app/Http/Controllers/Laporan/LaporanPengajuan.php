@@ -9,240 +9,242 @@ use Barryvdh\DomPDF\Facade\Pdf;
 class LaporanPengajuan extends Controller
 {
     public function formLaporanPersetujuan(Request $request)
+{
+    $user = auth()->user();
+
+    // 1. Identifikasi Role & List Divisi
+    $listDivisi = \DB::table('divisi')->orderBy('nama_divisi', 'asc')->get();
+    $roleMapping = \DB::table('roles_mapping')
+        ->where('jabatan_id', $user->jabatan_id)
+        ->where('level_id', $user->level_id)
+        ->first();
+
+    $roleName = $roleMapping->role_name ?? 'Atasan';
+    $isManager = str_contains(strtolower($roleName), 'manager');
+
+    // 2. Konfigurasi Laporan (Status diambil dari tabel UTAMA)
+    $reportConfigs = [
+        ['tabel' => 'pengajuan_cuti',   'log' => 'log_persetujuan_cuti',   'label' => 'Cuti',         'slug' => 'cuti',    'st_col' => 'status_pengajuan', 'pk' => 'id_cuti'],
+        ['tabel' => 'pengajuan_lembur', 'log' => 'log_persetujuan_lembur', 'label' => 'Lembur',       'slug' => 'lembur',  'st_col' => 'status_lembur',    'pk' => 'id_lembur'],
+        ['tabel' => 'pengajuan_pensiun', 'log' => 'log_persetujuan_pensiun', 'label' => 'Pensiun',      'slug' => 'pensiun', 'st_col' => 'status_pensiun',   'pk' => 'id_pensiun'],
+        ['tabel' => 'pengajuan_pangkatgajitunjangan', 'log' => 'log_persetujuan_pangkatgajitunjangan', 'label' => 'Pangkat/Gaji', 'slug' => 'pangkat', 'st_col' => 'status_kenaikan', 'pk' => 'id_kenaikan'],
+    ];
+
+    $queries = [];
+    $totalDisetujui = 0; $totalDitolak = 0;
+    $detailDisetujui = []; $detailDitolak = [];
+
+    foreach ($reportConfigs as $cfg) {
+        // --- 3. BASE QUERY: Ambil dari tabel Utama (Main) ---
+        $baseQuery = \DB::table($cfg['tabel'] . ' as main')
+            ->join('pegawai as p', 'main.nomor_urut_pegawai', '=', 'p.nomor_urut_pegawai')
+            ->join('pekerjaan as pek', 'p.nomor_urut_pegawai', '=', 'pek.nomor_urut_pegawai')
+            ->join('divisi as d', 'pek.id_divisi', '=', 'd.id_divisi')
+            // KUNCI: Cek apakah User Login pernah memproses data ini di tabel Log
+            ->whereExists(function ($query) use ($cfg, $user) {
+                $query->select(\DB::raw(1))
+                    ->from($cfg['log'] . ' as log')
+                    ->whereColumn('log.' . $cfg['pk'], 'main.' . $cfg['pk'])
+                    ->where('log.nomor_urut_pegawai_penyetuju', $user->nomor_urut_pegawai)
+                    ->where('log.tahap_persetujuan', '!=', 'Pengajuan Awal');
+            })
+            // Ambil yang statusnya sudah final di tabel utama
+            ->whereIn('main.' . $cfg['st_col'], ['disetujui', 'ditolak']);
+
+        // Filter Filter
+        if ($isManager) { $baseQuery->where('pek.id_divisi', $user->id_divisi); }
+        if ($request->filled('divisi_filter')) { $baseQuery->where('d.nama_divisi', $request->divisi_filter); }
+        if ($request->filled('search')) {
+            $baseQuery->where(function($q) use ($request) {
+                $q->where('p.nama', 'like', '%' . $request->search . '%')
+                  ->orWhere('p.nomor_urut_pegawai', 'like', '%' . $request->search . '%');
+            });
+        }
+        if ($request->filled('status')) { $baseQuery->where('main.' . $cfg['st_col'], $request->status); }
+        if ($request->start_date && $request->end_date) {
+            $baseQuery->whereBetween(\DB::raw('DATE(main.created_at)'), [$request->start_date, $request->end_date]);
+        }
+
+        // --- 4. HITUNG STATISTIK ---
+        $countApprove = (clone $baseQuery)->where('main.' . $cfg['st_col'], 'disetujui')->count();
+        $countReject = (clone $baseQuery)->where('main.' . $cfg['st_col'], 'ditolak')->count();
+        $totalDisetujui += $countApprove; $totalDitolak += $countReject;
+        $detailDisetujui[] = ['label' => $cfg['label'], 'jumlah' => $countApprove];
+        $detailDitolak[] = ['label' => $cfg['label'], 'jumlah' => $countReject];
+
+        // --- 5. DINAMISASI KOLOM (Gunakan Main Table) ---
+        $jenisSql = match($cfg['slug']) {
+            'cuti' => 'main.jenis_cuti', 'pensiun', 'pangkat' => 'main.jenis_pengajuan', default => "'Lembur'"
+        };
+        $tglAwalSql = match($cfg['slug']) {
+            'cuti' => 'main.tanggal_mulai', 'lembur' => 'main.tanggal_lembur', 'pensiun' => 'main.tmt_pensiun', 'pangkat' => 'main.tmt_pegawai', default => 'main.created_at'
+        };
+        $tglAkhirSql = ($cfg['slug'] === 'cuti') ? 'main.tanggal_selesai' : 'NULL';
+        $jamLemburSql = ($cfg['slug'] === 'lembur') ? 'main.total_jam_lembur' : 'NULL';
+
+        $queries[] = $baseQuery->select(
+            'main.' . $cfg['pk'] . ' as id_transaksi',
+            'main.created_at as tanggal',
+            'p.nomor_urut_pegawai as nup', 'p.nama', 'd.nama_divisi', 'pek.jabatan',
+            \DB::raw("$jenisSql as jenis"),
+            'main.' . $cfg['st_col'] . ' as status',
+            \DB::raw("'{$cfg['slug']}' as sumber"),
+            \DB::raw("$tglAwalSql as tgl_awal"),
+            \DB::raw("$tglAkhirSql as tgl_akhir"),
+            \DB::raw("$jamLemburSql as total_jam_lembur")
+        );
+    }
+
+    // 6. Eksekusi Union & Pagination
+    if (empty($queries)) {
+        $dataPengajuan = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 10);
+    } else {
+        $finalQuery = array_shift($queries);
+        foreach ($queries as $u) { $finalQuery->unionAll($u); }
+        $dataPengajuan = \DB::table(\DB::raw("({$finalQuery->toSql()}) as combined"))
+            ->mergeBindings($finalQuery)->orderBy('tanggal', 'desc')->paginate(10)->withQueryString();
+    }
+
+    // 7. AMBIL HISTORI UNTUK STEPPER HOVER
+    $dataPengajuan->getCollection()->transform(function($row) {
+        $logTable = match($row->sumber) {
+            'cuti' => 'log_persetujuan_cuti', 'lembur' => 'log_persetujuan_lembur', 'pensiun' => 'log_persetujuan_pensiun', 'pangkat' => 'log_persetujuan_pangkatgajitunjangan', default => 'log_persetujuan_cuti'
+        };
+        $fkLog = match($row->sumber) {
+            'cuti' => 'id_cuti', 'lembur' => 'id_lembur', 'pensiun' => 'id_pensiun', 'pangkat' => 'id_kenaikan', default => 'id'
+        };
+        $row->histori = \DB::table($logTable . ' as log')
+            ->leftJoin('pegawai as p', 'log.nomor_urut_pegawai_penyetuju', '=', 'p.nomor_urut_pegawai')
+            ->where('log.' . $fkLog, $row->id_transaksi)
+            ->select('log.*', 'p.nama as nama_penyetuju')->orderBy('log.id', 'asc')->get();
+        return $row;
+    });
+
+    $layout = $user->layout_file;
+    $breadcrumbs = ['Beranda' => $user->dashboard_link, "Laporan Persetujuan $roleName" => '#'];
+
+    return view('laporan.laporanpengajuan', compact(
+        'breadcrumbs', 'totalDisetujui', 'totalDitolak', 'detailDisetujui', 'detailDitolak',
+        'dataPengajuan', 'roleName', 'isManager', 'layout', 'listDivisi'
+    ));
+}
+
+
+    public function cetakPDF(Request $request)
     {
         $user = auth()->user();
 
-        // 1. Ambil data Role secara dinamis (Mapping Dashboard & Slug Divisi)
+        // 1. Identifikasi Role (Penting untuk filter data yang boleh dicetak)
         $roleMapping = \DB::table('roles_mapping')
             ->where('jabatan_id', $user->jabatan_id)
             ->where('level_id', $user->level_id)
             ->first();
+        $isManager = str_contains(strtolower($roleMapping->role_name ?? ''), 'manager');
 
-        // Cek apakah user adalah Manager/Kepala berdasarkan route_name
-        $isManagerOrKepala = $roleMapping && str_contains($roleMapping->route_name, 'manager');
+        // 2. Konfigurasi 4 Tabel (Gunakan kolom status Tabel Utama)
+        $reportConfigs = [
+            ['tabel' => 'pengajuan_cuti',   'log' => 'log_persetujuan_cuti',   'label' => 'Cuti',         'slug' => 'cuti',    'st_col' => 'status_pengajuan', 'pk' => 'id_cuti'],
+            ['tabel' => 'pengajuan_lembur', 'log' => 'log_persetujuan_lembur', 'label' => 'Lembur',       'slug' => 'lembur',  'st_col' => 'status_lembur',    'pk' => 'id_lembur'],
+            ['tabel' => 'pengajuan_pensiun', 'log' => 'log_persetujuan_pensiun', 'label' => 'Pensiun',      'slug' => 'pensiun', 'st_col' => 'status_pensiun',   'pk' => 'id_pensiun'],
+            ['tabel' => 'pengajuan_pangkatgajitunjangan', 'log' => 'log_persetujuan_pangkatgajitunjangan', 'label' => 'Pangkat/Gaji', 'slug' => 'pangkat', 'st_col' => 'status_kenaikan', 'pk' => 'id_kenaikan'],
+        ];
 
-        // Ambil Nama Divisi untuk Parameter Route & Breadcrumb
-        $divisiData = \DB::table('divisi')->where('id_divisi', $user->id_divisi)->first();
-        $namaDivisiReal = $divisiData->nama_divisi ?? 'Divisi';
-        $slugDivisi = \Illuminate\Support\Str::slug($namaDivisiReal);
+        $queries = [];
 
-        // Tentukan rute dashboard secara dinamis
-        $dashboardRoute = $isManagerOrKepala ? ($roleMapping->route_name ?? 'manager.dashboardmanager') : 'pegawai.dashboard';
-
-        // 2. Inisialisasi Statistik (Hanya untuk Manager)
-        $totalDisetujui = 0; $totalDitolak = 0;
-        $detailDisetujui = []; $detailDitolak = [];
-
-        if ($isManagerOrKepala) {
-            $tables = [
-                ['name' => 'log_persetujuan_lembur', 'col' => 'status_persetujuan', 'label' => 'Lembur'],
-                ['name' => 'log_persetujuan_cuti', 'col' => 'status_pengajuan', 'label' => 'Cuti'],
-            ];
-
-            foreach ($tables as $table) {
-                $baseQuery = \DB::table($table['name'])
-                    ->join('users', $table['name'] . '.nomor_urut_pegawai', '=', 'users.nomor_urut_pegawai')
-                    // Pastikan filter divisi agar manager hanya melihat divisinya sendiri
-                    ->join('pekerjaan', 'users.nomor_urut_pegawai', '=', 'pekerjaan.nomor_urut_pegawai')
-                    ->where('pekerjaan.id_divisi', $user->id_divisi)
-                    ->where('users.level_id', '!=', $user->level_id); // Filter bawahan
-
-                $countApprove = (clone $baseQuery)->where($table['col'], 'disetujui')->where('tahap_persetujuan', '!=', 'Pengajuan Awal')->count();
-                $countReject = (clone $baseQuery)->where($table['col'], 'ditolak')->where('tahap_persetujuan', '!=', 'Pengajuan Awal')->count();
-
-                $totalDisetujui += $countApprove;
-                $totalDitolak += $countReject;
-                $detailDisetujui[] = ['label' => $table['label'], 'jumlah' => $countApprove];
-                $detailDitolak[] = ['label' => $table['label'], 'jumlah' => $countReject];
+        foreach ($reportConfigs as $cfg) {
+            // --- FILTER JENIS (Jika user pilih salah satu, skip yang lain) ---
+            if ($request->filled('jenis') && strtolower($request->jenis) !== $cfg['slug']) {
+                continue;
             }
-        }
 
-        // $listDivisi = \DB::table('divisi')->get();
-
-        // 1. QUERY UNTUK CUTI
-        $queryCuti = \DB::table('pengajuan_cuti as pc')
-            ->join('log_persetujuan_cuti as lpc', 'pc.nomor_urut_pegawai', '=', 'lpc.nomor_urut_pegawai')
-            ->join('pegawai as p', 'pc.nomor_urut_pegawai', '=', 'p.nomor_urut_pegawai')
-            ->join('pekerjaan as pek', 'p.nomor_urut_pegawai', '=', 'pek.nomor_urut_pegawai')
-            ->join('divisi as d', 'pek.id_divisi', '=', 'd.id_divisi')
-            ->join('users as u', 'p.nomor_urut_pegawai', '=', 'u.nomor_urut_pegawai')
-            ->where('u.level_akses', 'pegawai')
-            ->whereIn('lpc.status_pengajuan', ['disetujui', 'ditolak'])
-            ->where('lpc.tahap_persetujuan', '!=', 'Pengajuan Awal') // Filter tahap awal
-            ->when($request->search, function($q) use ($request) {
-                $q->where(function($sub) use ($request) {
-                    $sub->where('p.nama', 'like', '%' . $request->search . '%')
-                        ->orWhere('p.nomor_urut_pegawai', 'like', '%' . $request->search . '%');
+            $baseQuery = \DB::table($cfg['tabel'] . ' as main')
+                ->join('pegawai as p', 'main.nomor_urut_pegawai', '=', 'p.nomor_urut_pegawai')
+                ->join('pekerjaan as pek', 'p.nomor_urut_pegawai', '=', 'pek.nomor_urut_pegawai')
+                ->join('divisi as d', 'pek.id_divisi', '=', 'd.id_divisi')
+                ->whereExists(function ($query) use ($cfg, $user) {
+                    $query->select(\DB::raw(1))
+                        ->from($cfg['log'] . ' as log')
+                        ->whereColumn('log.' . $cfg['pk'], 'main.' . $cfg['pk'])
+                        ->where('log.nomor_urut_pegawai_penyetuju', $user->nomor_urut_pegawai)
+                        ->where('log.tahap_persetujuan', '!=', 'Pengajuan Awal');
                 });
-            })
-            ->when($request->divisi, function($q) use ($request) {
-                $q->where('d.nama_divisi', $request->divisi);
-            })
-            ->when($request->jenis && $request->jenis !== 'Cuti', function($q) {
-                $q->whereRaw('1 = 0');
-            })
-            ->when($request->start_date && $request->end_date, function($q) use ($request) {
-                $q->whereBetween(\DB::raw('DATE(pc.created_at)'), [$request->start_date, $request->end_date]);
-            })
-            ->when($request->status, function($q) use ($request) {
-                $q->where('lpc.status_pengajuan', $request->status);
-            })
-            ->where('pek.id_divisi', $user->id_divisi)
-            ->select(
-                'lpc.id as id_transaksi',
-                'pc.created_at as tanggal',
-                'pc.tanggal_mulai as tgl_awal',      // Alias tgl_awal
-                'pc.tanggal_selesai as tgl_akhir',   // Alias tgl_akhir
-                \DB::raw('NULL as total_jam_lembur'),
-                'pc.nomor_urut_pegawai as nup',
+
+            // --- FILTER TAMBAHAN (Sesuai Request) ---
+            if ($isManager) {
+                $baseQuery->where('pek.id_divisi', $user->id_divisi);
+            }
+            if ($request->filled('divisi_filter')) {
+                $baseQuery->where('d.nama_divisi', $request->divisi_filter);
+            }
+            if ($request->filled('search')) {
+                $baseQuery->where(function($q) use ($request) {
+                    $q->where('p.nama', 'like', '%' . $request->search . '%')
+                    ->orWhere('p.nomor_urut_pegawai', 'like', '%' . $request->search . '%');
+                });
+            }
+            if ($request->filled('status')) {
+                $baseQuery->where('main.' . $cfg['st_col'], $request->status);
+            } else {
+                $baseQuery->whereIn('main.' . $cfg['st_col'], ['disetujui', 'ditolak']);
+            }
+            if ($request->filled('start_date') && $request->filled('end_date')) {
+                $baseQuery->whereBetween(\DB::raw('DATE(main.created_at)'), [$request->start_date, $request->end_date]);
+            }
+
+            // --- DINAMISASI KOLOM UNTUK UNION ---
+            $jenisSql = match($cfg['slug']) {
+                'cuti'    => 'main.jenis_cuti',
+                'pensiun', 'pangkat' => 'main.jenis_pengajuan',
+                default   => "'Lembur'"
+            };
+            $tglAwalSql = match($cfg['slug']) {
+                'cuti'    => 'main.tanggal_mulai',
+                'lembur'  => 'main.tanggal_lembur',
+                'pensiun' => 'main.tmt_pensiun',
+                'pangkat' => 'main.tmt_pegawai',
+                default   => 'main.created_at'
+            };
+            $tglAkhirSql = ($cfg['slug'] === 'cuti') ? 'main.tanggal_selesai' : 'NULL';
+            $jamLemburSql = ($cfg['slug'] === 'lembur') ? 'main.total_jam_lembur' : 'NULL';
+
+            $q = $baseQuery->select(
+                'main.' . $cfg['pk'] . ' as id_transaksi',
+                'main.created_at as tanggal',
+                'p.nomor_urut_pegawai as nup',
                 'p.nama',
                 'd.nama_divisi',
                 'pek.jabatan',
-                'pc.Jenis_cuti as jenis',
-                'lpc.status_pengajuan as status',
-                \DB::raw("'cuti' as sumber")
+                \DB::raw("$jenisSql as jenis"),
+                'main.' . $cfg['st_col'] . ' as status',
+                \DB::raw("'{$cfg['slug']}' as sumber"),
+                \DB::raw("$tglAwalSql as tgl_awal"),
+                \DB::raw("$tglAkhirSql as tgl_akhir"),
+                \DB::raw("$jamLemburSql as total_jam_lembur")
             );
 
-        // 2. QUERY UNTUK LEMBUR
-        $dataPengajuan = \DB::table('pengajuan_lembur as pl')
-            ->join('log_persetujuan_lembur as lpl', 'pl.nomor_urut_pegawai', '=', 'lpl.nomor_urut_pegawai')
-            ->join('pegawai as p2', 'pl.nomor_urut_pegawai', '=', 'p2.nomor_urut_pegawai')
-            ->join('pekerjaan as pek2', 'p2.nomor_urut_pegawai', '=', 'pek2.nomor_urut_pegawai')
-            ->join('divisi as d2', 'pek2.id_divisi', '=', 'd2.id_divisi')
-            ->join('users as u2', 'p2.nomor_urut_pegawai', '=', 'u2.nomor_urut_pegawai')
-            ->where('u2.level_akses', 'pegawai')
-            ->whereIn('lpl.status_persetujuan', ['disetujui', 'ditolak'])
-            ->where('lpl.tahap_persetujuan', '!=', 'Pengajuan Awal') // Filter tahap awal
-            ->when($request->search, function($q) use ($request) {
-                $q->where(function($sub) use ($request) {
-                    $sub->where('p2.nama', 'like', '%' . $request->search . '%')
-                        ->orWhere('p2.nomor_urut_pegawai', 'like', '%' . $request->search . '%');
-                });
-            })
-            ->when($request->divisi, function($q) use ($request) {
-                $q->where('d2.nama_divisi', $request->divisi);
-            })
-            ->when($request->jenis && $request->jenis !== 'Lembur', function($q) {
-                $q->whereRaw('1 = 0');
-            })
-            ->when($request->start_date && $request->end_date, function($q) use ($request) {
-                $q->whereBetween(\DB::raw('DATE(pl.created_at)'), [$request->start_date, $request->end_date]);
-            })
-            ->when($request->status, function($q) use ($request) {
-                $q->where('lpl.status_persetujuan', $request->status);
-            })
-            ->select(
-                'lpl.id as id_transaksi',
-                'pl.created_at as tanggal',
-                'pl.tanggal_lembur as tgl_awal',     // Tanggal lembur jadi tgl_awal
-                \DB::raw('NULL as tgl_akhir'),
-                'pl.total_jam_lembur', // Mengambil kolom asli dari DB
-                'pl.nomor_urut_pegawai as nup',
-                'p2.nama',
-                'd2.nama_divisi',
-                'pek2.jabatan',
-                \DB::raw("'Lembur' as jenis"),
-                'lpl.status_persetujuan as status',
-                \DB::raw("'lembur' as sumber")
-            )
-            ->where('pek2.id_divisi', $user->id_divisi)
-            ->union($queryCuti)
-            ->orderBy('tanggal', 'desc')
-            ->paginate(10)
-            ->withQueryString();
-
-        // 4. Judul dan Breadcrumbs Dinamis
-        // $pageTitle = 'Laporan Pengajuan Pegawai';
-
-        // Penentuan Route Beranda dengan Parameter Divisi jika Manager
-        $berandaParams = ($dashboardRoute === 'manager.dashboardmanager') ? ['divisi' => $slugDivisi] : [];
-
-        $breadcrumbs = [
-            'Beranda' => route($dashboardRoute, $berandaParams),
-            "Laporan ↦ Laporan Pengajuan Pegawai Divisi $namaDivisiReal" => '#',
-        ];
-
-        // 5. Tentukan Layout secara otomatis (Gunakan layout_file dari Accessor User)
-        $layout = $user->layout_file;
-
-        return view('laporan.laporanpengajuan', compact(
-            'breadcrumbs', 'totalDisetujui', 'totalDitolak',
-            'detailDisetujui', 'detailDitolak', 'dataPengajuan', 'layout', 'isManagerOrKepala'
-        ));
-    }
-
-    public function cetakPDF(Request $request)
-    {
-        // 1. Tangkap parameter filter (Gunakan lowercase agar pengecekan aman)
-        $jenis_filter = strtolower($request->get('jenis'));
-        $status_filter = strtolower($request->get('status'));
-
-        // 2. DEFINISIKAN QUERY CUTI (Jangan pakai ->get() di sini)
-        $queryCuti = \DB::table('pengajuan_cuti as pc')
-            ->join('log_persetujuan_cuti as lpc', 'pc.nomor_urut_pegawai', '=', 'lpc.nomor_urut_pegawai')
-            ->join('pegawai as p', 'pc.nomor_urut_pegawai', '=', 'p.nomor_urut_pegawai')
-            ->join('pekerjaan as pek', 'p.nomor_urut_pegawai', '=', 'pek.nomor_urut_pegawai')
-            ->join('divisi as d', 'pek.id_divisi', '=', 'd.id_divisi')
-            ->join('users as u', 'p.nomor_urut_pegawai', '=', 'u.nomor_urut_pegawai')
-            ->where('lpc.tahap_persetujuan', '!=', 'Pengajuan Awal')
-            ->where('u.level_akses', 'pegawai')
-            ->whereIn('lpc.status_pengajuan', ['disetujui', 'ditolak'])
-            ->select(
-                'lpc.id as id_transaksi',
-                'pc.created_at as tanggal',
-                'pc.nomor_urut_pegawai as nup',
-                'p.nama', 'd.nama_divisi', 'pek.jabatan',
-                'pc.Jenis_cuti as jenis',
-                'lpc.status_pengajuan as status',
-                \DB::raw("'cuti' as sumber")
-            );
-
-        // 3. DEFINISIKAN QUERY LEMBUR (Jangan pakai ->get() di sini)
-        $queryLembur = \DB::table('pengajuan_lembur as pl')
-            ->join('log_persetujuan_lembur as lpl', 'pl.nomor_urut_pegawai', '=', 'lpl.nomor_urut_pegawai')
-            ->join('pegawai as p2', 'pl.nomor_urut_pegawai', '=', 'p2.nomor_urut_pegawai')
-            ->join('pekerjaan as pek2', 'p2.nomor_urut_pegawai', '=', 'pek2.nomor_urut_pegawai')
-            ->join('divisi as d2', 'pek2.id_divisi', '=', 'd2.id_divisi')
-            ->join('users as u2', 'p2.nomor_urut_pegawai', '=', 'u2.nomor_urut_pegawai')
-            ->where('lpl.tahap_persetujuan', '!=', 'Pengajuan Awal')
-            ->where('u2.level_akses', 'pegawai')
-            ->whereIn('lpl.status_persetujuan', ['disetujui', 'ditolak'])
-            ->select(
-                'lpl.id as id_transaksi',
-                'pl.created_at as tanggal',
-                'pl.nomor_urut_pegawai as nup',
-                'p2.nama', 'd2.nama_divisi', 'pek2.jabatan',
-                \DB::raw("'Lembur' as jenis"),
-                'lpl.status_persetujuan as status',
-                \DB::raw("'lembur' as sumber")
-            );
-
-        // 4. TERAPKAN FILTER STATUS (Jika user memilih Disetujui/Ditolak)
-        if ($status_filter) {
-            $queryCuti->where('lpc.status_pengajuan', $status_filter);
-            $queryLembur->where('lpl.status_persetujuan', $status_filter);
-        } else {
-            // Default jika status kosong: hanya ambil yang sudah diproses (bukan draft)
-            $queryCuti->whereIn('lpc.status_pengajuan', ['disetujui', 'ditolak']);
-            $queryLembur->whereIn('lpl.status_persetujuan', ['disetujui', 'ditolak']);
+            $queries[] = $q;
         }
 
-        // 5. LOGIKA EKSEKUSI BERDASARKAN JENIS
-        if ($jenis_filter === 'cuti') {
-            $dataPengajuan = $queryCuti->orderBy('tanggal', 'desc')->get();
-        } elseif ($jenis_filter === 'lembur') {
-            $dataPengajuan = $queryLembur->orderBy('tanggal', 'desc')->get();
+        // 3. Eksekusi Gabungan Data
+        if (empty($queries)) {
+            $dataPengajuan = collect([]);
         } else {
-            // Gabungkan keduanya jika filter jenis kosong atau 'Semua'
-            $dataPengajuan = $queryLembur->union($queryCuti)->orderBy('tanggal', 'desc')->get();
+            $finalQuery = array_shift($queries);
+            foreach ($queries as $u) { $finalQuery->unionAll($u); }
+            $dataPengajuan = \DB::table(\DB::raw("({$finalQuery->toSql()}) as combined"))
+                ->mergeBindings($finalQuery)
+                ->orderBy('tanggal', 'desc')
+                ->get();
         }
 
-        // 6. Cetak ke PDF
-        $pdf = Pdf::loadView('laporan.cetak_pdf', compact('dataPengajuan', 'request'))
-                ->setPaper('a4', 'landscape');
+        // 4. Generate PDF
+        $pdf = Pdf::loadView('laporan.cetak_pdf', [
+            'dataPengajuan' => $dataPengajuan,
+            'request' => $request,
+            'roleName' => $roleMapping->role_name ?? 'Atasan'
+        ])->setPaper('a4', 'landscape');
 
-        return $pdf->stream('Laporan-Pengajuan-' . now()->format('Y-m-d') . '.pdf');
+        return $pdf->stream('Laporan-Pengajuan-' . now()->format('d-m-Y') . '.pdf');
     }
-
 
 }

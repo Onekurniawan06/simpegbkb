@@ -9,131 +9,76 @@ use App\Models\Berita;
 
 class ManagerDashboard extends Controller
 {
-    public function index($divisi = null)
+    public function index()
     {
         $user = auth()->user();
 
-        // 1. Identifikasi Jabatan yang sedang Login (Manager/Direktur/HRO)
+        // 1. Deteksi Jabatan & Normalisasi (Agar fleksibel Manager/Manajer)
         $role = DB::table('roles_mapping')
             ->where('jabatan_id', $user->jabatan_id)
             ->where('level_id', $user->level_id)
             ->first();
-        $jabatanLogin = $role->role_name ?? 'Manager';
 
-        // *** NORMALISASI UNTUK SEMUA ATASAN (TERMASUK SKAI) ***
-        if (str_contains(strtolower($jabatanLogin), 'manajer') || str_contains(strtolower($jabatanLogin), 'manager')) {
-            $jabatanLogin = 'Manager';
-        } elseif (str_contains(strtolower($jabatanLogin), 'audit') || str_contains(strtolower($jabatanLogin), 'skai')) {
-            // Paksa jadi 'Kepala SK Audit' biar sinkron sama isi kolom 'tahap_persetujuan' di log
-            $jabatanLogin = 'Kepala SK Audit';
-        } elseif (str_contains(strtolower($jabatanLogin), 'skk') || str_contains(strtolower($jabatanLogin), 'kepatuhan')) {
-            $jabatanLogin = 'Kepala SKK & SKKMR';
-        }
+        $jabatanAsli = $role->role_name ?? 'Manager';
+        // Kita buat keyword pencarian yang mencakup Manager dan Manajer
+        $isManajerSpelling = str_contains(strtolower($jabatanAsli), 'manajer');
+        $keyword = $isManajerSpelling ? 'Manajer' : 'Manager';
 
-        $slugUser = strtolower(str_replace(' ', '-', $user->divisi->nama_divisi));
-        if ($divisi && $divisi !== $slugUser) {
-            return redirect()->route('manager.dashboardmanager', ['divisi' => $slugUser]);
-        }
+        // 2. Ambil ID Divisi (Tetap pakai cara akuratmu)
+        $pekerjaanManager = DB::table('pekerjaan')->where('nomor_urut_pegawai', $user->nomor_urut_pegawai)->first();
+        $idDivisi = $pekerjaanManager->id_divisi ?? null;
 
-        $totalMenunggu = 0;
-        $totalDisetujui = 0;
-        $totalDitolak = 0;
+        // 3. Ambil Daftar NUP Bawahan
+        $nupBawahan = DB::table('pekerjaan')
+            ->where('id_divisi', $idDivisi)
+            ->where('nomor_urut_pegawai', '!=', $user->nomor_urut_pegawai)
+            ->distinct()
+            ->pluck('nomor_urut_pegawai')
+            ->toArray();
 
-        $tables = [
-            ['name' => 'log_persetujuan_lembur', 'col' => 'status_persetujuan'],
-            ['name' => 'log_persetujuan_cuti', 'col' => 'status_pengajuan'],
-        ];
+        $totalMenunggu = 0; $totalDisetujui = 0; $totalDitolak = 0;
 
-        foreach ($tables as $table) {
-            $baseQuery = DB::table($table['name'])
-                ->join('users', $table['name'] . '.nomor_urut_pegawai', '=', 'users.nomor_urut_pegawai')
-                ->where('users.id_divisi', $user->id_divisi)
-                ->where('users.level_id', 1);
-
-            // A. *** KUNCI: HITUNG MENUNGGU (Hanya yang antri di MEJA SAYA) ***
-            // Jadi kalau data status 'diproses' tapi tahapnya 'HRO', Manager gak akan liat angka itu.
-            $totalMenunggu += (clone $baseQuery)
-                ->where($table['col'], 'diproses')
-                ->where($table['name'] . '.tahap_persetujuan', $jabatanLogin)
+        if (!empty($nupBawahan)) {
+            // --- A. PERHITUNGAN CUTI ---
+            // Menunggu: Cari yang tahapannya Manager/Manajer ATAU Pengajuan Awal dari Level 1
+            $totalMenunggu += DB::table('log_persetujuan_cuti as log')
+                ->join('pegawai as p', 'log.nomor_urut_pegawai', '=', 'p.nomor_urut_pegawai')
+                ->whereIn('log.nomor_urut_pegawai', $nupBawahan)
+                ->where(function($q) use ($keyword) {
+                    $q->where('tahap_persetujuan', 'LIKE', '%' . $keyword . '%')
+                    ->orWhere('tahap_persetujuan', 'Pengajuan Awal');
+                })
+                ->where('status_pengajuan', 'diproses')
+                ->whereNull('nomor_urut_pegawai_penyetuju')
                 ->count();
 
-            // B. HITUNG DISETUJUI (Kecuali Pengajuan Awal)
-            $totalDisetujui += (clone $baseQuery)
-                ->where($table['col'], 'disetujui')
-                ->where($table['name'] . '.tahap_persetujuan', $jabatanLogin)
+            // Hasil Akhir (Tabel Utama)
+            $totalDisetujui += DB::table('pengajuan_cuti')->whereIn('nomor_urut_pegawai', $nupBawahan)->where('status_pengajuan', 'disetujui')->count();
+            $totalDitolak += DB::table('pengajuan_cuti')->whereIn('nomor_urut_pegawai', $nupBawahan)->where('status_pengajuan', 'ditolak')->count();
+
+            // --- B. PERHITUNGAN LEMBUR ---
+            $totalMenunggu += DB::table('log_persetujuan_lembur as log')
+                ->join('pegawai as p', 'log.nomor_urut_pegawai', '=', 'p.nomor_urut_pegawai')
+                ->whereIn('log.nomor_urut_pegawai', $nupBawahan)
+                ->where(function($q) use ($keyword) {
+                    $q->where('tahap_persetujuan', 'LIKE', '%' . $keyword . '%')
+                    ->orWhere('tahap_persetujuan', 'Pengajuan Awal');
+                })
+                ->where('status_persetujuan', 'diproses')
+                ->whereNull('nomor_urut_pegawai_penyetuju')
                 ->count();
 
-            // C. HITUNG DITOLAK (Kecuali Pengajuan Awal)
-            $totalDitolak += (clone $baseQuery)
-                ->where($table['col'], 'ditolak')
-                ->where($table['name'] . '.tahap_persetujuan', $jabatanLogin)
-                ->count();
+            // Hasil Akhir (Tabel Utama)
+            $totalDisetujui += DB::table('pengajuan_lembur')->whereIn('nomor_urut_pegawai', $nupBawahan)->where('status_lembur', 'disetujui')->count();
+            $totalDitolak += DB::table('pengajuan_lembur')->whereIn('nomor_urut_pegawai', $nupBawahan)->where('status_lembur', 'ditolak')->count();
         }
 
-        // Ambil data berita (Opsional)
-        $daftar_berita = Berita::where('tanggal_posting', '>=', now()->subHours(72))
-            ->orderBy('tanggal_posting', 'desc')
-            ->paginate(5);
-
+        // 4. Berita
+        $daftar_berita = Berita::where('tanggal_posting', '>=', now()->subHours(72))->orderBy('tanggal_posting', 'desc')->paginate(5);
         $total_belum_dibaca = Berita::where('tanggal_posting', '>=', now()->subDay())->count();
 
-        return view('manager.dashboardmanager', compact(
-            'totalMenunggu', 'totalDisetujui', 'totalDitolak',
-            'daftar_berita', 'total_belum_dibaca'
-        ));
+        return view('manager.dashboardmanager', compact('totalMenunggu', 'totalDisetujui', 'totalDitolak', 'daftar_berita', 'total_belum_dibaca'));
     }
-
-    public function dataPegawaiGlobal(Request $request)
-    {
-        $user = auth()->user();
-
-        // 1. Logika Role Mapping Dinamis
-        $roleMapping = \DB::table('roles_mapping')
-            ->where('jabatan_id', $user->jabatan_id)
-            ->where('level_id', $user->level_id)
-            ->first();
-
-        $isManagerOrKepala = $roleMapping && str_contains($roleMapping->route_name, 'manager');
-        $dashboardRoute = $isManagerOrKepala ? ($roleMapping->route_name ?? 'manager.dashboardmanagerumum') : 'pegawai.dashboard';
-
-        // 2. Query Utama
-        $query = \DB::table('pegawai')
-            ->leftJoin('pekerjaan', 'pegawai.nomor_urut_pegawai', '=', 'pekerjaan.nomor_urut_pegawai')
-            ->leftJoin('divisi', 'pekerjaan.id_divisi', '=', 'divisi.id_divisi');
-
-        // 3. FILTER DINAMIS
-        if ($isManagerOrKepala) {
-            $query->where('pekerjaan.id_divisi', $user->id_divisi)
-                ->where('pegawai.level_id', 1);
-        }
-
-        // 4. Statistik
-        $statsQuery = \DB::table('pekerjaan');
-        if ($isManagerOrKepala) {
-            $statsQuery->where('id_divisi', $user->id_divisi);
-        }
-        $stats = $statsQuery->select('status_pegawai', \DB::raw('count(*) as total'))
-            ->groupBy('status_pegawai')->pluck('total', 'status_pegawai');
-
-        // 5. Breadcrumbs & Page Title
-        $pageTitle = 'Data Pegawai';
-
-        // PERBAIKAN: Tambahkan parameter divisi di route Beranda
-        $breadcrumbs = [
-            'Beranda' => route($dashboardRoute, ['divisi' => $user->id_divisi]),
-            'Data Pegawai' => null,
-        ];
-
-        $pegawaiDivisi = $query->select('pegawai.*', 'pekerjaan.*', 'divisi.nama_divisi')
-            ->orderBy('pegawai.nama', 'asc')
-            ->paginate(18);
-
-        // 6. Tambahkan variabel layout agar view tidak error
-        $layout = $user->layout_file;
-
-        return view('manager.pegawaidivisi', compact('pegawaiDivisi', 'stats', 'pageTitle', 'breadcrumbs', 'layout'));
-    }
-
 
     // 2. Fungsi Detail Pegawai Global
     public function detailPegawai($nup)

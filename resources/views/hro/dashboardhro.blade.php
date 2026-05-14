@@ -130,38 +130,37 @@
             wire:poll.60m>
 
             <!-- Header & Navigasi (Tampilan Rapi seperti gambar) -->
-<div class="flex flex-col sm:flex-row items-center justify-between mb-4 border-b border-gray-200 pb-2 gap-4">
+            <div class="flex flex-col sm:flex-row items-center justify-between mb-4 border-b border-gray-200 pb-2 gap-4">
 
-    <!-- Judul & Kedua Notifikasi (RATA KIRI) -->
-    <h3 class="text-sm font-semibold text-gray-800 flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start">
-        <x-heroicon-o-megaphone class="h-5 w-5 text-indigo-600" />
-        <span>Informasi & Pengumuman</span>
+                <!-- Judul & Kedua Notifikasi (RATA KIRI) -->
+                <h3 class="text-sm font-semibold text-gray-800 flex items-center gap-2 w-full sm:w-auto justify-center sm:justify-start">
+                    <x-heroicon-o-megaphone class="h-5 w-5 text-indigo-600" />
+                    <span>Informasi & Pengumuman</span>
 
-        <!-- Badge "Baru" (Menggunakan Alpine.js totalUnread) -->
-        <template x-if="totalUnread > 0">
-            <span class="inline-flex items-center justify-center px-2 py-0.5 text-[10px] font-bold leading-none text-white bg-red-600 rounded-full animate-pulse">
-                <span x-text="totalUnread" class="mr-1"></span> Informasi Baru
-            </span>
-        </template>
-    </h3>
+                    <!-- Badge "Baru" (Menggunakan Alpine.js totalUnread) -->
+                    <template x-if="totalUnread > 0">
+                        <span class="inline-flex items-center justify-center px-2 py-0.5 text-[10px] font-bold leading-none text-white bg-red-600 rounded-full animate-pulse">
+                            <span x-text="totalUnread" class="mr-1"></span> Informasi Baru
+                        </span>
+                    </template>
+                </h3>
 
-    <!-- Navigasi & Info Data (RATA KANAN) -->
-    <div class="flex items-center gap-4 w-full sm:w-auto justify-center sm:justify-end">
-        <p class="hidden sm:block text-[13px] font-semibold text-gray-500 whitespace-nowrap">
-            Menampilkan {{ $daftar_berita->firstItem() }} - {{ $daftar_berita->lastItem() }} dari {{ $daftar_berita->total() }} data
-        </p>
-        <div class="flex items-center border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
-            <a href="{{ $daftar_berita->previousPageUrl() ?? '#' }}" class="px-2 py-1.5 border-r hover:bg-gray-50 {{ $daftar_berita->onFirstPage() ? 'text-gray-300 pointer-events-none' : 'text-gray-600' }}">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-            </a>
-            <span class="px-3 py-1.5 bg-gray-50 text-xs font-bold text-gray-700 border-r">{{ $daftar_berita->currentPage() }}</span>
-            <a href="{{ $daftar_berita->nextPageUrl() ?? '#' }}" class="px-2 py-1.5 hover:bg-gray-50 {{ !$daftar_berita->hasMorePages() ? 'text-gray-300 pointer-events-none' : 'text-gray-600' }}">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-            </a>
-        </div>
-    </div>
-</div>
-
+                <!-- Navigasi & Info Data (RATA KANAN) -->
+                <div class="flex items-center gap-4 w-full sm:w-auto justify-center sm:justify-end">
+                    <p class="hidden sm:block text-[13px] font-semibold text-gray-500 whitespace-nowrap">
+                        Menampilkan {{ $daftar_berita->firstItem() }} - {{ $daftar_berita->lastItem() }} dari {{ $daftar_berita->total() }} data
+                    </p>
+                    <div class="flex items-center border border-gray-200 rounded-lg overflow-hidden bg-white shadow-sm">
+                        <a href="{{ $daftar_berita->previousPageUrl() ?? '#' }}" class="px-2 py-1.5 border-r hover:bg-gray-50 {{ $daftar_berita->onFirstPage() ? 'text-gray-300 pointer-events-none' : 'text-gray-600' }}">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        </a>
+                        <span class="px-3 py-1.5 bg-gray-50 text-xs font-bold text-gray-700 border-r">{{ $daftar_berita->currentPage() }}</span>
+                        <a href="{{ $daftar_berita->nextPageUrl() ?? '#' }}" class="px-2 py-1.5 hover:bg-gray-50 {{ !$daftar_berita->hasMorePages() ? 'text-gray-300 pointer-events-none' : 'text-gray-600' }}">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
 
             <!-- Daftar Berita/Card Berita -->
             <div class="grid gap-4">

@@ -119,50 +119,50 @@
                 
                 <div class="p-4 shadow-sm">
                     <span class="text-md font-semibold text-blue-700 mb-4"># Section 1: Pengajuan Cuti dan Izin</span>
-<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-    <input type="hidden" name="nomor_urut_pegawai" id="nomor_urut_pegawai" value="<?php echo e(auth()->user()->nomor_urut_pegawai); ?>" class="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 mt-1 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow read-only:bg-gray-50" placeholder="Nomor Urut Pegawai" readonly/>
-    <input type="hidden" name="nama_pegawai" value="<?php echo e(auth()->user()->name ?? 'NamaPegawaiDefault'); ?>">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <input type="hidden" name="nomor_urut_pegawai" id="nomor_urut_pegawai" value="<?php echo e(auth()->user()->nomor_urut_pegawai); ?>" class="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 mt-1 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow read-only:bg-gray-50" placeholder="Nomor Urut Pegawai" readonly/>
+                        <input type="hidden" name="nama_pegawai" value="<?php echo e(auth()->user()->name ?? 'NamaPegawaiDefault'); ?>">
 
-    <div>
-        <label for="jenis_cuti" class="block text-sm font-medium text-gray-700 mt-2">Jenis Cuti dan Izin</label>
-        <select name="jenis_cuti" id="jenis_cuti" class="w-full bg-white text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 mt-1 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow">
-            <option value="">-- Pilih Jenis Cuti dan Izin --</option>
-            <?php $__currentLoopData = $jenisCuti; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cuti): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                <option value="<?php echo e($cuti->nama_cuti); ?>" <?php echo e((old('jenis_cuti') == $cuti->nama_cuti) ? 'selected' : ''); ?>>
-                    <?php echo e($cuti->nama_cuti); ?>
+                        <div>
+                            <label for="jenis_cuti" class="block text-sm font-medium text-gray-700 mt-2">Jenis Cuti dan Izin</label>
+                            <select name="jenis_cuti" id="jenis_cuti" class="w-full bg-white text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 mt-1 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow">
+                                <option value="">-- Pilih Jenis Cuti dan Izin --</option>
+                                <?php $__currentLoopData = $jenisCuti; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $cuti): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($cuti->nama_cuti); ?>" <?php echo e((old('jenis_cuti') == $cuti->nama_cuti) ? 'selected' : ''); ?>>
+                                        <?php echo e($cuti->nama_cuti); ?>
 
-                </option>
-            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-        </select>
-    </div>
+                                    </option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </select>
+                        </div>
 
-    <div id="sub_jenis_cuti_container" style="display: none;">
-        <label for="sub_jenis_cuti" class="block text-sm font-medium text-gray-700 mt-2">Sub Jenis Cuti Penting</label>
-        <select name="sub_jenis_cuti" id="sub_jenis_cuti" class="w-full bg-white text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 mt-1 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow">
-            <option value="">-- Pilih Sub Jenis Cuti --</option>
-            <?php $__currentLoopData = $subJenisCuti; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $subCuti): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
-                <option value="<?php echo e($subCuti->id); ?>" <?php echo e((old('sub_jenis_cuti') == $subCuti->id) ? 'selected' : ''); ?>>
-                    <?php echo e($subCuti->nama_sub_jenis); ?>
+                        <div id="sub_jenis_cuti_container" style="display: none;">
+                            <label for="sub_jenis_cuti" class="block text-sm font-medium text-gray-700 mt-2">Sub Jenis Cuti Penting</label>
+                            <select name="sub_jenis_cuti" id="sub_jenis_cuti" class="w-full bg-white text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 mt-1 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow">
+                                <option value="">-- Pilih Sub Jenis Cuti --</option>
+                                <?php $__currentLoopData = $subJenisCuti; $__env->addLoop($__currentLoopData); foreach($__currentLoopData as $subCuti): $__env->incrementLoopIndices(); $loop = $__env->getLastLoop(); ?>
+                                    <option value="<?php echo e($subCuti->id); ?>" <?php echo e((old('sub_jenis_cuti') == $subCuti->id) ? 'selected' : ''); ?>>
+                                        <?php echo e($subCuti->nama_sub_jenis); ?>
 
-                </option>
-            <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
-        </select>
-    </div>
+                                    </option>
+                                <?php endforeach; $__env->popLoop(); $loop = $__env->getLastLoop(); ?>
+                            </select>
+                        </div>
 
-    <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
-        <!-- Kolom Saldo Awal (Menampilkan jatah yang tersedia saat ini) -->
-        <div class="flex flex-col gap-1">
-            <label for="saldo_awal" class="block text-sm font-medium text-gray-700 mt-2">Saldo Cuti Saat Ini</label>
-            <input type="text" name="saldo_awal" id="saldo_awal" value="<?php echo e($sisaCutiTahunIni); ?>" readonly
-                class="w-full bg-gray-100 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 shadow-sm cursor-not-allowed"
-                placeholder="Otomatis">
-            
-            <input type="hidden" name="jatah_periode_hari" id="jatah_periode_hari" value="<?php echo e($sisaCutiTahunIni); ?>">
-        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                            <!-- Kolom Saldo Awal (Menampilkan jatah yang tersedia saat ini) -->
+                            <div class="flex flex-col gap-1">
+                                <label for="saldo_awal" class="block text-sm font-medium text-gray-700 mt-2">Saldo Cuti Saat Ini</label>
+                                <input type="text" name="saldo_awal" id="saldo_awal" value="<?php echo e($sisaCutiTahunIni); ?>" readonly
+                                    class="w-full bg-gray-100 text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 shadow-sm cursor-not-allowed"
+                                    placeholder="Otomatis">
+                                
+                                <input type="hidden" name="jatah_periode_hari" id="jatah_periode_hari" value="<?php echo e($sisaCutiTahunIni); ?>">
+                            </div>
 
-        <div class="flex flex-col gap-1">
-            <label for="tanggal_mulai" class="block text-sm font-medium text-gray-700 mt-2">Tanggal Mulai Cuti</label>
-            <input id="tanggal_mulai" type="date" min="<?php echo e(now()->format('Y-m-d')); ?>" class="form-control <?php $__errorArgs = ['tanggal_mulai'];
+                            <div class="flex flex-col gap-1">
+                                <label for="tanggal_mulai" class="block text-sm font-medium text-gray-700 mt-2">Tanggal Mulai Cuti</label>
+                                <input id="tanggal_mulai" type="date" min="<?php echo e(now()->format('Y-m-d')); ?>" class="form-control <?php $__errorArgs = ['tanggal_mulai'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
@@ -170,21 +170,21 @@ $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?> w-full bg-white text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 focus:border-blue-500 outline-none shadow-sm" name="tanggal_mulai" required >
-            <?php $__errorArgs = ['tanggal_mulai'];
+                                <?php $__errorArgs = ['tanggal_mulai'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?>
-                <span class="invalid-feedback" role="alert"><strong><?php echo e($message); ?></strong></span>
-            <?php unset($message);
+                                    <span class="invalid-feedback" role="alert"><strong><?php echo e($message); ?></strong></span>
+                                <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>
-        </div>
+                            </div>
 
-        <div class="flex flex-col gap-1">
-            <label for="tanggal_selesai" class="block text-sm font-medium text-gray-700 mt-2">Tanggal Selesai Cuti</label>
-            <input id="tanggal_selesai" type="date" class="form-control <?php $__errorArgs = ['tanggal_selesai'];
+                            <div class="flex flex-col gap-1">
+                                <label for="tanggal_selesai" class="block text-sm font-medium text-gray-700 mt-2">Tanggal Selesai Cuti</label>
+                                <input id="tanggal_selesai" type="date" class="form-control <?php $__errorArgs = ['tanggal_selesai'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
@@ -192,45 +192,45 @@ $message = $__bag->first($__errorArgs[0]); ?> is-invalid <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?> w-full bg-white text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 focus:border-blue-500 outline-none shadow-sm" name="tanggal_selesai" required>
-            <?php $__errorArgs = ['tanggal_selesai'];
+                                <?php $__errorArgs = ['tanggal_selesai'];
 $__bag = $errors->getBag($__errorArgs[1] ?? 'default');
 if ($__bag->has($__errorArgs[0])) :
 if (isset($message)) { $__messageOriginal = $message; }
 $message = $__bag->first($__errorArgs[0]); ?>
-                <span class="invalid-feedback" role="alert"><strong><?php echo e($message); ?></strong></span>
-            <?php unset($message);
+                                    <span class="invalid-feedback" role="alert"><strong><?php echo e($message); ?></strong></span>
+                                <?php unset($message);
 if (isset($__messageOriginal)) { $message = $__messageOriginal; }
 endif;
 unset($__errorArgs, $__bag); ?>
-        </div>
-    </div>
+                            </div>
+                        </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div class="flex flex-col gap-1">
-            <label for="jumlah_cuti" class="block text-sm font-medium text-gray-700 mt-2">Jumlah Cuti yang diambil (Hari)</label>
-            <input id="jumlah_cuti" type="number" readonly
-                class="form-control w-full bg-gray-100 cursor-not-allowed text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 outline-none shadow-sm"
-                name="jumlah_cuti" placeholder="Otomatis terisi">
-        </div>
-        <div class="flex flex-col gap-1">
-            <label for="sisa_cuti" class="block text-sm font-medium text-gray-700 mt-2">Sisa Cuti Nanti (Hari)</label>
-            <input id="sisa_cuti" type="number" readonly
-                class="form-control w-full bg-gray-100 cursor-not-allowed text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 outline-none shadow-sm"
-                name="sisa_cuti" placeholder="Otomatis terisi">
-        </div>
-    </div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div class="flex flex-col gap-1">
+                                <label for="jumlah_cuti" class="block text-sm font-medium text-gray-700 mt-2">Jumlah Cuti yang diambil (Hari)</label>
+                                <input id="jumlah_cuti" type="number" readonly
+                                    class="form-control w-full bg-gray-100 cursor-not-allowed text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 outline-none shadow-sm"
+                                    name="jumlah_cuti" placeholder="Otomatis terisi">
+                            </div>
+                            <div class="flex flex-col gap-1">
+                                <label for="sisa_cuti" class="block text-sm font-medium text-gray-700 mt-2">Sisa Cuti Nanti (Hari)</label>
+                                <input id="sisa_cuti" type="number" readonly
+                                    class="form-control w-full bg-gray-100 cursor-not-allowed text-slate-700 text-sm border border-slate-200 rounded-md px-3 py-2 outline-none shadow-sm"
+                                    name="sisa_cuti" placeholder="Otomatis terisi">
+                            </div>
+                        </div>
 
-    <?php
-        $jenisCutiJson = $jenisCuti->toJson();
-        // Variabel sisaCutiTahunIni ini diambil dari Controller menggunakan fungsi hitungSaldoAwal
-    ?>
-</div>
+                        <?php
+                            $jenisCutiJson = $jenisCuti->toJson();
+                            // Variabel sisaCutiTahunIni ini diambil dari Controller menggunakan fungsi hitungSaldoAwal
+                        ?>
+                    </div>
 
-<div class="mt-4 flex justify-start items-center">
-    <button type="button" id="btn_refresh_form" class="btn btn-warning bg-blue-600 hover:bg-blue-700 text-sm font-semibold" style="padding: 10px 22px; color: white; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-    Reset Pengajuan Cuti
-    </button>
-</div>
+                    <div class="mt-4 flex justify-start items-center">
+                        <button type="button" id="btn_refresh_form" class="btn btn-warning bg-blue-600 hover:bg-blue-700 text-sm font-semibold" style="padding: 10px 22px; color: white; border: none; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                        Reset Pengajuan Cuti
+                        </button>
+                    </div>
 
                 </div>
             </div>

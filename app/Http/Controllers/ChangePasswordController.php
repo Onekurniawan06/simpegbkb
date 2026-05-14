@@ -10,23 +10,21 @@ use App\Models\User; // Sesuaikan dengan nama model Anda, mungkin Pegawai
 class ChangePasswordController extends Controller
 {
     public function showChangePasswordForm()
-    {
-        // Mendapatkan data user yang sedang login
-        $user = Auth::user();
+{
+    $user = Auth::user();
+    $pageTitle = 'Ubah Kata Sandi';
 
-        // Menggunakan nama variabel yang konsisten: $pageTitle
-        $pageTitle = 'Ubah Kata Sandi'; // Baris ini diubah dari $pageTitleChangePassword
+    // Ambil langsung file layout dari logic di Model User
+    $layoutFile = $user->layout_file;
 
-        // Anda bisa tambahkan variabel lain jika perlu, misal
-        $breadcrumbs = [
-            'Beranda' => route(name: 'password.change'),
-            $pageTitle => null // Menggunakan $pageTitle di sini
-        ];
+    $breadcrumbs = [
+        'Beranda' => route('password.change'),
+        $pageTitle => null
+    ];
 
-        // Ubah baris ini:
-        return view(view: 'pegawai.change-password', data: compact('user', 'pageTitle', 'breadcrumbs'));
+    return view('change-password', compact('user', 'pageTitle', 'breadcrumbs', 'layoutFile'));
+}
 
-    }
 
     public function changePassword(Request $request)
     {

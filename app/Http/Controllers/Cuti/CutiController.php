@@ -45,14 +45,7 @@ class CutiController extends Controller
         $durationsMapping = $jenisCuti->pluck('durasi_hari', 'nama_cuti')->toJson();
         $subJenisCuti = SubJenisCutiPenting::all();
         $jatahCutiTahunanMaksimal = $jenisCuti->where('nama_cuti', 'Cuti Tahunan')->first()->durasi_hari ?? 0;
-
-        // =====================================================
-        // LOGIKA BARU: MENGHITUNG SISA CUTI TAHUNAN TERAKHIR
-        // =====================================================
         $sisaCutiTahunIni = PengajuanCuti::hitungSaldoAwal($user->nomor_urut_pegawai, 'Cuti Tahunan');
-        // =====================================================
-
-        // --- LOGIKA MENCARI ATASAN DINAMIS (MANAGER DIVISI) ---
         $idDivisiUser = $pekerjaanData->id_divisi ?? null;
         $managerDivisi = null;
 
@@ -68,11 +61,8 @@ class CutiController extends Controller
 
         $namaAtasan = $managerDivisi->pegawai->nama ?? '........................';
         $jabatanAtasan = $managerDivisi->jabatan ?? 'Atasan Langsung';
-
-        // --- LOGIKA MENCARI DIREKSI DINAMIS (GLOBAL SEMUA DIVISI) ---
         $dirOps = Pekerjaan::where('jabatan', 'Direktur Operasional')->with('pegawai')->first();
         $dirKep = Pekerjaan::where('jabatan', 'Direktur Kepatuhan')->with('pegawai')->first();
-
         $namaDireksi = strtoupper($dirOps->pegawai->nama ?? '........................') .
                     ' atau ' .
                     strtoupper($dirKep->pegawai->nama ?? '........................');
@@ -89,7 +79,6 @@ class CutiController extends Controller
         $namaVerif2 = strtoupper($v2->pegawai->nama ?? '........................');
         $jabatanVerif2 = "Human Resources Officer";
 
-        // --- VARIABEL YANG DIKEMBALIKAN ---
         $jenisPengajuan = 'cuti';
         $submissionsType = 'Cuti';
 
@@ -130,182 +119,174 @@ class CutiController extends Controller
 
 
     public function updateCutiizin(Request $request)
-{
-    // 1. Validasi Data (Data yang berasal dari Form)
-    $validatedData = $request->validate([
-        'nomor_urut_pegawai' => 'required',
-        'jenis_cuti'         => 'required',
-        'tanggal_mulai'      => 'required|date',
-        'tanggal_selesai'    => 'required|date',
-        'jumlah_cuti'        => 'required',
-        'saldo_awal'         => 'required',
-        'sisa_cuti'          => 'required', // Ini akan menjadi saldo_akhir di database
-        'jatah_periode_hari' => 'nullable', 
-        'keterangan'         => 'nullable',
-    ]);
+    {
+        // 1. Validasi Data (Data yang berasal dari Form)
+        $validatedData = $request->validate([
+            'nomor_urut_pegawai' => 'required',
+            'jenis_cuti'         => 'required',
+            'tanggal_mulai'      => 'required|date',
+            'tanggal_selesai'    => 'required|date',
+            'jumlah_cuti'        => 'required',
+            'saldo_awal'         => 'required',
+            'sisa_cuti'          => 'required',
+            'jatah_periode_hari' => 'nullable',
+            'keterangan'         => 'nullable',
+        ]);
 
-    $nomorPegawai = $request->input('nomor_urut_pegawai');
+        $nomorPegawai = $request->input('nomor_urut_pegawai');
 
-    // 2. Ambil Data User & Divisi
-    $userLogin = auth()->user();
-    $userOwner = User::with('pegawai.pekerjaan')->where('nomor_urut_pegawai', $nomorPegawai)->first();
+        // 2. Ambil Data User & Divisi
+        $userLogin = auth()->user();
+        $userOwner = User::with('pegawai.pekerjaan')->where('nomor_urut_pegawai', $nomorPegawai)->first();
 
-    if (!$userOwner || !$userOwner->pegawai || !$userOwner->pegawai->pekerjaan) {
-        return back()->with('error', 'Data divisi pegawai tidak ditemukan.')->withInput();
+        if (!$userOwner || !$userOwner->pegawai || !$userOwner->pegawai->pekerjaan) {
+            return back()->with('error', 'Data divisi pegawai tidak ditemukan.')->withInput();
+        }
+
+        $idDivisi = $userOwner->pegawai->pekerjaan->id_divisi ?? null;
+        $startDate = $request->input('tanggal_mulai');
+        $endDate = $request->input('tanggal_selesai');
+
+        // --- Cek Role Login untuk Redirect ---
+        $roleMapping = \DB::table('roles_mapping')
+            ->where('jabatan_id', $userLogin->jabatan_id)
+            ->where('level_id', $userLogin->level_id)
+            ->first();
+
+        $isManagerOrKepala = $roleMapping && str_contains($roleMapping->route_name, 'manager');
+
+        // 3. Eksekusi Simpan Data
+        try {
+        \DB::beginTransaction();
+
+        // 1. Ambil data dari validasi
+        $dataToSave = $validatedData;
+
+        // 2. Bersihkan angka dari teks (Menghilangkan kata "Hari")
+        if (isset($dataToSave['jatah_periode_hari'])) {
+            $dataToSave['jatah_periode_hari'] = (int) filter_var($dataToSave['jatah_periode_hari'], FILTER_SANITIZE_NUMBER_INT);
+        }
+
+        // 3. Mapping data sesuai nama kolom di Database
+        $dataToSave['saldo_akhir'] = $validatedData['sisa_cuti'];
+        $dataToSave['status_pengajuan'] = 'diproses';
+        $dataToSave['updated_at'] = now();
+        $dataToSave['created_at'] = now();
+
+        // 4. BUANG kolom yang tidak ada di tabel 'pengajuan_cuti' agar tidak Error
+        unset($dataToSave['sisa_cuti']);
+        unset($dataToSave['sub_jenis_cuti']);
+        unset($dataToSave['nama_pegawai']);
+
+        // 5. SIMPAN KE TABEL UTAMA
+        $idCutiBaru = \DB::table('pengajuan_cuti')->insertGetId($dataToSave);
+
+        // 6. SIMPAN KE TABEL LOG
+        \DB::table('log_persetujuan_cuti')->insert([
+            'id_cuti'            => $idCutiBaru,
+            'nomor_urut_pegawai' => $nomorPegawai,
+            'tahap_persetujuan'  => 'Pengajuan Awal',
+            'status_pengajuan'   => 'diproses',
+            'komentar'           => 'Menunggu verifikasi.',
+            'updated_at'         => now()
+        ]);
+
+        \DB::commit();
+
+        // 7. REDIRECT
+        $parentRouteName = $isManagerOrKepala ? 'manager.pilihpengajuan' : 'datapengajuan.formDataPengajuan';
+        $targetRoute = $isManagerOrKepala ? 'manager.pilihpengajuan' : 'pegawai.dashboard';
+
+        return redirect()->route($targetRoute)->with([
+            'success' => 'Permintaan Cuti/Izin Anda telah tercatat.',
+            'modal_title' => 'Pengajuan Cuti/Izin berhasil dibuat!!!',
+            'modal_link' => route($parentRouteName)
+        ]);
+
+        } catch (\Throwable $e) {
+            \DB::rollBack();
+            // Simpan pesan error asli ke log agar bisa kita baca jika masih gagal
+            \Log::error('Gagal simpan cuti: ' . $e->getMessage());
+            return back()->with('error', 'DATABASE ERROR: ' . $e->getMessage())->withInput();
+        }
+
     }
-
-    $idDivisi = $userOwner->pegawai->pekerjaan->id_divisi ?? null;
-    $startDate = $request->input('tanggal_mulai');
-    $endDate = $request->input('tanggal_selesai');
-
-    // --- Cek Role Login untuk Redirect ---
-    $roleMapping = \DB::table('roles_mapping')
-        ->where('jabatan_id', $userLogin->jabatan_id)
-        ->where('level_id', $userLogin->level_id)
-        ->first();
-
-    $isManagerOrKepala = $roleMapping && str_contains($roleMapping->route_name, 'manager');
-
-    // 3. Eksekusi Simpan Data
-    try {
-    \DB::beginTransaction();
-
-    // 1. Ambil data dari validasi
-    $dataToSave = $validatedData;
-
-    // 2. Bersihkan angka dari teks (Menghilangkan kata "Hari")
-    if (isset($dataToSave['jatah_periode_hari'])) {
-        $dataToSave['jatah_periode_hari'] = (int) filter_var($dataToSave['jatah_periode_hari'], FILTER_SANITIZE_NUMBER_INT);
-    }
-
-    // 3. Mapping data sesuai nama kolom di Database
-    $dataToSave['saldo_akhir'] = $validatedData['sisa_cuti']; 
-    $dataToSave['status_pengajuan'] = 'diproses';
-    $dataToSave['updated_at'] = now();
-    $dataToSave['created_at'] = now();
-
-    // 4. BUANG kolom yang tidak ada di tabel 'pengajuan_cuti' agar tidak Error
-    // Ini bagian paling krusial
-    unset($dataToSave['sisa_cuti']);
-    unset($dataToSave['sub_jenis_cuti']);
-    unset($dataToSave['nama_pegawai']); // <--- INI BIANG KEROKNYA, kolom ini tidak ada di tabel DB
-
-    // 5. SIMPAN KE TABEL UTAMA
-    $idCutiBaru = \DB::table('pengajuan_cuti')->insertGetId($dataToSave);
-
-    // 6. SIMPAN KE TABEL LOG
-    \DB::table('log_persetujuan_cuti')->insert([
-        'id_cuti'            => $idCutiBaru,
-        'nomor_urut_pegawai' => $nomorPegawai,
-        'tahap_persetujuan'  => 'Pengajuan Awal',
-        'status_pengajuan'   => 'diproses',
-        'komentar'           => 'Menunggu verifikasi.',
-        'updated_at'         => now()
-    ]);
-
-    \DB::commit();
-
-    // 7. REDIRECT
-    $parentRouteName = $isManagerOrKepala ? 'manager.pilihpengajuan' : 'datapengajuan.formDataPengajuan';
-    $targetRoute = $isManagerOrKepala ? 'manager.pilihpengajuan' : 'pegawai.dashboard';
-
-    return redirect()->route($targetRoute)->with([
-        'success' => 'Permintaan Cuti/Izin Anda telah tercatat.',
-        'modal_title' => 'Pengajuan Cuti/Izin berhasil dibuat!!!',
-        'modal_link' => route($parentRouteName)
-    ]);
-
-} catch (\Throwable $e) {
-    \DB::rollBack();
-    // Simpan pesan error asli ke log agar bisa kita baca jika masih gagal
-    \Log::error('Gagal simpan cuti: ' . $e->getMessage());
-    return back()->with('error', 'DATABASE ERROR: ' . $e->getMessage())->withInput();
-}
-
-}
-
-
 
     public function statuscuti($id_cuti)
-{
-    $user = auth()->user();
+    {
+        $user = auth()->user();
 
-    // 1. Logika Role Dinamis - TETAP UTUH
-    $roleMapping = \DB::table('roles_mapping')
-        ->where('jabatan_id', $user->jabatan_id)
-        ->where('level_id', $user->level_id)
-        ->first();
+        // 1. Logika Role Dinamis - TETAP UTUH
+        $roleMapping = \DB::table('roles_mapping')
+            ->where('jabatan_id', $user->jabatan_id)
+            ->where('level_id', $user->level_id)
+            ->first();
 
-    $isAtasan = $roleMapping && str_contains($roleMapping->route_name, 'manager');
+        $isAtasan = $roleMapping && str_contains($roleMapping->route_name, 'manager');
 
-    // 2. Ambil Data Pengajuan - SEKARANG DI ATAS agar NIP bisa diambil
-    $pengajuancuti = PengajuanCuti::with(['jenisCuti', 'logs' => function ($query) {
-        $query->orderByDesc('updated_at')->orderByDesc('id_cuti');
-    }])
-    ->where('id_cuti', $id_cuti)
-    ->firstOrFail();
+        // 2. Ambil Data Pengajuan - SEKARANG DI ATAS agar NIP bisa diambil
+        $pengajuancuti = PengajuanCuti::with(['jenisCuti', 'logs' => function ($query) {
+            $query->orderByDesc('updated_at')->orderByDesc('id_cuti');
+        }])
+        ->where('id_cuti', $id_cuti)
+        ->firstOrFail();
 
-    // Ambil Pekerjaan menggunakan NIP dari $pengajuancuti
-    $pekerjaanData = Pekerjaan::where('nomor_urut_pegawai', $pengajuancuti->nomor_urut_pegawai)->first();
+        $pekerjaanData = Pekerjaan::where('nomor_urut_pegawai', $pengajuancuti->nomor_urut_pegawai)->first();
 
-    // 3. Siapkan data untuk Processor - TETAP UTUH
-    $submissionRaw = [
-        'type' => 'Cuti',
-        'logs' => $pengajuancuti->logs ? $pengajuancuti->logs->toArray() : [],
-        'pengajuancuti' => array_merge($pengajuancuti->toArray(), [
-            'jenisCuti' => $pengajuancuti->jenisCuti ? $pengajuancuti->jenisCuti->toArray() : [
-                'nama_cuti' => $pengajuancuti->jenis_cuti,
-                'id' => null
-            ]
-        ]),
-        'tanggal_mulai' => $pengajuancuti->tanggal_mulai,
-        'tanggal_selesai' => $pengajuancuti->tanggal_selesai,
+        // 3. Siapkan data untuk Processor - TETAP UTUH
+        $submissionRaw = [
+            'type' => 'Cuti',
+            'logs' => $pengajuancuti->logs ? $pengajuancuti->logs->toArray() : [],
+            'pengajuancuti' => array_merge($pengajuancuti->toArray(), [
+                'jenisCuti' => $pengajuancuti->jenisCuti ? $pengajuancuti->jenisCuti->toArray() : [
+                    'nama_cuti' => $pengajuancuti->jenis_cuti,
+                    'id' => null
+                ]
+            ]),
+            'tanggal_mulai' => $pengajuancuti->tanggal_mulai,
+            'tanggal_selesai' => $pengajuancuti->tanggal_selesai,
 
-        // --- PENYESUAIAN DATA SALDO ---
-        'saldo_awal' => $pengajuancuti->saldo_awal, // Tambahkan ini agar bisa tampil di tracking
-        'sisa_cuti' => $pengajuancuti->sisa_cuti,  // Ini saldo akhirnya
-        // ------------------------------
+            'saldo_awal' => $pengajuancuti->saldo_awal,
+            'sisa_cuti' => $pengajuancuti->sisa_cuti,
 
-        'jumlah_cuti' => $pengajuancuti->jumlah_cuti,
-        'keterangan' => $pengajuancuti->keterangan,
-        'status_pengajuan' => $pengajuancuti->status_pengajuan, // Tambahkan status dari tabel utama
-    ];
+            'jumlah_cuti' => $pengajuancuti->jumlah_cuti,
+            'keterangan' => $pengajuancuti->keterangan,
+            'status_pengajuan' => $pengajuancuti->status_pengajuan,
+        ];
 
-    $submission = $this->submissionProcessor->processSubmissions(collect([$submissionRaw]))->first();
+        $submission = $this->submissionProcessor->processSubmissions(collect([$submissionRaw]))->first();
 
-    // 4. Logika Tampilan & Variabel Penting - TETAP UTUH
-    $latestLog = $pengajuancuti->logs->first();
-    $komentarStatus = $latestLog ? $latestLog->komentar : 'Menunggu keputusan';
-    $submissionType = 'Cuti';
-    $pageTitle = 'Lacak Pengajuan ' . $submissionRaw['type'];
+        // 4. Logika Tampilan & Variabel Penting - TETAP UTUH
+        $latestLog = $pengajuancuti->logs->first();
+        $komentarStatus = $latestLog ? $latestLog->komentar : 'Menunggu keputusan';
+        $submissionType = 'Cuti';
+        $pageTitle = 'Lacak Pengajuan ' . $submissionRaw['type'];
 
-    // 5. BREADCRUMBS & ROUTE OTOMATIS - TETAP UTUH
-    $roleName = $roleMapping->role_name ?? 'Pegawai';
-    $parentLabel = $isAtasan ? "Manajemen Pengajuan ↦ Approval Pengajuan $roleName" : 'Data Pengajuan';
-    $parentRouteName = $isAtasan ? 'manager.pilihpengajuan' : 'datapengajuan.formDataPengajuan';
+        // 5. BREADCRUMBS & ROUTE OTOMATIS - TETAP UTUH
+        $roleName = $roleMapping->role_name ?? 'Pegawai';
+        $parentLabel = $isAtasan ? "Manajemen Pengajuan ↦ Approval Pengajuan $roleName" : 'Data Pengajuan';
+        $parentRouteName = $isAtasan ? 'manager.pilihpengajuan' : 'datapengajuan.formDataPengajuan';
 
-    $breadcrumbs = [
-        'Beranda' => $user->dashboard_link,
-        $parentLabel => route($parentRouteName),
-        $pageTitle => null
-    ];
+        $breadcrumbs = [
+            'Beranda' => $user->dashboard_link,
+            $parentLabel => route($parentRouteName),
+            $pageTitle => null
+        ];
 
-    // 6. LAYOUT OTOMATIS - TETAP UTUH
-    $layout = $user->layout_file;
+        // 6. LAYOUT OTOMATIS - TETAP UTUH
+        $layout = $user->layout_file;
 
-    return view('datapengajuan.lacakpengajuan', compact(
-        'pengajuancuti',
-        'pageTitle',
-        'komentarStatus',
-        'pekerjaanData',
-        'submissionRaw',
-        'submissionType',
-        'submission',
-        'breadcrumbs',
-        'layout'
-    ));
-}
-
-
+        return view('datapengajuan.lacakpengajuan', compact(
+            'pengajuancuti',
+            'pageTitle',
+            'komentarStatus',
+            'pekerjaanData',
+            'submissionRaw',
+            'submissionType',
+            'submission',
+            'breadcrumbs',
+            'layout'
+        ));
+    }
 
 }

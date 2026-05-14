@@ -12,64 +12,46 @@ class HroDashboard extends Controller
     {
         $user = auth()->user();
 
-        // 1. Identifikasi Role menggunakan mapping (Tanpa level_akses)
-        $role = DB::table('roles_mapping')
-            ->where('jabatan_id', $user->jabatan_id)
-            ->where('level_id', $user->level_id)
-            ->first();
+        // 1. Konfigurasi 4 Tabel (Gunakan kolom status di TABEL UTAMA)
+        $configs = [
+            ['main' => 'pengajuan_cuti',   'st' => 'status_pengajuan', 'log' => 'log_persetujuan_cuti',   'st_log' => 'status_pengajuan'],
+            ['main' => 'pengajuan_lembur', 'st' => 'status_lembur',    'log' => 'log_persetujuan_lembur', 'st_log' => 'status_persetujuan'],
+            ['main' => 'pengajuan_pensiun', 'st' => 'status_pensiun',   'log' => 'log_persetujuan_pensiun', 'st_log' => 'status_persetujuan'],
+            ['main' => 'pengajuan_pangkatgajitunjangan', 'st' => 'status_kenaikan', 'log' => 'log_persetujuan_pangkatgajitunjangan', 'st_log' => 'status_persetujuan'],
+        ];
 
-        // Pastikan ini adalah HRO
-        $jabatanLogin = $role->role_name ?? 'HRO';
-
-        // 2. Inisialisasi Counter
         $totalMenunggu = 0;
         $totalDisetujui = 0;
         $totalDitolak = 0;
 
-        // 3. Daftar Tabel yang dipantau HRO (Bisa ditambah sesuai kebutuhan)
-        $tables = [
-            ['name' => 'log_persetujuan_lembur', 'col' => 'status_persetujuan'],
-            ['name' => 'log_persetujuan_cuti', 'col' => 'status_pengajuan'],
-            ['name' => 'log_persetujuan_pensiun', 'col' => 'status_persetujuan'],
-            ['name' => 'log_persetujuan_pangkatgajitunjangan', 'col' => 'status_persetujuan'],
-        ];
-
-        foreach ($tables as $table) {
-            // Query Dasar: HRO melihat SEMUA DIVISI (Tidak pakai where id_divisi)
-            $baseQuery = DB::table($table['name'])
-                ->join('users', $table['name'] . '.nomor_urut_pegawai', '=', 'users.nomor_urut_pegawai');
-
-            // A. HITUNG MENUNGGU (Antrean khusus untuk HRO)
-            $totalMenunggu += (clone $baseQuery)
-                ->where($table['col'], 'diproses')
-                ->where($table['name'] . '.tahap_persetujuan', 'HRO')
+        foreach ($configs as $cfg) {
+            // --- A. HITUNG MENUNGGU (WAJIB CEK TABEL LOG) ---
+            $totalMenunggu += DB::table($cfg['log'])
+                ->where('tahap_persetujuan', 'HRO')
+                ->where($cfg['st_log'], 'diproses')
+                ->whereNull('nomor_urut_pegawai_penyetuju')
                 ->count();
 
-            // B. HITUNG DISETUJUI (Yang sudah diselesaikan oleh HRO)
-            $totalDisetujui += (clone $baseQuery)
-                ->where($table['col'], 'disetujui')
-                ->where($table['name'] . '.tahap_persetujuan', 'HRO')
+            // --- B. HITUNG DISETUJUI (WAJIB CEK TABEL UTAMA) ---
+            $totalDisetujui += DB::table($cfg['main'])
+                ->where($cfg['st'], 'disetujui')
                 ->count();
 
-            // C. HITUNG DITOLAK (Yang ditolak oleh HRO)
-            $totalDitolak += (clone $baseQuery)
-                ->where($table['col'], 'ditolak')
-                ->where($table['name'] . '.tahap_persetujuan', 'HRO')
+            // --- C. HITUNG DITOLAK (WAJIB CEK TABEL UTAMA) ---
+            $totalDitolak += DB::table($cfg['main'])
+                ->where($cfg['st'], 'ditolak')
                 ->count();
         }
 
-        // 4. Data Berita/Pengumuman (Tetap dipertahankan)
-        $daftar_berita = Berita::where('tanggal_posting', '>=', now()->subHours(72))
-            ->orderBy('tanggal_posting', 'desc')
-            ->paginate(5);
-
+        // 2. Berita & Informasi
+        $daftar_berita = Berita::orderBy('tanggal_posting', 'desc')->paginate(5);
         $total_belum_dibaca = Berita::where('tanggal_posting', '>=', now()->subDay())->count();
 
-        // 5. Return ke View khusus HRO
         return view('hro.dashboardhro', compact(
             'totalMenunggu', 'totalDisetujui', 'totalDitolak',
-            'daftar_berita', 'total_belum_dibaca', 'jabatanLogin'
+            'daftar_berita', 'total_belum_dibaca'
         ));
     }
+
 
 }

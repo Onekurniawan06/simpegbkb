@@ -268,12 +268,8 @@
 
                 @elseif($sumber == 'lembur')
                     <!-- Blok Deskripsi & Detail Waktu Lembur -->
-                    <div class="ml-2 bg-blue-50/50 p-3 rounded-2xl border border-blue-100 space-y-5">
-                        <div>
-                            <label class="block text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-2">Deskripsi Pengajuan Lembur</label>
-                            <p class="text-sm text-slate-700 leading-relaxed italic">"{{ $data->uraian_tugas ?? 'Tidak ada deskripsi' }}"</p>
-                        </div>
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-blue-100/50">
+                    <div class="bg-blue-50/50 rounded-2xl border border-blue-100">
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 px-4 py-3">
                             <div class="flex flex-col">
                                 <span class="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Tanggal Lembur</span>
                                 <span class="text-sm font-semibold text-slate-700 mt-1">{{ \Carbon\Carbon::parse($data->tanggal_lembur)->translatedFormat('d F Y') }}</span>
@@ -291,6 +287,10 @@
                                 <span class="text-sm font-bold text-blue-700 mt-1">{{ $data->total_jam_lembur ?? '0' }}</span>
                             </div>
                         </div>
+                        <div class="border-t border-blue-100/50 px-4 py-3">
+                            <label class="block text-[10px] font-bold text-blue-400 uppercase tracking-widest mb-2">Deskripsi Pengajuan Lembur</label>
+                            <p class="text-sm text-slate-700 leading-relaxed italic">"{{ $data->uraian_tugas ?? 'Tidak ada deskripsi' }}"</p>
+                        </div>
                     </div>
 
                 @elseif($sumber == 'cuti')
@@ -298,7 +298,7 @@
                     <div class="ml-2 bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100 space-y-5">
                         <!-- Grid Utama: Menggunakan 4 kolom yang sama lebar (w-full + grid-cols-4) -->
                         <div class="grid grid-cols-2 md:grid-cols-4 gap-6 w-full">
-                            
+
                             {{-- TANGGAL MULAI --}}
                             <div class="flex flex-col items-start">
                                 <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Tanggal Mulai</span>
@@ -423,11 +423,11 @@
                     @endif
 
                     {{-- KOTAK CATATAN (Muncul untuk semua jenis pengajuan) --}}
-                    <div class="flex flex-col">
+                    <div class="flex flex-col mt-3">
                         <label class="block text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-2">Catatan Persetujuan</label>
                         <textarea name="catatan" rows="4"
                             class="w-full p-5 text-sm bg-white border border-slate-200 rounded-3xl text-slate-700 focus:ring-4 focus:ring-indigo-500/5 focus:border-indigo-500 outline-none transition resize-none placeholder-slate-400 shadow-sm"
-                            placeholder="Berikan alasan atau instruksi tambahan"
+                            placeholder="Wajib berikan alasan atau instruksi tambahan..."
                             @if($data->status !== 'diproses') readonly @endif>{{ $data->komentar ?? '' }}</textarea>
                     </div>
                     <input type="hidden" name="status" id="status_input">

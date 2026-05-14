@@ -35,6 +35,7 @@ use App\Http\Controllers\Laporan\laporanpengajuan;
 use App\Http\Controllers\BeritaController;
 use App\Http\Controllers\ProfileController;
 use App\Models\Pegawai;
+use App\Http\Controllers\pegawai\PegawaiController;
 use App\Http\Controllers\Cuti\CutiController;
 use App\Http\Controllers\Lembur\PengajuanLemburController;
 use App\Http\Controllers\Pensiun\PengajuanPensiunController;
@@ -61,7 +62,6 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::get('/logout', [AuthController::class, 'logout']);
 
 // RUTE LUPA PASSWORD BARU DIMULAI DI SINI
-// Menggunakan middleware 'guest' agar hanya bisa diakses saat belum login
 
 // 1. Menampilkan form "Lupa Password" (view auth.forgot-password yang dibuat sebelumnya)
 Route::get('/forgot-password', function () {
@@ -73,7 +73,6 @@ Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink
     ->middleware('guest')->name('password.email');
 
 // 3. Menampilkan form "Reset Password" setelah user mengklik link di email
-// Anda perlu membuat view 'auth.reset-password'
 Route::get('/reset-password/{token}', function ($token) {
     return view('reset-password', ['token' => $token]);
 })->middleware('guest')->name('password.reset');
@@ -275,14 +274,13 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/manager/dashboard/{divisi}', [ManagerDashboard::class, 'index'])->name('manager.dashboardmanager');
 
-    // Route Daftar Pegawai Global
-    Route::get('/manager/pegawai', [ManagerDashboard::class, 'dataPegawaiGlobal'])
-        ->name('manager.pegawaidivisi');
+    // // Route Daftar Pegawai Global
+    // Route::get('/manager/pegawai', [ManagerDashboard::class, 'dataPegawaiGlobal'])
+    //     ->name('manager.pegawaidivisi');
 
-    // Route Detail Pegawai
-    Route::get('/manager/pegawai/detail/{nup}', [ManagerDashboard::class, 'detailPegawai'])
-        ->name('manager.pegawai.detail');
-
+    // // Route Detail Pegawai
+    // Route::get('/manager/pegawai/detail/{nup}', [ManagerDashboard::class, 'detailPegawai'])
+    //     ->name('manager.pegawai.detail');
 
     // Rute Manajemen Approval (Daftar Pengajuan Pegawai)
     Route::get('/manager/manajemenpengajuanmanager', [ManagerApproval::class, 'formManagementPersetujuan'])
@@ -443,10 +441,10 @@ Route::middleware(['auth'])->group(function () {
 
 Route::middleware(['auth'])->group(function () {
     // Rute GET untuk menampilkan form lembur
-    Route::get('/pegawai/formPangkatGajiTunjangan', [KenaikanPangkatgajitunjangan::class, 'formPangkatGajiTunjangan'])->name('pegawai.pangkatgajitunjangan'); // <-- Ubah namanya di sini
+    // Route::get('/pegawai/formPangkatGajiTunjangan', [KenaikanPangkatgajitunjangan::class, 'formPangkatGajiTunjangan'])->name('pegawai.pangkatgajitunjangan'); // <-- Ubah namanya di sini
 
     // Rute yang mengarah ke controller baru di dalam sub-folder Pegawai
-    Route::post('/pegawai/kenaikanpangkatgajitunjangan', [KenaikanPangkatgajitunjangan::class, 'updatePangkatGajiTunjangan'])->name('pegawai.updatePangkatGajiTunjangan');
+    // Route::post('/pegawai/kenaikanpangkatgajitunjangan', [KenaikanPangkatgajitunjangan::class, 'updatePangkatGajiTunjangan'])->name('pegawai.updatePangkatGajiTunjangan');
 
     // Tracking Pengajuan Pensiun
     // Route::get('/pegawai/lacakpengajuan-pangkatgajitunjangan/{nip}', [KenaikanPangkatgajitunjangan::class, 'statuspangkatgajitunjangan'])->name('pengajuan.statuspangkatgajitunjangan');
@@ -458,6 +456,14 @@ Route::middleware(['auth'])->group(function () {
     // Rute spesifik Surat untuk Pensiun
     Route::get('/pengajuan-pangkat/{nup}/detail-surat', [DataPengajuanController::class, 'getPangkatgajitunjanganLetterDetailsByNup']);
     Route::get('/download-surat-pangkat/{nup}', [DataPengajuanController::class, 'downloadLetterPdfPangkatGajiTunjangan'])->name('pengajuan.download.pangkat');
+
+    // Route Daftar Pegawai
+    Route::get('/pegawai', [PegawaiController::class, 'dataPegawaiGlobal'])
+        ->name('pegawai.data');
+
+    // Route Detail Pegawai (Jika fungsinya ada di controller yang sama)
+    Route::get('/pegawai/detail/{nup}', [PegawaiController::class, 'detailPegawai'])
+        ->name('pegawai.detail');
 
 });
 
